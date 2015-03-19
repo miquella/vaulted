@@ -3,182 +3,298 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
+	"github.com/bgentry/speakeasy"
 	"github.com/miquella/vaulted/vault"
+	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
-	"strings"
+	"sort"
+)
+
+type CommandMode int
+
+const (
+	NoMode CommandMode = iota
+	SpawnEnvironmentMode
+	MutateEnvironmentMode
+	ListEnvironmentsMode
 )
 
 var (
+	// vault flags
 	filename string
-	password string = "password"
-	envs     Envs   = Envs{}
 
-	accountJson  []byte
-	accountVault *vault.AccountVault = &vault.AccountVault{}
+	// environment flags
+	environment string
+	commandMode CommandMode = NoMode
+
+	listEnvironments    bool
+	dumpJsonEnvironment bool
+
+	interactiveAdd    bool
+	deleteEnvironment bool
+	interactiveShell  bool
+
+	charDevice bool
+
+	// vault
+	vaultKey  []byte
+	vaultData []byte
+	v         vault.Vault
+	envs      vault.Environments
 )
 
 func init() {
+	environment = os.Getenv("VAULTED_ENV")
+
 	u, err := user.Current()
 	if err != nil {
 		panic(err)
 	}
 
-	flag.StringVar(&filename, "f", filepath.Join(u.HomeDir, ".shell-vault"), "vault filename")
-	flag.Var(envs, "e", "env vars")
+	flag.StringVar(&filename, "f", filepath.Join(u.HomeDir, ".vaulted"), "vault filename")
+	flag.StringVar(&environment, "n", environment, "name of the environment")
+	flag.BoolVar(&listEnvironments, "L", false, "list environments in vault")
+	flag.BoolVar(&dumpJsonEnvironment, "j", false, "dump json version of environment")
+	flag.BoolVar(&interactiveAdd, "a", false, "add to environment interactively")
+	flag.BoolVar(&deleteEnvironment, "D", false, "delete environment from vault")
+	flag.BoolVar(&interactiveShell, "i", false, "spawn a new shell populated with the environment")
 	flag.Parse()
 
-	if flag.NArg() < 1 {
-		println("invalid syntax")
-		os.Exit(1)
+	// figure out which mode the user wants
+	spawnMode := interactiveShell || flag.NArg() > 0
+	mutateMode := interactiveAdd || deleteEnvironment
+	listMode := listEnvironments || dumpJsonEnvironment
+
+	if spawnMode {
+		if listMode || mutateMode {
+			fmt.Fprint(os.Stderr, "ERROR: cannot list/dump or update environments while spawning\n")
+			os.Exit(2)
+		}
+
+		if os.Getenv("SHELL") == "" {
+			fmt.Fprint(os.Stderr, "ERROR: SHELL environment variable not set, cannot spawn shell")
+			os.Exit(2)
+		}
+
+		commandMode = SpawnEnvironmentMode
+
+	} else if mutateMode {
+		if listMode {
+			fmt.Fprintf(os.Stderr, "ERROR: cannot update environments while listing/dumping\n")
+			os.Exit(2)
+		}
+		commandMode = MutateEnvironmentMode
+
+	} else if listMode {
+		commandMode = ListEnvironmentsMode
 	}
+
+	stat, _ := os.Stdin.Stat()
+	charDevice = (stat.Mode() & os.ModeCharDevice) != 0
 }
 
 func main() {
-	var err error
-	if _, err = os.Stat(filename); !os.IsNotExist(err) {
-		accountVault, err = vault.LoadAccountVault(filename, password)
-		if err != nil {
-			panic(err)
-		}
-
-		accountJson, err = json.Marshal(accountVault)
-		if err != nil {
-			panic(err)
-		}
+	if commandMode == NoMode {
+		fmt.Fprint(os.Stderr, "invalid command mode\n")
+		flag.PrintDefaults()
+		os.Exit(2)
 	}
 
-	switch flag.Arg(0) {
-	case "add":
-		if flag.NArg() != 2 {
-			println("invalid syntax")
-			os.Exit(1)
-		}
-		addAccount(flag.Arg(1))
-	case "cat":
-		if flag.NArg() != 2 {
-			println("invalid syntax")
-			os.Exit(1)
-		}
-		showAccount(flag.Arg(1))
-	case "list":
-		if flag.NArg() != 1 {
-			println("invalid syntax")
-			os.Exit(1)
-		}
-		listAccounts()
-	case "shell":
-		if flag.NArg() != 2 {
-			println("invalid syntax")
-			os.Exit(1)
-		}
-		shellAccount(flag.Arg(1))
-	default:
-		println("unknown subcommand")
-		os.Exit(1)
-	}
-
-	// save vault if it has changed
-	newAccountJson, err := json.Marshal(accountVault)
+	err := loadVault()
 	if err != nil {
-		panic(err)
+		println(err.Error())
+		os.Exit(3)
 	}
 
-	if !bytes.Equal(accountJson, newAccountJson) {
-		err = accountVault.SaveAccountVault(filename, password)
+	switch commandMode {
+	case ListEnvironmentsMode:
+		listEnvironmentsMode()
+	case SpawnEnvironmentMode:
+		spawnEnvironmentMode()
+	case MutateEnvironmentMode:
+		mutateEnvironmentMode()
+		err = saveVault()
 		if err != nil {
-			println("error updating vault")
-			println(err)
+			println(err.Error())
+			os.Exit(3)
+		}
+	}
+}
+
+func getPassword() string {
+	password, err := speakeasy.Ask("Vault password: ")
+	if err != nil {
+		fmt.Printf("ERROR: %s\n", err)
+		os.Exit(4)
+	}
+
+	return password
+}
+
+func loadVault() error {
+	var err error
+
+	// skip loading if the file doesn't exist
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		envs = make(vault.Environments)
+		return nil
+	}
+
+	// read the vault data
+	vaultData, err = ioutil.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+
+	// deserialize the vault data
+	err = json.Unmarshal(vaultData, &v)
+	if err != nil {
+		return err
+	}
+
+	// decrypt the vault
+	if vaultKey == nil {
+		vaultKey, err = v.GenerateKey(getPassword())
+		if err != nil {
+			return err
+		}
+	}
+
+	envs, err = v.DecryptEnvironments(vaultKey)
+	return err
+}
+
+func saveVault() error {
+	var err error
+
+	// encrypt the vault
+	if vaultKey == nil {
+		vaultKey, err = v.GenerateKey(getPassword())
+		if err != nil {
+			return err
+		}
+	}
+
+	err = v.EncryptEnvironments(vaultKey, envs)
+	if err != nil {
+		return err
+	}
+
+	// serialize the vault data
+	tmpVaultData, err := json.Marshal(&v)
+	if err != nil {
+		return err
+	}
+
+	// write the vault data
+	if !bytes.Equal(tmpVaultData, vaultData) {
+		return ioutil.WriteFile(filename, tmpVaultData, 0600)
+	}
+
+	return nil
+}
+
+func listEnvironmentsMode() {
+	if listEnvironments {
+		envList := make([]string, 0, len(envs))
+		for name := range envs {
+			envList = append(envList, name)
+		}
+
+		sort.Strings(envList)
+		for _, name := range envList {
+			fmt.Fprintf(os.Stdout, "%s\n", name)
+		}
+	} else {
+		env, exists := envs[environment]
+		if !exists {
+			fmt.Fprintf(os.Stderr, "ERROR: environment '%s' does not exist\n", environment)
 			os.Exit(2)
 		}
-		println("vault updated")
+
+		data, err := json.MarshalIndent(&env, "", "  ")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Fprintf(os.Stdout, "%s\n", data)
 	}
 }
 
-func addAccount(name string) {
-	if _, exists := accountVault.Accounts[name]; exists {
-		println("ERROR: account already exists")
-		os.Exit(2)
+func spawnEnvironmentMode() {
+	var spawnArgs []string
+	if interactiveShell {
+		spawnArgs = append(spawnArgs, os.Getenv("SHELL"), "--login")
 	}
+	spawnArgs = append(spawnArgs, flag.Args()...)
 
-	if accountVault.Accounts == nil {
-		accountVault.Accounts = make(map[string]vault.Account)
-	}
-
-	account := vault.Account{
-		Name: name,
-		Env:  map[string]string{},
-	}
-	for v, val := range envs {
-		account.Env[v] = val
-	}
-	accountVault.Accounts[name] = account
-}
-
-func showAccount(name string) {
-	account, exists := accountVault.Accounts[name]
+	env, exists := envs[environment]
 	if !exists {
-		println("unknown account name")
+		fmt.Fprintf(os.Stderr, "ERROR: environment '%s' does not exist\n", environment)
 		os.Exit(2)
 	}
 
-	for k, val := range account.Env {
-		fmt.Printf("%s=%s\n", k, val)
-	}
-}
-
-func listAccounts() {
-	for name := range accountVault.Accounts {
-		fmt.Println(name)
-	}
-}
-
-func shellAccount(name string) {
-	account, exists := accountVault.Accounts[name]
-	if !exists {
-		println("unknown account name")
+	if len(spawnArgs) < 1 {
+		fmt.Fprint(os.Stderr, "ERROR: invalid spawn arguments\n")
 		os.Exit(2)
 	}
 
-	envs := ParseEnviron(os.Environ())
-	for key, val := range account.Env {
-		envs[key] = val
+	vars := ParseEnviron(os.Environ())
+	for key, val := range env.Vars {
+		vars[key] = val
 	}
 
-	cmd := exec.Command(envs["SHELL"], "--login")
-	cmd.Env = CreateEnviron(envs)
+	cmd := exec.Command(spawnArgs[0], spawnArgs[1:]...)
+	cmd.Env = CreateEnviron(vars)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Run()
-	if cmd.ProcessState.Success() {
-		os.Exit(0)
-	} else {
-		os.Exit(5)
+	err := cmd.Run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: failed to execute command: %s\n", err)
+		os.Exit(3)
+	}
+	if !cmd.ProcessState.Success() {
+		os.Exit(3)
 	}
 }
 
-type Envs map[string]string
+func mutateEnvironmentMode() {
+	if deleteEnvironment {
+		delete(envs, environment)
+	} else if interactiveAdd {
+		env := envs[environment]
+		env.Name = environment
+		if env.Vars == nil {
+			env.Vars = make(map[string]string)
+		}
 
-func (e Envs) String() string {
-	return "[]"
-}
+		if charDevice {
+			fmt.Printf("input vars (VAR=VALUE); end with ctrl+d\n")
+		}
+		for {
+			if charDevice {
+				fmt.Print("var> ")
+			}
 
-func (e Envs) Set(v string) error {
-	parts := strings.SplitN(v, "=", 2)
-	if len(parts) < 2 {
-		return errors.New("An env var must be in the form VAR=VALUE")
+			var varLine string
+			_, err := fmt.Scanln(&varLine)
+			if err == io.EOF || varLine == "" {
+				break
+			}
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "ERROR: Failed to read env vars - %s\n", err)
+				os.Exit(1)
+			}
+
+			key, value := ParseVar(varLine)
+			env.Vars[key] = value
+		}
+		envs[environment] = env
 	}
-
-	if _, exists := e[parts[0]]; exists {
-		return errors.New("An env var cannot be set more than once")
-	}
-
-	e[parts[0]] = parts[1]
-	return nil
 }

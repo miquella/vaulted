@@ -5,11 +5,17 @@ import (
 	"strings"
 )
 
+func ParseVar(envVar string) (string, string) {
+	parts := make([]string, 2)
+	parts = append(parts[:0], strings.SplitN(envVar, "=", 2)...)
+	return parts[0], parts[1]
+}
+
 func ParseEnviron(envs []string) map[string]string {
 	envsMap := make(map[string]string)
 	for _, env := range envs {
-		parts := strings.SplitN(env, "=", 2)
-		envsMap[parts[0]] = parts[1]
+		key, value := ParseVar(env)
+		envsMap[key] = value
 	}
 	return envsMap
 }
