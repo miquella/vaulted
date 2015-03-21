@@ -227,39 +227,55 @@ func listEnvironmentsMode() {
 }
 
 func spawnEnvironmentMode() {
-	var spawnArgs []string
-	if interactiveShell {
-		spawnArgs = append(spawnArgs, os.Getenv("SHELL"), "--login")
-	}
-	spawnArgs = append(spawnArgs, flag.Args()...)
-
+	// validate that the environment exists
 	env, exists := envs[environment]
 	if !exists {
 		fmt.Fprintf(os.Stderr, "ERROR: environment '%s' does not exist\n", environment)
 		os.Exit(2)
 	}
 
+	// compile command line arguments
+	var spawnArgs []string
+	if interactiveShell {
+		spawnArgs = append(spawnArgs, os.Getenv("SHELL"), "--login")
+	}
+	spawnArgs = append(spawnArgs, flag.Args()...)
+
 	if len(spawnArgs) < 1 {
 		fmt.Fprint(os.Stderr, "ERROR: invalid spawn arguments\n")
 		os.Exit(2)
 	}
 
+	// build the environment
 	vars := ParseEnviron(os.Environ())
 	for key, val := range env.Vars {
 		vars[key] = val
 	}
 
-	cmd := exec.Command(spawnArgs[0], spawnArgs[1:]...)
-	cmd.Env = CreateEnviron(vars)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	// locate the executable
+	fullpath, err := exec.LookPath(spawnArgs[0])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: cannot find executable: %s - %s\n", spawnArgs[0], err)
+		os.Exit(2)
+	}
+
+	// start the process
+	var attr os.ProcAttr
+	attr.Env = CreateEnviron(vars)
+	attr.Files = []*os.File{os.Stdin, os.Stdout, os.Stderr}
+	proc, err := os.StartProcess(fullpath, spawnArgs, &attr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: failed to execute command: %s\n", err)
 		os.Exit(3)
 	}
-	if !cmd.ProcessState.Success() {
+
+	// wait for the process to exit
+	state, err := proc.Wait()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: failed to execute command: %s\n", err)
+		os.Exit(3)
+	}
+	if !state.Success() {
 		os.Exit(3)
 	}
 }
