@@ -137,6 +137,21 @@ func getPassword() string {
 	return password
 }
 
+func requireEnvironment(mustExist bool) {
+	if environment == "" {
+		fmt.Fprint(os.Stderr, "ERROR: an environment must be provided\n")
+		os.Exit(2)
+	}
+
+	if mustExist {
+		_, exists := envs[environment]
+		if !exists {
+			fmt.Fprintf(os.Stderr, "ERROR: environment '%s' does not exist\n", environment)
+			os.Exit(2)
+		}
+	}
+}
+
 func loadVault() error {
 	var err error
 
@@ -212,11 +227,8 @@ func listEnvironmentsMode() {
 			fmt.Fprintf(os.Stdout, "%s\n", name)
 		}
 	} else {
-		env, exists := envs[environment]
-		if !exists {
-			fmt.Fprintf(os.Stderr, "ERROR: environment '%s' does not exist\n", environment)
-			os.Exit(2)
-		}
+		requireEnvironment(true)
+		env := envs[environment]
 
 		data, err := json.MarshalIndent(&env, "", "  ")
 		if err != nil {
@@ -228,11 +240,8 @@ func listEnvironmentsMode() {
 
 func spawnEnvironmentMode() {
 	// validate that the environment exists
-	env, exists := envs[environment]
-	if !exists {
-		fmt.Fprintf(os.Stderr, "ERROR: environment '%s' does not exist\n", environment)
-		os.Exit(2)
-	}
+	requireEnvironment(true)
+	env := envs[environment]
 
 	// compile command line arguments
 	var spawnArgs []string
@@ -284,7 +293,9 @@ func mutateEnvironmentMode() {
 	if deleteEnvironment {
 		delete(envs, environment)
 	} else if interactiveAdd {
+		requireEnvironment(false)
 		env := envs[environment]
+
 		env.Name = environment
 		if env.Vars == nil {
 			env.Vars = make(map[string]string)
