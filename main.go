@@ -42,6 +42,8 @@ var (
 
 	charDevice bool
 
+	activeEnvVarName string
+
 	// vault
 	vaultKey  []byte
 	vaultData []byte
@@ -64,6 +66,7 @@ func init() {
 	flag.BoolVar(&interactiveAdd, "a", false, "add to environment interactively")
 	flag.BoolVar(&deleteEnvironment, "D", false, "delete environment from vault")
 	flag.BoolVar(&interactiveShell, "i", false, "spawn a new shell populated with the environment")
+	flag.StringVar(&activeEnvVarName, "E", "VAULTED_ACTIVE_ENV", "env var name to set in a spawned environment")
 	flag.Parse()
 
 	// figure out which mode the user wants
@@ -259,6 +262,11 @@ func spawnEnvironmentMode() {
 	vars := ParseEnviron(os.Environ())
 	for key, val := range env.Vars {
 		vars[key] = val
+	}
+
+	// indicate the name of the Vaulted environment
+	if activeEnvVarName != "" {
+		vars[activeEnvVarName] = environment
 	}
 
 	// locate the executable
