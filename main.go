@@ -261,6 +261,9 @@ func spawnEnvironmentMode() {
 		vars[key] = val
 	}
 
+	// indicate the name of the Vaulted environment
+	vars["VAULTED_ENV"] = environment
+
 	// locate the executable
 	fullpath, err := exec.LookPath(spawnArgs[0])
 	if err != nil {

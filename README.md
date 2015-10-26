@@ -35,3 +35,7 @@ vaulted -n env_name command arg1 arg2
 ```sh
 vaulted -n env_name -i
 ```
+
+# Environment Self-Awareness
+
+Vaulted will set an environment variable `VAULTED_ENV` in spawned environments for commands or interactive shells to allow the spawned process to be aware that it is within a Vaulted-spawned environment. This is particularly useful if you would like to indicate such status in your shell prompt.
