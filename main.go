@@ -50,7 +50,7 @@ var (
 )
 
 func init() {
-	environment = os.Getenv("VAULTED_ENV")
+	environment = os.Getenv("VAULTED_DEFAULT_ENV")
 
 	u, err := user.Current()
 	if err != nil {
