@@ -7,6 +7,15 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sts"
+)
+
+const (
+	STS_DURATION = 3600
 )
 
 var (
@@ -14,7 +23,13 @@ var (
 )
 
 type Vault struct {
-	Vars map[string]string `json:"vars"`
+	Vars   map[string]string `json:"vars"`
+	AWSKey *AWSKey           `json:"aws_key,omitempty"`
+}
+
+type AWSKey struct {
+	ID     string `json:"id"`
+	Secret string `json:"secret"`
 }
 
 func (v *Vault) Spawn(cmd []string, env map[string]string) (*int, error) {
@@ -35,6 +50,16 @@ func (v *Vault) Spawn(cmd []string, env map[string]string) (*int, error) {
 	}
 	for key, value := range env {
 		vars[key] = value
+	}
+
+	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
+		stsCreds, err := v.AWSKey.generateSTS()
+		if err != nil {
+			return nil, err
+		}
+		for k, v := range stsCreds {
+			vars[k] = v
+		}
 	}
 
 	// start the process
@@ -83,4 +108,30 @@ func (v *Vault) getEnviron(vars map[string]string) []string {
 		environ = append(environ, fmt.Sprintf("%s=%s", key, value))
 	}
 	return environ
+}
+
+func (k *AWSKey) generateSTS() (map[string]string, error) {
+	sess := session.New(&aws.Config{
+		Credentials: credentials.NewStaticCredentials(
+			k.ID,
+			k.Secret,
+			"", // Temporary session token
+		),
+	})
+
+	params := &sts.GetSessionTokenInput{
+		DurationSeconds: aws.Int64(STS_DURATION),
+	}
+
+	stsClient := sts.New(sess)
+	resp, err := stsClient.GetSessionToken(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]string{
+		"AWS_ACCESS_KEY_ID":     *resp.Credentials.AccessKeyId,
+		"AWS_SECRET_ACCESS_KEY": *resp.Credentials.SecretAccessKey,
+		"AWS_SESSION_TOKEN":     *resp.Credentials.SessionToken,
+	}, nil
 }
