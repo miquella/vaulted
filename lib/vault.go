@@ -1,6 +1,7 @@
 package vaulted
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
@@ -30,6 +31,8 @@ type Vault struct {
 type AWSKey struct {
 	ID     string `json:"id"`
 	Secret string `json:"secret"`
+	MFA    string `json:"mfa,omitempty"`
+	Role   string `json:"role,omitempty"`
 }
 
 func (v *Vault) Spawn(cmd []string, env map[string]string) (*int, error) {
@@ -53,12 +56,18 @@ func (v *Vault) Spawn(cmd []string, env map[string]string) (*int, error) {
 	}
 
 	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
-		stsCreds, err := v.AWSKey.generateSTS()
+		var stsCreds map[string]string
+		if v.AWSKey.Role != "" {
+			stsCreds, err = v.AWSKey.assumeRole()
+		} else {
+			stsCreds, err = v.AWSKey.generateSTS()
+		}
 		if err != nil {
 			return nil, err
 		}
-		for k, v := range stsCreds {
-			vars[k] = v
+
+		for key, value := range stsCreds {
+			vars[key] = value
 		}
 	}
 
@@ -110,7 +119,7 @@ func (v *Vault) getEnviron(vars map[string]string) []string {
 	return environ
 }
 
-func (k *AWSKey) generateSTS() (map[string]string, error) {
+func (k *AWSKey) stsClient() *sts.STS {
 	sess := session.New(&aws.Config{
 		Credentials: credentials.NewStaticCredentials(
 			k.ID,
@@ -118,13 +127,28 @@ func (k *AWSKey) generateSTS() (map[string]string, error) {
 			"", // Temporary session token
 		),
 	})
+	return sts.New(sess)
+}
 
-	params := &sts.GetSessionTokenInput{
+func (k *AWSKey) getAssumeRoleInput() *sts.AssumeRoleInput {
+	roleSessionName := "VaultedSession"
+	input := &sts.AssumeRoleInput{
 		DurationSeconds: aws.Int64(STS_DURATION),
+		RoleArn:         &k.Role,
+		RoleSessionName: &roleSessionName,
 	}
 
-	stsClient := sts.New(sess)
-	resp, err := stsClient.GetSessionToken(params)
+	if k.MFA != "" {
+		tokenCode := getTokenCode()
+		input.SerialNumber = &k.MFA
+		input.TokenCode = &tokenCode
+	}
+
+	return input
+}
+
+func (k *AWSKey) assumeRole() (map[string]string, error) {
+	resp, err := k.stsClient().AssumeRole(k.getAssumeRoleInput())
 	if err != nil {
 		return nil, err
 	}
@@ -134,4 +158,42 @@ func (k *AWSKey) generateSTS() (map[string]string, error) {
 		"AWS_SECRET_ACCESS_KEY": *resp.Credentials.SecretAccessKey,
 		"AWS_SESSION_TOKEN":     *resp.Credentials.SessionToken,
 	}, nil
+}
+
+func (k *AWSKey) buildSessionTokenInput() *sts.GetSessionTokenInput {
+	input := &sts.GetSessionTokenInput{
+		DurationSeconds: aws.Int64(STS_DURATION),
+	}
+
+	if k.MFA != "" {
+		tokenCode := getTokenCode()
+		input.SerialNumber = &k.MFA
+		input.TokenCode = &tokenCode
+	}
+
+	return input
+}
+
+func (k *AWSKey) generateSTS() (map[string]string, error) {
+	resp, err := k.stsClient().GetSessionToken(k.buildSessionTokenInput())
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]string{
+		"AWS_ACCESS_KEY_ID":     *resp.Credentials.AccessKeyId,
+		"AWS_SECRET_ACCESS_KEY": *resp.Credentials.SecretAccessKey,
+		"AWS_SESSION_TOKEN":     *resp.Credentials.SessionToken,
+	}, nil
+}
+
+func getTokenCode() string {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter your MFA code: ")
+	tokenCode, err := reader.ReadString('\n')
+	if err != nil {
+		panic(err)
+	}
+	tokenCode = strings.TrimSpace(tokenCode)
+	return tokenCode
 }
