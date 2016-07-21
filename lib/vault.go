@@ -35,7 +35,40 @@ type AWSKey struct {
 	Role   string `json:"role,omitempty"`
 }
 
-func (v *Vault) Spawn(cmd []string, env map[string]string) (*int, error) {
+func (v *Vault) GetEnvVars(extraVars map[string]string, staticOnly bool) (map[string]string, error) {
+	vars := make(map[string]string)
+	for key, value := range v.Vars {
+		vars[key] = value
+	}
+	for key, value := range extraVars {
+		vars[key] = value
+	}
+
+	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
+		var err error
+		var stsCreds map[string]string
+		if staticOnly {
+			stsCreds["AWS_ACCESS_KEY_ID"] = v.AWSKey.ID
+			stsCreds["AWS_SECRET_ACCESS_KEY"] = v.AWSKey.Secret
+		} else {
+			if v.AWSKey.Role != "" {
+				stsCreds, err = v.AWSKey.assumeRole()
+			} else {
+				stsCreds, err = v.AWSKey.generateSTS()
+			}
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		for key, value := range stsCreds {
+			vars[key] = value
+		}
+	}
+	return vars, nil
+}
+
+func (v *Vault) Spawn(cmd []string, extraVars map[string]string) (*int, error) {
 	if len(cmd) == 0 {
 		return nil, ErrInvalidCommand
 	}
@@ -47,28 +80,9 @@ func (v *Vault) Spawn(cmd []string, env map[string]string) (*int, error) {
 	}
 
 	// build the environ
-	vars := make(map[string]string)
-	for key, value := range v.Vars {
-		vars[key] = value
-	}
-	for key, value := range env {
-		vars[key] = value
-	}
-
-	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
-		var stsCreds map[string]string
-		if v.AWSKey.Role != "" {
-			stsCreds, err = v.AWSKey.assumeRole()
-		} else {
-			stsCreds, err = v.AWSKey.generateSTS()
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		for key, value := range stsCreds {
-			vars[key] = value
-		}
+	vars, err := v.GetEnvVars(extraVars, false)
+	if err != nil {
+		return nil, err
 	}
 
 	// start the process
