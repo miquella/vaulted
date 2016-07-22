@@ -142,6 +142,20 @@ func OpenVault(password string, name string) (*Vault, error) {
 	return &v, nil
 }
 
+func RemoveVault(name string) error {
+	existing := xdg.DATA_HOME.Find(filepath.Join("vaulted", name))
+	if existing == "" {
+		untouchable := xdg.DATA_DIRS.Find(filepath.Join("vaulted", name))
+		if len(untouchable) == 0 {
+			return os.ErrNotExist
+		}
+
+		return fmt.Errorf("Because %s is outside the vaulted managed directory (%s), it must be removed manually", untouchable[0], xdg.DATA_HOME.Join("vaulted"))
+	}
+
+	return os.Remove(existing)
+}
+
 func readVaultFile(name string) (*VaultFile, error) {
 	existing := xdg.DATA.Find(filepath.Join("vaulted", name))
 	if len(existing) == 0 {
