@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
@@ -79,8 +81,14 @@ func (cli VaultedCLI) Run() {
 	case "cat":
 		cli.Cat()
 
+	case "dump":
+		cli.Dump()
+
 	case "list", "ls":
 		cli.List()
+
+	case "load":
+		cli.Load()
 
 	case "rm":
 		cli.Remove()
@@ -102,7 +110,7 @@ func (cli VaultedCLI) Run() {
 
 func (cli VaultedCLI) Cat() {
 	if len(cli) != 2 {
-		fmt.Fprintln(os.Stderr, "You must specify a single vault to cat")
+		fmt.Fprintln(os.Stderr, "You must specify a vault to cat")
 		os.Exit(255)
 	}
 
@@ -129,6 +137,35 @@ func (cli VaultedCLI) Cat() {
 	}
 }
 
+func (cli VaultedCLI) Dump() {
+	if len(cli) != 2 {
+		fmt.Fprintln(os.Stderr, "You must specify a vault to dump")
+		os.Exit(255)
+	}
+
+	_, vault, err := openVault(cli[1])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	jvault, err := json.MarshalIndent(vault, "", "  ")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	for len(jvault) > 0 {
+		n, err := os.Stdout.Write(jvault)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
+		jvault = jvault[n:]
+	}
+}
+
 func (cli VaultedCLI) List() {
 	vaults, err := vaulted.ListVaults()
 	if err != nil {
@@ -138,6 +175,34 @@ func (cli VaultedCLI) List() {
 
 	for _, vault := range vaults {
 		fmt.Fprintln(os.Stdout, vault)
+	}
+}
+
+func (cli VaultedCLI) Load() {
+	if len(cli) != 2 {
+		fmt.Fprintln(os.Stderr, "You must specify a vault to load")
+		os.Exit(255)
+	}
+
+	password := getPassword()
+
+	jvault, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	vault := &vaulted.Vault{}
+	err = json.Unmarshal(jvault, vault)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	err = vaulted.SealVault(password, cli[1], vault)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
 
@@ -161,7 +226,7 @@ func (cli VaultedCLI) Remove() {
 
 func (cli VaultedCLI) Shell() {
 	if len(cli) != 2 {
-		fmt.Fprintln(os.Stderr, "You must specify a single vault to spawn a shell with")
+		fmt.Fprintln(os.Stderr, "You must specify a vault to spawn a shell with")
 		os.Exit(255)
 	}
 
