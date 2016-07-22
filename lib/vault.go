@@ -35,7 +35,7 @@ type AWSKey struct {
 	Role   string `json:"role,omitempty"`
 }
 
-func (v *Vault) GetEnvVars(extraVars map[string]string, staticOnly bool) (map[string]string, error) {
+func (v *Vault) CreateEnvironment(staticEnvironment bool, extraVars map[string]string) (map[string]string, error) {
 	vars := make(map[string]string)
 	for key, value := range v.Vars {
 		vars[key] = value
@@ -47,7 +47,7 @@ func (v *Vault) GetEnvVars(extraVars map[string]string, staticOnly bool) (map[st
 	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
 		var err error
 		var stsCreds map[string]string
-		if staticOnly {
+		if staticEnvironment {
 			stsCreds["AWS_ACCESS_KEY_ID"] = v.AWSKey.ID
 			stsCreds["AWS_SECRET_ACCESS_KEY"] = v.AWSKey.Secret
 		} else {
@@ -80,7 +80,7 @@ func (v *Vault) Spawn(cmd []string, extraVars map[string]string) (*int, error) {
 	}
 
 	// build the environ
-	vars, err := v.GetEnvVars(extraVars, false)
+	vars, err := v.CreateEnvironment(false, extraVars)
 	if err != nil {
 		return nil, err
 	}

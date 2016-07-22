@@ -112,7 +112,7 @@ func (cli VaultedCLI) Cat() {
 		os.Exit(1)
 	}
 
-	staticVars, err := vault.GetEnvVars(nil, true)
+	staticVars, err := vault.CreateEnvironment(true, nil)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
