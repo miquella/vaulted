@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/bgentry/speakeasy"
 	"github.com/miquella/vaulted/lib"
 	"github.com/miquella/vaulted/lib/legacy"
+	"github.com/spf13/pflag"
 )
 
 func main() {
@@ -90,7 +92,11 @@ func (cli VaultedCLI) Run() {
 		cli.Upgrade()
 
 	default:
-		os.Exit(255)
+		if strings.HasPrefix(cli[0], "-") {
+			cli.Spawn()
+		} else {
+			os.Exit(255)
+		}
 	}
 }
 
@@ -166,6 +172,42 @@ func (cli VaultedCLI) Shell() {
 	}
 
 	code, err := vault.Spawn([]string{os.Getenv("SHELL"), "--login"}, map[string]string{"VAULTED_ENV": cli[1]})
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+	os.Exit(*code)
+}
+
+func (cli VaultedCLI) Spawn() {
+	spawnFlags := pflag.NewFlagSet("spawn", pflag.ContinueOnError)
+	spawnFlags.SetInterspersed(false)
+
+	name := spawnFlags.StringP("name", "n", "", "Name of the vault to spawn")
+	interactive := spawnFlags.BoolP("interactive", "i", false, "Spawn an interactive shell")
+	err := spawnFlags.Parse([]string(cli))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(255)
+	}
+
+	if spawnFlags.ArgsLenAtDash() > 0 {
+		fmt.Fprintln(os.Stderr, fmt.Sprintf("Unknown argument(s): %v", spawnFlags.Args()[:spawnFlags.ArgsLenAtDash()]))
+		os.Exit(255)
+	}
+
+	_, vault, err := openVault(cli[1])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	var cmd []string
+	if *interactive {
+		cmd = append(cmd, os.Getenv("SHELL"), "--login")
+	}
+	cmd = append(cmd, spawnFlags.Args()...)
+
+	code, err := vault.Spawn(cmd, map[string]string{"VAULTED_ENV": *name})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
