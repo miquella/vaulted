@@ -2,6 +2,8 @@ package vaulted
 
 import (
 	"bufio"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"os"
@@ -13,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"golang.org/x/crypto/ssh/agent"
 )
 
 const (
@@ -24,8 +27,9 @@ var (
 )
 
 type Vault struct {
-	Vars   map[string]string `json:"vars"`
-	AWSKey *AWSKey           `json:"aws_key,omitempty"`
+	Vars    map[string]string `json:"vars"`
+	AWSKey  *AWSKey           `json:"aws_key,omitempty"`
+	SSHKeys map[string]string `json:"ssh_keys,omitempty"`
 }
 
 type AWSKey struct {
@@ -46,18 +50,12 @@ func (v *Vault) CreateEnvironment(staticEnvironment bool, extraVars map[string]s
 
 	// start ssh agent in dynamic environments
 	if !staticEnvironment {
-		agent, err := NewProxyKeyring(os.Getenv("SSH_AUTH_SOCK"))
-		if err != nil {
-			return nil, err
-		}
-
-		sock, err := agent.Listen()
+		sock, err := v.startProxyKeyring()
 		if err != nil {
 			return nil, err
 		}
 
 		vars["SSH_AUTH_SOCK"] = sock
-		go agent.Serve()
 	}
 
 	// get aws creds (use sts in dynamic environments)
@@ -149,6 +147,43 @@ func (v *Vault) getEnviron(vars map[string]string) []string {
 		environ = append(environ, fmt.Sprintf("%s=%s", key, value))
 	}
 	return environ
+}
+
+func (v *Vault) startProxyKeyring() (string, error) {
+	keyring, err := NewProxyKeyring(os.Getenv("SSH_AUTH_SOCK"))
+	if err != nil {
+		return "", err
+	}
+
+	// load ssh keys
+	for comment, key := range v.SSHKeys {
+		addedKey := agent.AddedKey{
+			Comment: comment,
+		}
+
+		block, _ := pem.Decode([]byte(key))
+		addedKey.PrivateKey, err = x509.ParseECPrivateKey(block.Bytes)
+		if err != nil {
+			addedKey.PrivateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+		}
+		if err != nil {
+			return "", err
+		}
+
+		err := keyring.Add(addedKey)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	sock, err := keyring.Listen()
+	if err != nil {
+		return "", err
+	}
+
+	go keyring.Serve()
+
+	return sock, err
 }
 
 func (k *AWSKey) stsClient() *sts.STS {
