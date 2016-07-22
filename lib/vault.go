@@ -44,6 +44,23 @@ func (v *Vault) CreateEnvironment(staticEnvironment bool, extraVars map[string]s
 		vars[key] = value
 	}
 
+	// start ssh agent in dynamic environments
+	if !staticEnvironment {
+		agent, err := NewProxyKeyring(os.Getenv("SSH_AUTH_SOCK"))
+		if err != nil {
+			return nil, err
+		}
+
+		sock, err := agent.Listen()
+		if err != nil {
+			return nil, err
+		}
+
+		vars["SSH_AUTH_SOCK"] = sock
+		go agent.Serve()
+	}
+
+	// get aws creds (use sts in dynamic environments)
 	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
 		var err error
 		var stsCreds map[string]string
@@ -65,6 +82,7 @@ func (v *Vault) CreateEnvironment(staticEnvironment bool, extraVars map[string]s
 			vars[key] = value
 		}
 	}
+
 	return vars, nil
 }
 
