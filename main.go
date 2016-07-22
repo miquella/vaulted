@@ -7,6 +7,7 @@ import (
 
 	"github.com/bgentry/speakeasy"
 	"github.com/miquella/vaulted/lib"
+	"github.com/miquella/vaulted/lib/legacy"
 )
 
 func main() {
@@ -43,6 +44,28 @@ func openVault(name string) (password string, vault *vaulted.Vault, err error) {
 	return
 }
 
+func openLegacyVault() (password string, environments map[string]legacy.Environment, err error) {
+	legacyVault, err := legacy.ReadVault()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	password = os.Getenv("VAULTED_PASSWORD")
+	if password != "" {
+		environments, err = legacyVault.DecryptEnvironments(password)
+	} else {
+		for i := 0; i < 3; i++ {
+			password = getPassword()
+			environments, err = legacyVault.DecryptEnvironments(password)
+			if err != legacy.ErrInvalidPassword {
+				break
+			}
+		}
+	}
+	return
+}
+
 type VaultedCLI []string
 
 func (cli VaultedCLI) Run() {
@@ -62,6 +85,9 @@ func (cli VaultedCLI) Run() {
 
 	case "shell":
 		cli.Shell()
+
+	case "upgrade":
+		cli.Upgrade()
 
 	default:
 		os.Exit(255)
@@ -144,4 +170,40 @@ func (cli VaultedCLI) Shell() {
 		fmt.Fprintln(os.Stderr, err)
 	}
 	os.Exit(*code)
+}
+
+func (cli VaultedCLI) Upgrade() {
+	password, environments, err := openLegacyVault()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	// collect the current list of vaults (so we don't overwrite any)
+	vaults, _ := vaulted.ListVaults()
+	existingVaults := map[string]bool{}
+	for _, name := range vaults {
+		existingVaults[name] = true
+	}
+
+	failed := 0
+	for name, env := range environments {
+		if existingVaults[name] {
+			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s: skipped (vault already exists)", name))
+			continue
+		}
+
+		vault := vaulted.Vault{
+			Vars: env.Vars,
+		}
+		err = vaulted.SealVault(password, name, &vault)
+		if err != nil {
+			failed++
+			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s: %v", name, err))
+		} else {
+			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s: upgraded", name))
+		}
+	}
+
+	os.Exit(failed)
 }
