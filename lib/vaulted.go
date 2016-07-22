@@ -18,6 +18,15 @@ var (
 	ErrInvalidEncryptionConfig = errors.New("Invalid encryption configuration")
 )
 
+func VaultExists(name string) bool {
+	existing := xdg.DATA.Find(filepath.Join("vaulted", name))
+	if len(existing) == 0 {
+		return false
+	}
+
+	return true
+}
+
 func ListVaults() ([]string, error) {
 	vaults, err := xdg.DATA.Glob(filepath.Join("vaulted", "*"))
 	if err != nil {

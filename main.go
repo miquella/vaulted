@@ -78,6 +78,9 @@ func (cli VaultedCLI) Run() {
 	}
 
 	switch cli[0] {
+	case "add", "edit":
+		cli.Edit()
+
 	case "cat":
 		cli.Cat()
 
