@@ -27,6 +27,22 @@ func getPassword() string {
 	return password
 }
 
+func openVault(name string) (password string, vault *vaulted.Vault, err error) {
+	password = os.Getenv("VAULTED_PASSWORD")
+	if password != "" {
+		vault, err = vaulted.OpenVault(password, name)
+	} else {
+		for i := 0; i < 3; i++ {
+			password = getPassword()
+			vault, err = vaulted.OpenVault(password, name)
+			if err != vaulted.ErrInvalidPassword {
+				break
+			}
+		}
+	}
+	return
+}
+
 type VaultedCLI []string
 
 func (cli VaultedCLI) Run() {
@@ -58,8 +74,7 @@ func (cli VaultedCLI) Cat() {
 		os.Exit(255)
 	}
 
-	password := getPassword()
-	vault, err := vaulted.OpenVault(password, cli[1])
+	_, vault, err := openVault(cli[1])
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -118,8 +133,7 @@ func (cli VaultedCLI) Shell() {
 		os.Exit(255)
 	}
 
-	password := getPassword()
-	vault, err := vaulted.OpenVault(password, cli[1])
+	_, vault, err := openVault(cli[1])
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
