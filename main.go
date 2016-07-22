@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 
+	"github.com/bgentry/speakeasy"
 	"github.com/miquella/vaulted/lib"
 )
 
@@ -17,6 +19,14 @@ func main() {
 	cli.Run()
 }
 
+func getPassword() string {
+	password, err := speakeasy.Ask("Password: ")
+	if err != nil {
+		os.Exit(1)
+	}
+	return password
+}
+
 type VaultedCLI []string
 
 func (cli VaultedCLI) Run() {
@@ -25,6 +35,9 @@ func (cli VaultedCLI) Run() {
 	}
 
 	switch cli[0] {
+	case "cat":
+		cli.Cat()
+
 	case "list", "ls":
 		cli.List()
 
@@ -33,6 +46,36 @@ func (cli VaultedCLI) Run() {
 
 	default:
 		os.Exit(255)
+	}
+}
+
+func (cli VaultedCLI) Cat() {
+	if len(cli) != 2 {
+		fmt.Fprintln(os.Stderr, "You must specify a single vault to cat")
+		os.Exit(255)
+	}
+
+	password := getPassword()
+	vault, err := vaulted.OpenVault(password, cli[1])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	staticVars, err := vault.GetEnvVars(nil, true)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	var keys []string
+	for key, _ := range staticVars {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		fmt.Fprintln(os.Stdout, fmt.Sprintf("%s=%s", key, staticVars[key]))
 	}
 }
 
