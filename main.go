@@ -44,6 +44,9 @@ func (cli VaultedCLI) Run() {
 	case "rm":
 		cli.Remove()
 
+	case "shell":
+		cli.Shell()
+
 	default:
 		os.Exit(255)
 	}
@@ -107,4 +110,24 @@ func (cli VaultedCLI) Remove() {
 	}
 
 	os.Exit(failures)
+}
+
+func (cli VaultedCLI) Shell() {
+	if len(cli) != 2 {
+		fmt.Fprintln(os.Stderr, "You must specify a single vault to spawn a shell with")
+		os.Exit(255)
+	}
+
+	password := getPassword()
+	vault, err := vaulted.OpenVault(password, cli[1])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	code, err := vault.Spawn([]string{os.Getenv("SHELL"), "--login"}, map[string]string{"VAULTED_ENV": cli[1]})
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+	os.Exit(*code)
 }
