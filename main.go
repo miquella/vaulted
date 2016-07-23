@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/bgentry/speakeasy"
+	"github.com/miquella/ask"
 	"github.com/miquella/vaulted/lib"
 	"github.com/miquella/vaulted/lib/legacy"
 	"github.com/spf13/pflag"
@@ -25,7 +25,7 @@ func main() {
 }
 
 func getPassword() string {
-	password, err := speakeasy.Ask("Password: ")
+	password, err := ask.HiddenAsk("Password: ")
 	if err != nil {
 		os.Exit(1)
 	}
@@ -187,8 +187,6 @@ func (cli VaultedCLI) Load() {
 		os.Exit(255)
 	}
 
-	password := getPassword()
-
 	jvault, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -202,6 +200,7 @@ func (cli VaultedCLI) Load() {
 		os.Exit(1)
 	}
 
+	password := getPassword()
 	err = vaulted.SealVault(password, cli[1], vault)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
