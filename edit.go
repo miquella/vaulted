@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/miquella/ask"
 	"github.com/miquella/vaulted/lib"
 )
 
@@ -33,7 +34,11 @@ func (cli VaultedCLI) Edit() {
 	edit(cli[1], vault)
 
 	if password == "" {
-		password = getPassword()
+		password, err = ask.HiddenAsk("New Password: ")
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	}
 
 	err = vaulted.SealVault(password, cli[1], vault)

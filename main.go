@@ -24,21 +24,17 @@ func main() {
 	cli.Run()
 }
 
-func getPassword() string {
-	password, err := ask.HiddenAsk("Password: ")
-	if err != nil {
-		os.Exit(1)
-	}
-	return password
-}
-
 func openVault(name string) (password string, vault *vaulted.Vault, err error) {
 	password = os.Getenv("VAULTED_PASSWORD")
 	if password != "" {
 		vault, err = vaulted.OpenVault(password, name)
 	} else {
 		for i := 0; i < 3; i++ {
-			password = getPassword()
+			password, err = ask.HiddenAsk("Password: ")
+			if err != nil {
+				break
+			}
+
 			vault, err = vaulted.OpenVault(password, name)
 			if err != vaulted.ErrInvalidPassword {
 				break
@@ -60,7 +56,11 @@ func openLegacyVault() (password string, environments map[string]legacy.Environm
 		environments, err = legacyVault.DecryptEnvironments(password)
 	} else {
 		for i := 0; i < 3; i++ {
-			password = getPassword()
+			password, err = ask.HiddenAsk("Legacy Password: ")
+			if err != nil {
+				break
+			}
+
 			environments, err = legacyVault.DecryptEnvironments(password)
 			if err != legacy.ErrInvalidPassword {
 				break
@@ -200,7 +200,12 @@ func (cli VaultedCLI) Load() {
 		os.Exit(1)
 	}
 
-	password := getPassword()
+	password, err := ask.HiddenAsk("New Password: ")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
 	err = vaulted.SealVault(password, cli[1], vault)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
