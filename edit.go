@@ -58,21 +58,11 @@ func (cli VaultedCLI) Edit() {
 func mainMenu() {
 	color.Set(color.FgYellow)
 	print("")
-	print("v - Variables")
 	print("a - AWS Key")
 	print("s - SSH Keys")
+	print("v - Variables")
 	print("? - Help")
 	print("q - Quit")
-	color.Unset()
-}
-
-func variableMenu() {
-	color.Set(color.FgYellow)
-	print("")
-	print("a - Add")
-	print("d - Delete")
-	print("? - Help")
-	print("b - Back")
 	color.Unset()
 }
 
@@ -99,6 +89,16 @@ func sshKeysHelp() {
 	color.Unset()
 }
 
+func variableMenu() {
+	color.Set(color.FgYellow)
+	print("")
+	print("a - Add")
+	print("d - Delete")
+	print("? - Help")
+	print("b - Back")
+	color.Unset()
+}
+
 func edit(name string, v *vaulted.Vault) {
 	exit := false
 	for exit == false {
@@ -109,50 +109,18 @@ func edit(name string, v *vaulted.Vault) {
 		printAWS(v, false)
 		printSSHKeys(v)
 
-		input := readMenu("\nEdit vault: [v,a,s,?,q]: ")
+		input := readMenu("\nEdit vault: [a,s,v,?,q]: ")
 		switch input {
-		case "v":
-			variables(v)
 		case "a":
 			aws(v)
 		case "s":
 			sshKeysMenu(v)
+		case "v":
+			variables(v)
 		case "q":
 			exit = true
 		case "?", "help":
 			mainMenu()
-		default:
-			color.Red("Command not recognized")
-		}
-	}
-}
-
-func variables(v *vaulted.Vault) {
-	exit := false
-
-	for exit == false {
-		printVariables(v)
-		input := readMenu("\nEdit environment variables: [a,d,?,b]: ")
-		switch input {
-		case "a":
-			variableKey := readValue("Name: ")
-			variableValue := readValue("Value: ")
-			if v.Vars == nil {
-				v.Vars = make(map[string]string)
-			}
-			v.Vars[variableKey] = variableValue
-		case "d":
-			variable := readValue("Variable name: ")
-			_, ok := v.Vars[variable]
-			if ok {
-				delete(v.Vars, variable)
-			} else {
-				color.Red("Variable '%s' not found", variable)
-			}
-		case "b":
-			exit = true
-		case "?", "help":
-			variableMenu()
 		default:
 			color.Red("Command not recognized")
 		}
@@ -362,6 +330,38 @@ func loadPublicKeyComment(filename string) string {
 		return ""
 	}
 	return comment
+}
+
+func variables(v *vaulted.Vault) {
+	exit := false
+
+	for exit == false {
+		printVariables(v)
+		input := readMenu("\nEdit environment variables: [a,d,?,b]: ")
+		switch input {
+		case "a":
+			variableKey := readValue("Name: ")
+			variableValue := readValue("Value: ")
+			if v.Vars == nil {
+				v.Vars = make(map[string]string)
+			}
+			v.Vars[variableKey] = variableValue
+		case "d":
+			variable := readValue("Variable name: ")
+			_, ok := v.Vars[variable]
+			if ok {
+				delete(v.Vars, variable)
+			} else {
+				color.Red("Variable '%s' not found", variable)
+			}
+		case "b":
+			exit = true
+		case "?", "help":
+			variableMenu()
+		default:
+			color.Red("Command not recognized")
+		}
+	}
 }
 
 func print(message string) {
