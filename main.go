@@ -74,6 +74,7 @@ type VaultedCLI []string
 
 func (cli VaultedCLI) Run() {
 	if len(cli) == 0 {
+		cli.PrintUsage()
 		os.Exit(255)
 	}
 
@@ -106,9 +107,29 @@ func (cli VaultedCLI) Run() {
 		if strings.HasPrefix(cli[0], "-") {
 			cli.Spawn()
 		} else {
+			fmt.Fprintf(os.Stderr, "Invalid command: %s\n", cli[0])
+			cli.PrintUsage()
 			os.Exit(255)
 		}
 	}
+}
+
+func (cli VaultedCLI) PrintUsage() {
+	fmt.Fprintln(os.Stderr, "USAGE:")
+	fmt.Fprintln(os.Stderr, "  vaulted -n VAULT [--] CMD    - Spawn CMD in the VAULT environment")
+	fmt.Fprintln(os.Stderr, "  vaulted -n VAULT -i          - Spawn an interactive shell in the VAULT environment")
+	fmt.Fprintln(os.Stderr, "")
+	fmt.Fprintln(os.Stderr, "  vaulted ls                   - List all vaults")
+	fmt.Fprintln(os.Stderr, "  vaulted add VAULT            - Interactively add the VAULT")
+	fmt.Fprintln(os.Stderr, "  vaulted edit VAULT           - Interactively edit the VAULT")
+	fmt.Fprintln(os.Stderr, "  vaulted cat VAULT            - Display the static variables in the VAULT")
+	fmt.Fprintln(os.Stderr, "  vaulted rm VAULT [VAULT...]  - Remove the VAULT environment(s)")
+	fmt.Fprintln(os.Stderr, "  vaulted shell VAULT          - Spawn an interactive shell in the VAULT environment")
+	fmt.Fprintln(os.Stderr, "")
+	fmt.Fprintln(os.Stderr, "  vaulted dump VAULT           - Dump the VAULT in JSON format")
+	fmt.Fprintln(os.Stderr, "  vaulted load VAULT           - Load the VAULT from JSON format")
+	fmt.Fprintln(os.Stderr, "")
+	fmt.Fprintln(os.Stderr, "  vaulted upgrade              - Upgrade from a legacy vaulted format")
 }
 
 func (cli VaultedCLI) Cat() {
