@@ -2,8 +2,6 @@ package vaulted
 
 import (
 	"bufio"
-	"crypto/x509"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"os"
@@ -15,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
 
@@ -161,11 +160,7 @@ func (v *Vault) startProxyKeyring() (string, error) {
 			Comment: comment,
 		}
 
-		block, _ := pem.Decode([]byte(key))
-		addedKey.PrivateKey, err = x509.ParseECPrivateKey(block.Bytes)
-		if err != nil {
-			addedKey.PrivateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
-		}
+		addedKey.PrivateKey, err = ssh.ParseRawPrivateKey([]byte(key))
 		if err != nil {
 			return "", err
 		}
