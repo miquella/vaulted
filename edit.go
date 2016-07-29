@@ -2,13 +2,20 @@ package main
 
 import (
 	"bufio"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"os/user"
+	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/miquella/ask"
 	"github.com/miquella/vaulted/lib"
+	"golang.org/x/crypto/ssh"
 )
 
 func (cli VaultedCLI) Edit() {
@@ -53,6 +60,7 @@ func mainMenu() {
 	print("")
 	print("v - Variables")
 	print("a - AWS Key")
+	print("s - SSH Keys")
 	print("? - Help")
 	print("q - Quit")
 	color.Unset()
@@ -81,6 +89,16 @@ func awsMenu() {
 	color.Unset()
 }
 
+func sshKeysHelp() {
+	color.Set(color.FgYellow)
+	print("")
+	print("a - Add")
+	print("d - Delete")
+	print("? - Help")
+	print("b - Back")
+	color.Unset()
+}
+
 func edit(name string, v *vaulted.Vault) {
 	exit := false
 	for exit == false {
@@ -89,13 +107,16 @@ func edit(name string, v *vaulted.Vault) {
 		fmt.Printf("%s", name)
 		printVariables(v)
 		printAWS(v, false)
+		printSSHKeys(v)
 
-		input := readMenu("\nEdit vault: [v,a,?,q]: ")
+		input := readMenu("\nEdit vault: [v,a,s,?,q]: ")
 		switch input {
 		case "v":
 			variables(v)
 		case "a":
 			aws(v)
+		case "s":
+			sshKeysMenu(v)
 		case "q":
 			exit = true
 		case "?", "help":
@@ -200,6 +221,149 @@ func aws(v *vaulted.Vault) {
 	}
 }
 
+func sshKeysMenu(v *vaulted.Vault) {
+	exit := false
+
+	for exit == false {
+		printSSHKeys(v)
+		input := readMenu("\nEdit ssh keys: [a,d,?,b]: ")
+		switch input {
+		case "a":
+			addSSHKey(v)
+		case "d":
+			key := readValue("Key: ")
+			_, ok := v.SSHKeys[key]
+			if ok {
+				delete(v.SSHKeys, key)
+			} else {
+				color.Red("Key '%s' not found", key)
+			}
+		case "b":
+			exit = true
+		case "?", "help":
+			sshKeysHelp()
+		default:
+			color.Red("Command not recognized")
+		}
+	}
+}
+
+func addSSHKey(v *vaulted.Vault) {
+	homeDir := ""
+	user, err := user.Current()
+	if err == nil {
+		homeDir = user.HomeDir
+	} else {
+		homeDir = os.Getenv("HOME")
+	}
+
+	defaultFilename := ""
+	filename := ""
+	if homeDir != "" {
+		defaultFilename = filepath.Join(homeDir, ".ssh", "id_rsa")
+		filename = readValue(fmt.Sprintf("Key file (default: %s): ", defaultFilename))
+		if filename == "" {
+			filename = defaultFilename
+		}
+		if !filepath.IsAbs(filename) {
+			filename = filepath.Join(filepath.Join(homeDir, ".ssh"), filename)
+		}
+	} else {
+		filename = readValue("Key file: ")
+	}
+
+	decryptedBlock, err := loadAndDecryptKey(filename)
+	if err != nil {
+		color.Red("%v", err)
+		return
+	}
+
+	comment := loadPublicKeyComment(filename + ".pub")
+	var name string
+	if comment != "" {
+		name = readValue(fmt.Sprintf("Name (default: %s): ", comment))
+		if name == "" {
+			name = comment
+		}
+	} else {
+		name = readValue("Name: ")
+		if name == "" {
+			name = filename
+		}
+	}
+
+	if v.SSHKeys == nil {
+		v.SSHKeys = make(map[string]string)
+	}
+	v.SSHKeys[name] = string(pem.EncodeToMemory(decryptedBlock))
+}
+
+func loadAndDecryptKey(filename string) (*pem.Block, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	data, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	block, _ := pem.Decode(data)
+	if block == nil {
+		return nil, err
+	}
+
+	if x509.IsEncryptedPEMBlock(block) {
+		var passphrase string
+		var decryptedBytes []byte
+		for i := 0; i < 3; i++ {
+			passphrase, err = ask.HiddenAsk("Passphrase: ")
+			if err != nil {
+				return nil, err
+			}
+
+			decryptedBytes, err = x509.DecryptPEMBlock(block, []byte(passphrase))
+			if err == nil {
+				break
+			}
+			if err != x509.IncorrectPasswordError {
+				return nil, err
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &pem.Block{
+			Type:  block.Type,
+			Bytes: decryptedBytes,
+		}, nil
+	}
+	return block, nil
+}
+
+func loadPublicKeyComment(filename string) string {
+	f, err := os.Open(filename)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+
+	data, err := ioutil.ReadAll(f)
+	if err != nil {
+		return ""
+	}
+
+	_, comment, _, _, err := ssh.ParseAuthorizedKey(data)
+	if err != nil {
+		return ""
+	}
+	return comment
+}
+
 func print(message string) {
 	fmt.Printf("%s\n", message)
 }
@@ -235,10 +399,29 @@ func printAWS(v *vaulted.Vault, show bool) {
 	}
 }
 
+func printSSHKeys(v *vaulted.Vault) {
+	color.Cyan("\nSSH Keys:")
+	if len(v.SSHKeys) > 0 {
+		keys := []string{}
+		for key, _ := range v.SSHKeys {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+
+		for _, key := range keys {
+			fmt.Printf("  %s\n", key)
+		}
+	} else {
+		print("  [Empty]")
+	}
+}
+
 func readMenu(message string) string {
 	blue := color.New(color.FgBlue)
 	blue.Printf(message)
-	return readInput(message)
+	input := readInput(message)
+	print("")
+	return input
 }
 
 func readValue(message string) string {
@@ -253,7 +436,5 @@ func readInput(message string) string {
 	if err != nil {
 		panic(err)
 	}
-	input = strings.TrimSpace(input)
-	print("")
-	return input
+	return strings.TrimSpace(input)
 }
