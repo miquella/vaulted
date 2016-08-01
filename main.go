@@ -288,7 +288,7 @@ func (cli VaultedCLI) Spawn() {
 		os.Exit(255)
 	}
 
-	_, vault, err := openVault(cli[1])
+	_, vault, err := openVault(*name)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
