@@ -293,7 +293,7 @@ func (cli VaultedCLI) Spawn() {
 	}
 
 	if *name == "" {
-		fmt.Println(os.Stderr, "A vault must be specified when spawning a command")
+		fmt.Fprintln(os.Stderr, "A vault must be specified when spawning")
 		os.Exit(255)
 	}
 
