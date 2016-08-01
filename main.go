@@ -130,7 +130,7 @@ func (cli VaultedCLI) PrintUsage() {
 	fmt.Fprintln(os.Stderr, "  vaulted add VAULT            - Interactively add the VAULT")
 	fmt.Fprintln(os.Stderr, "  vaulted edit VAULT           - Interactively edit the VAULT")
 	fmt.Fprintln(os.Stderr, "  vaulted cat VAULT            - Display the static variables in the VAULT")
-	fmt.Fprintln(os.Stderr, "  vaulted copy VAULT NEWVAULT  - Interactively creates a copy of VAULT as NEWVAULT")
+	fmt.Fprintln(os.Stderr, "  vaulted cp VAULT NEWVAULT    - Creates a copy of VAULT as NEWVAULT")
 	fmt.Fprintln(os.Stderr, "  vaulted rm VAULT [VAULT...]  - Remove the VAULT environment(s)")
 	fmt.Fprintln(os.Stderr, "  vaulted shell VAULT          - Spawn an interactive shell in the VAULT environment")
 	fmt.Fprintln(os.Stderr, "")
@@ -180,8 +180,6 @@ func (cli VaultedCLI) Copy() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-
-	edit(cli[2], vault)
 
 	password, err := ask.HiddenAsk("New Password: ")
 	if err != nil {
