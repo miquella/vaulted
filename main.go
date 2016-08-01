@@ -288,6 +288,15 @@ func (cli VaultedCLI) Spawn() {
 		os.Exit(255)
 	}
 
+	if *name == "" {
+		*name = os.Getenv("VAULTED_DEFAULT_ENV")
+	}
+
+	if *name == "" {
+		fmt.Println(os.Stderr, "A vault must be specified when spawning a command")
+		os.Exit(255)
+	}
+
 	_, vault, err := openVault(*name)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
