@@ -371,8 +371,14 @@ func print(message string) {
 func printVariables(v *vaulted.Vault) {
 	color.Cyan("\nVariables:")
 	if len(v.Vars) > 0 {
-		for key, value := range v.Vars {
-			fmt.Printf("  %s: %s\n", key, value)
+		var keys []string
+		for key, _ := range v.Vars {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+
+		for _, key := range keys {
+			fmt.Printf("  %s: %s\n", key, v.Vars[key])
 		}
 	} else {
 		print("  [Empty]")
