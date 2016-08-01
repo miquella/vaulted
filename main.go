@@ -312,6 +312,7 @@ func (cli VaultedCLI) Spawn() {
 	code, err := vault.Spawn(cmd, map[string]string{"VAULTED_ENV": *name})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
 	}
 	os.Exit(*code)
 }
