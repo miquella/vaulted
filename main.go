@@ -85,6 +85,9 @@ func (cli VaultedCLI) Run() {
 	case "cat":
 		cli.Cat()
 
+	case "copy", "cp":
+		cli.Copy()
+
 	case "dump":
 		cli.Dump()
 
@@ -123,6 +126,7 @@ func (cli VaultedCLI) PrintUsage() {
 	fmt.Fprintln(os.Stderr, "  vaulted add VAULT            - Interactively add the VAULT")
 	fmt.Fprintln(os.Stderr, "  vaulted edit VAULT           - Interactively edit the VAULT")
 	fmt.Fprintln(os.Stderr, "  vaulted cat VAULT            - Display the static variables in the VAULT")
+	fmt.Fprintln(os.Stderr, "  vaulted copy VAULT NEWVAULT  - Interactively creates a copy of VAULT as NEWVAULT")
 	fmt.Fprintln(os.Stderr, "  vaulted rm VAULT [VAULT...]  - Remove the VAULT environment(s)")
 	fmt.Fprintln(os.Stderr, "  vaulted shell VAULT          - Spawn an interactive shell in the VAULT environment")
 	fmt.Fprintln(os.Stderr, "")
@@ -158,6 +162,33 @@ func (cli VaultedCLI) Cat() {
 
 	for _, key := range keys {
 		fmt.Fprintln(os.Stdout, fmt.Sprintf("%s=%s", key, staticVars[key]))
+	}
+}
+
+func (cli VaultedCLI) Copy() {
+	if len(cli) != 3 {
+		fmt.Fprintln(os.Stderr, "You must specify a vault to copy from and to")
+		os.Exit(255)
+	}
+
+	_, vault, err := openVault(cli[1])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	edit(cli[2], vault)
+
+	password, err := ask.HiddenAsk("New Password: ")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	err = vaulted.SealVault(password, cli[2], vault)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
 
