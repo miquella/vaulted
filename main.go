@@ -289,6 +289,12 @@ func (cli VaultedCLI) Shell() {
 		os.Exit(255)
 	}
 
+	currentVaultedEnv := os.Getenv("VAULTED_ENV")
+	if currentVaultedEnv != "" {
+		fmt.Fprintln(os.Stderr, fmt.Sprintf("Refusing to spawn a new shell when already in environment '%s'.", currentVaultedEnv))
+		os.Exit(255)
+	}
+
 	_, vault, err := openVault(cli[1])
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -308,9 +314,16 @@ func (cli VaultedCLI) Spawn() {
 
 	name := spawnFlags.StringP("name", "n", "", "Name of the vault to spawn")
 	interactive := spawnFlags.BoolP("interactive", "i", false, "Spawn an interactive shell")
+	force := spawnFlags.BoolP("force", "f", false, "Bypass protective checks and force spawning of the environment")
 	err := spawnFlags.Parse([]string(cli))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		os.Exit(255)
+	}
+
+	currentVaultedEnv := os.Getenv("VAULTED_ENV")
+	if !*force && currentVaultedEnv != "" {
+		fmt.Fprintln(os.Stderr, fmt.Sprintf("Refusing to spawn a new environment when already in environment '%s'. Use --force to override.", currentVaultedEnv))
 		os.Exit(255)
 	}
 
