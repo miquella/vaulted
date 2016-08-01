@@ -117,7 +117,7 @@ func (cli VaultedCLI) Run() {
 func (cli VaultedCLI) PrintUsage() {
 	fmt.Fprintln(os.Stderr, "USAGE:")
 	fmt.Fprintln(os.Stderr, "  vaulted -n VAULT [--] CMD    - Spawn CMD in the VAULT environment")
-	fmt.Fprintln(os.Stderr, "  vaulted -n VAULT -i          - Spawn an interactive shell in the VAULT environment")
+	fmt.Fprintln(os.Stderr, "  vaulted -n VAULT [-i]        - Spawn an interactive shell in the VAULT environment")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "  vaulted ls                   - List all vaults")
 	fmt.Fprintln(os.Stderr, "  vaulted add VAULT            - Interactively add the VAULT")
@@ -304,7 +304,7 @@ func (cli VaultedCLI) Spawn() {
 	}
 
 	var cmd []string
-	if *interactive {
+	if *interactive || len(spawnFlags.Args()) == 0 {
 		cmd = append(cmd, os.Getenv("SHELL"), "--login")
 	}
 	cmd = append(cmd, spawnFlags.Args()...)
