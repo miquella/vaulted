@@ -106,6 +106,10 @@ func (cli VaultedCLI) Run() {
 	case "upgrade":
 		cli.Upgrade()
 
+	case "help":
+		cli.PrintUsage()
+		os.Exit(255)
+
 	default:
 		if strings.HasPrefix(cli[0], "-") {
 			cli.Spawn()
@@ -315,9 +319,15 @@ func (cli VaultedCLI) Spawn() {
 	name := spawnFlags.StringP("name", "n", "", "Name of the vault to spawn")
 	interactive := spawnFlags.BoolP("interactive", "i", false, "Spawn an interactive shell")
 	force := spawnFlags.BoolP("force", "f", false, "Bypass protective checks and force spawning of the environment")
+	help := spawnFlags.Bool("help", false, "Show usage help")
 	err := spawnFlags.Parse([]string(cli))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		os.Exit(255)
+	}
+
+	if *help {
+		cli.PrintUsage()
 		os.Exit(255)
 	}
 
