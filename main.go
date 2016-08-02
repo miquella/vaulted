@@ -306,6 +306,7 @@ func (cli VaultedCLI) Shell() {
 	code, err := vault.Spawn([]string{os.Getenv("SHELL"), "--login"}, map[string]string{"VAULTED_ENV": cli[1]})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
 	}
 	os.Exit(*code)
 }
