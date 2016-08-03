@@ -36,14 +36,6 @@ Interactively edit an environment named `NAME`.
 vaulted edit NAME
 ```
 
-## `vaulted cat`
-
-Display the static environment variables defined in `NAME`.
-
-```sh
-vaulted cat NAME
-```
-
 ## `vaulted dump`
 
 Dumps a JSON formatted version of the `NAME` vault.

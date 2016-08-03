@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"sort"
 	"strings"
 
 	"github.com/miquella/ask"
@@ -82,9 +81,6 @@ func (cli VaultedCLI) Run() {
 	case "add", "edit":
 		cli.Edit()
 
-	case "cat":
-		cli.Cat()
-
 	case "copy", "cp":
 		cli.Copy()
 
@@ -129,7 +125,6 @@ func (cli VaultedCLI) PrintUsage() {
 	fmt.Fprintln(os.Stderr, "  vaulted ls                   - List all vaults")
 	fmt.Fprintln(os.Stderr, "  vaulted add VAULT            - Interactively add the VAULT")
 	fmt.Fprintln(os.Stderr, "  vaulted edit VAULT           - Interactively edit the VAULT")
-	fmt.Fprintln(os.Stderr, "  vaulted cat VAULT            - Display the static variables in the VAULT")
 	fmt.Fprintln(os.Stderr, "  vaulted cp VAULT NEWVAULT    - Creates a copy of VAULT as NEWVAULT")
 	fmt.Fprintln(os.Stderr, "  vaulted rm VAULT [VAULT...]  - Remove the VAULT environment(s)")
 	fmt.Fprintln(os.Stderr, "  vaulted shell VAULT          - Spawn an interactive shell in the VAULT environment")
@@ -138,35 +133,6 @@ func (cli VaultedCLI) PrintUsage() {
 	fmt.Fprintln(os.Stderr, "  vaulted load VAULT           - Load the VAULT from JSON format")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "  vaulted upgrade              - Upgrade from a legacy vaulted format")
-}
-
-func (cli VaultedCLI) Cat() {
-	if len(cli) != 2 {
-		fmt.Fprintln(os.Stderr, "You must specify a vault to cat")
-		os.Exit(255)
-	}
-
-	_, vault, err := openVault(cli[1])
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	staticVars, err := vault.CreateEnvironment(true, nil)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	var keys []string
-	for key, _ := range staticVars {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		fmt.Fprintln(os.Stdout, fmt.Sprintf("%s=%s", key, staticVars[key]))
-	}
 }
 
 func (cli VaultedCLI) Copy() {
