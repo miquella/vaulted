@@ -207,6 +207,8 @@ func writeVaultFile(name string, vaultFile *VaultFile) error {
 		return err
 	}
 
+	removeEnvironment(name)
+
 	return nil
 }
 
