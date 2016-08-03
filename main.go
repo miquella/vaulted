@@ -348,7 +348,7 @@ func (cli VaultedCLI) Shell() {
 		os.Exit(255)
 	}
 
-	code, err := env.Spawn([]string{os.Getenv("SHELL"), "--login"}, map[string]string{"VAULTED_ENV": cli[1]})
+	code, err := env.Spawn([]string{os.Getenv("SHELL"), "--login"}, nil)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
@@ -413,7 +413,7 @@ func (cli VaultedCLI) Spawn() {
 		os.Exit(255)
 	}
 
-	code, err := env.Spawn(cmd, map[string]string{"VAULTED_ENV": *name})
+	code, err := env.Spawn(cmd, nil)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)

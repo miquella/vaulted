@@ -38,7 +38,7 @@ type AWSKey struct {
 	Role   string `json:"role,omitempty"`
 }
 
-func (v *Vault) CreateEnvironment() (*Environment, error) {
+func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, error) {
 	e := &Environment{
 		Vars:       make(map[string]string),
 		Expiration: time.Now().Add(STS_DURATION * time.Second).Unix(),
@@ -46,6 +46,9 @@ func (v *Vault) CreateEnvironment() (*Environment, error) {
 
 	// copy the vault vars to the environment
 	for key, value := range v.Vars {
+		e.Vars[key] = value
+	}
+	for key, value := range extraVars {
 		e.Vars[key] = value
 	}
 
@@ -90,7 +93,7 @@ func (v *Vault) GetEnvironment(name, password string) (*Environment, error) {
 	// the environment isn't valid (possibly expired), so remove it
 	removeEnvironment(name)
 
-	env, err = v.CreateEnvironment()
+	env, err = v.CreateEnvironment(map[string]string{"VAULTED_ENV": name})
 	if err != nil {
 		return nil, err
 	}
