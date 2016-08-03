@@ -53,6 +53,14 @@ Dumps a JSON formatted version of the `NAME` vault.
 vaulted dump NAME
 ```
 
+## `vaulted env`
+
+Outputs the commands to run to load the `NAME` vault's secrets into the shell.
+
+```sh
+vaulted env NAME
+```
+
 ## `vaulted list` / `vaulted ls`
 
 Lists all vaults.

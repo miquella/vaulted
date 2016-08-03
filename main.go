@@ -2,15 +2,22 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/miquella/ask"
 	"github.com/miquella/vaulted/lib"
 	"github.com/miquella/vaulted/lib/legacy"
 	"github.com/spf13/pflag"
+)
+
+var (
+	ErrUnknownShell = errors.New("Unknown shell")
 )
 
 func main() {
@@ -87,6 +94,9 @@ func (cli VaultedCLI) Run() {
 	case "dump":
 		cli.Dump()
 
+	case "env":
+		cli.Env()
+
 	case "list", "ls":
 		cli.List()
 
@@ -127,6 +137,7 @@ func (cli VaultedCLI) PrintUsage() {
 	fmt.Fprintln(os.Stderr, "  vaulted edit VAULT           - Interactively edit the VAULT")
 	fmt.Fprintln(os.Stderr, "  vaulted cp VAULT NEWVAULT    - Creates a copy of VAULT as NEWVAULT")
 	fmt.Fprintln(os.Stderr, "  vaulted rm VAULT [VAULT...]  - Remove the VAULT environment(s)")
+	fmt.Fprintln(os.Stderr, "  vaulted env VAULT            - Displays the environment variables for the VAULT environment")
 	fmt.Fprintln(os.Stderr, "  vaulted shell VAULT          - Spawn an interactive shell in the VAULT environment")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "  vaulted dump VAULT           - Dump the VAULT in JSON format")
@@ -186,6 +197,68 @@ func (cli VaultedCLI) Dump() {
 		}
 
 		jvault = jvault[n:]
+	}
+}
+
+func (cli VaultedCLI) Env() {
+	if len(cli) != 2 {
+		fmt.Fprintln(os.Stderr, "You must specify a vault for which to get the environment")
+		os.Exit(255)
+	}
+
+	password, vault, err := openVault(cli[1])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	env, err := vault.GetEnvironment(cli[1], password)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(255)
+	}
+
+	// detect the correct shell
+	shell, err := detectShell()
+	if err == ErrUnknownShell {
+		shell = "sh"
+	}
+
+	usageHint := ""
+	setVar := ""
+	quoteReplacement := "\""
+	switch shell {
+	case "fish":
+		usageHint = "# To load these variables into your shell, execute:\n#   eval (%s)"
+		setVar = "set -x %s \"%s\";"
+		quoteReplacement = "\\\""
+	default:
+		usageHint = "# To load these variables into your shell, execute:\n#   eval $(%s)"
+		setVar = "export %s=\"%s\""
+		quoteReplacement = "\\\""
+	}
+
+	// sort the vars
+	var keys []string
+	for key, _ := range env.Vars {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	// display the vars using the format string for the shell
+	displayUsageHint := true
+	fi, err := os.Stdout.Stat()
+	if err == nil {
+		if fi.Mode()&os.ModeCharDevice == 0 {
+			displayUsageHint = false
+		}
+	}
+	if displayUsageHint {
+		fmt.Fprintln(os.Stdout, fmt.Sprintf(usageHint, strings.Join(os.Args, " ")))
+	}
+
+	for _, key := range keys {
+		fmt.Fprintln(os.Stdout, fmt.Sprintf(setVar, key, strings.Replace(env.Vars[key], "\"", quoteReplacement, -1)))
 	}
 }
 
@@ -382,4 +455,13 @@ func (cli VaultedCLI) Upgrade() {
 	}
 
 	os.Exit(failed)
+}
+
+func detectShell() (string, error) {
+	shell := os.Getenv("SHELL")
+	if shell != "" {
+		return filepath.Base(shell), nil
+	}
+
+	return "", ErrUnknownShell
 }
