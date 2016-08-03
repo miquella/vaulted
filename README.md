@@ -36,6 +36,15 @@ Interactively edit an environment named `NAME`.
 vaulted edit NAME
 ```
 
+## `vaulted copy` / `vaulted cp`
+
+Creates a new vault with the content of an existing vault. The new vault is
+re-encrypted with a new password.
+
+```sh
+vaulted copy VAULT NEWVAULT
+```
+
 ## `vaulted dump`
 
 Dumps a JSON formatted version of the `NAME` vault.
