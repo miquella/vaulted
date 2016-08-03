@@ -5,16 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
-	"syscall"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/agent"
 )
 
 const (
@@ -38,147 +35,44 @@ type AWSKey struct {
 	Role   string `json:"role,omitempty"`
 }
 
-func (v *Vault) CreateEnvironment(staticEnvironment bool, extraVars map[string]string) (map[string]string, error) {
-	vars := make(map[string]string)
+func (v *Vault) CreateEnvironment() (*Environment, error) {
+	e := &Environment{
+		Vars:       make(map[string]string),
+		Expiration: time.Now().Add(STS_DURATION * time.Second).Unix(),
+	}
+
+	// copy the vault vars to the environment
 	for key, value := range v.Vars {
-		vars[key] = value
-	}
-	for key, value := range extraVars {
-		vars[key] = value
+		e.Vars[key] = value
 	}
 
-	// start ssh agent in dynamic environments
-	if !staticEnvironment {
-		sock, err := v.startProxyKeyring()
-		if err != nil {
-			return nil, err
+	// copy the vault ssh keys to the environment
+	if len(v.SSHKeys) > 0 {
+		e.SSHKeys = make(map[string]string)
+		for key, value := range v.SSHKeys {
+			e.SSHKeys[key] = value
 		}
-
-		vars["SSH_AUTH_SOCK"] = sock
 	}
 
-	// get aws creds (use sts in dynamic environments)
+	// get aws creds
 	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
 		var err error
 		var stsCreds map[string]string
-		if staticEnvironment {
-			stsCreds["AWS_ACCESS_KEY_ID"] = v.AWSKey.ID
-			stsCreds["AWS_SECRET_ACCESS_KEY"] = v.AWSKey.Secret
+		if v.AWSKey.Role != "" {
+			stsCreds, err = v.AWSKey.assumeRole()
 		} else {
-			if v.AWSKey.Role != "" {
-				stsCreds, err = v.AWSKey.assumeRole()
-			} else {
-				stsCreds, err = v.AWSKey.generateSTS()
-			}
+			stsCreds, err = v.AWSKey.generateSTS()
 		}
 		if err != nil {
 			return nil, err
 		}
 
 		for key, value := range stsCreds {
-			vars[key] = value
+			e.Vars[key] = value
 		}
 	}
 
-	return vars, nil
-}
-
-func (v *Vault) Spawn(cmd []string, extraVars map[string]string) (*int, error) {
-	if len(cmd) == 0 {
-		return nil, ErrInvalidCommand
-	}
-
-	// lookup the path of the executable
-	cmdpath, err := exec.LookPath(cmd[0])
-	if err != nil {
-		return nil, fmt.Errorf("Cannot find executable %s: %v", cmd[0], err)
-	}
-
-	// build the environ
-	vars, err := v.CreateEnvironment(false, extraVars)
-	if err != nil {
-		return nil, err
-	}
-
-	// start the process
-	var attr os.ProcAttr
-	attr.Env = v.getEnviron(vars)
-	attr.Files = []*os.File{os.Stdin, os.Stdout, os.Stderr}
-
-	proc, err := os.StartProcess(cmdpath, cmd, &attr)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to execute command: %v", err)
-	}
-
-	// wait for the process to exit
-	state, _ := proc.Wait()
-
-	var exitStatus int
-	if !state.Success() {
-		if status, ok := state.Sys().(syscall.WaitStatus); ok {
-			exitStatus = status.ExitStatus()
-		} else {
-			exitStatus = 255
-		}
-	}
-
-	// we only return an error if spawning the process failed, not if
-	// the spawned command returned a failure status code.
-	return &exitStatus, nil
-}
-
-func (v *Vault) getEnviron(vars map[string]string) []string {
-	// load the current environ
-	env := make(map[string]string)
-	for _, envVar := range os.Environ() {
-		parts := strings.SplitN(envVar, "=", 2)
-		env[parts[0]] = parts[1]
-	}
-
-	// merge the provided vars
-	for key, value := range vars {
-		env[key] = value
-	}
-
-	// recombine into environ
-	environ := make([]string, 0, len(env))
-	for key, value := range env {
-		environ = append(environ, fmt.Sprintf("%s=%s", key, value))
-	}
-	return environ
-}
-
-func (v *Vault) startProxyKeyring() (string, error) {
-	keyring, err := NewProxyKeyring(os.Getenv("SSH_AUTH_SOCK"))
-	if err != nil {
-		return "", err
-	}
-
-	// load ssh keys
-	for comment, key := range v.SSHKeys {
-		addedKey := agent.AddedKey{
-			Comment: comment,
-		}
-
-		addedKey.PrivateKey, err = ssh.ParseRawPrivateKey([]byte(key))
-		if err != nil {
-			return "", err
-		}
-
-		err := keyring.Add(addedKey)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	sock, err := keyring.Listen()
-	if err != nil {
-		return "", err
-	}
-
-	go keyring.Serve()
-
-	return sock, err
+	return e, nil
 }
 
 func (k *AWSKey) stsClient() *sts.STS {
