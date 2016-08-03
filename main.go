@@ -263,13 +263,13 @@ func (cli VaultedCLI) Shell() {
 		os.Exit(255)
 	}
 
-	_, vault, err := openVault(cli[1])
+	password, vault, err := openVault(cli[1])
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	env, err := vault.CreateEnvironment()
+	env, err := vault.GetEnvironment(cli[1], password)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(255)
@@ -322,7 +322,7 @@ func (cli VaultedCLI) Spawn() {
 		os.Exit(255)
 	}
 
-	_, vault, err := openVault(*name)
+	password, vault, err := openVault(*name)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -334,7 +334,7 @@ func (cli VaultedCLI) Spawn() {
 	}
 	cmd = append(cmd, spawnFlags.Args()...)
 
-	env, err := vault.CreateEnvironment()
+	env, err := vault.GetEnvironment(*name, password)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(255)

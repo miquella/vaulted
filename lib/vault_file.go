@@ -23,6 +23,12 @@ type VaultKey struct {
 	Details Details `json:"details"`
 }
 
+type EnvironmentFile struct {
+	Method     string  `json:"method"`
+	Details    Details `json:"details,omitempty"`
+	Ciphertext []byte  `json:"ciphertext"`
+}
+
 func newVaultKey(previous *VaultKey) *VaultKey {
 	var method string
 	var details Details
