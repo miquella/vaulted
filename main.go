@@ -30,6 +30,26 @@ func main() {
 	cli.Run()
 }
 
+func openEnvironment(name string) (password string, env *vaulted.Environment, err error) {
+	password = os.Getenv("VAULTED_PASSWORD")
+	if password != "" {
+		env, err = vaulted.GetEnvironment(name, password)
+	} else {
+		for i := 0; i < 3; i++ {
+			password, err = ask.HiddenAsk("Password: ")
+			if err != nil {
+				break
+			}
+
+			env, err = vaulted.GetEnvironment(name, password)
+			if err != vaulted.ErrInvalidPassword {
+				break
+			}
+		}
+	}
+	return
+}
+
 func openVault(name string) (password string, vault *vaulted.Vault, err error) {
 	password = os.Getenv("VAULTED_PASSWORD")
 	if password != "" {
@@ -206,16 +226,10 @@ func (cli VaultedCLI) Env() {
 		os.Exit(255)
 	}
 
-	password, vault, err := openVault(cli[1])
+	_, env, err := openEnvironment(cli[1])
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
-	}
-
-	env, err := vault.GetEnvironment(cli[1], password)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(255)
 	}
 
 	// detect the correct shell
@@ -336,16 +350,10 @@ func (cli VaultedCLI) Shell() {
 		os.Exit(255)
 	}
 
-	password, vault, err := openVault(cli[1])
+	_, env, err := openEnvironment(cli[1])
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
-	}
-
-	env, err := vault.GetEnvironment(cli[1], password)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(255)
 	}
 
 	code, err := env.Spawn([]string{os.Getenv("SHELL"), "--login"}, nil)
@@ -395,7 +403,7 @@ func (cli VaultedCLI) Spawn() {
 		os.Exit(255)
 	}
 
-	password, vault, err := openVault(*name)
+	_, env, err := openEnvironment(cli[1])
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -406,12 +414,6 @@ func (cli VaultedCLI) Spawn() {
 		cmd = append(cmd, os.Getenv("SHELL"), "--login")
 	}
 	cmd = append(cmd, spawnFlags.Args()...)
-
-	env, err := vault.GetEnvironment(*name, password)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(255)
-	}
 
 	code, err := env.Spawn(cmd, nil)
 	if err != nil {
