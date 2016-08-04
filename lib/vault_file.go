@@ -4,9 +4,13 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"math/big"
+	"os"
+	"path/filepath"
 
+	"github.com/miquella/xdg"
 	"golang.org/x/crypto/pbkdf2"
 )
 
@@ -18,15 +22,56 @@ type VaultFile struct {
 	Ciphertext []byte  `json:"ciphertext"`
 }
 
+func readVaultFile(name string) (*VaultFile, error) {
+	existing := xdg.DATA.Find(filepath.Join("vaulted", name))
+	if len(existing) == 0 {
+		return nil, os.ErrNotExist
+	}
+
+	f, err := os.Open(existing[0])
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	d := json.NewDecoder(f)
+	vf := VaultFile{}
+	err = d.Decode(&vf)
+	if err != nil {
+		return nil, err
+	}
+
+	return &vf, nil
+}
+
+func writeVaultFile(name string, vaultFile *VaultFile) error {
+	pathname := xdg.DATA_HOME.Join("vaulted")
+	err := os.MkdirAll(pathname, 0700)
+	if err != nil {
+		return err
+	}
+
+	filename := xdg.DATA_HOME.Join(filepath.Join("vaulted", name))
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	e := json.NewEncoder(f)
+	err = e.Encode(vaultFile)
+	if err != nil {
+		return err
+	}
+
+	removeEnvironment(name)
+
+	return nil
+}
+
 type VaultKey struct {
 	Method  string  `json:"method"`
 	Details Details `json:"details"`
-}
-
-type EnvironmentFile struct {
-	Method     string  `json:"method"`
-	Details    Details `json:"details,omitempty"`
-	Ciphertext []byte  `json:"ciphertext"`
 }
 
 func newVaultKey(previous *VaultKey) *VaultKey {
