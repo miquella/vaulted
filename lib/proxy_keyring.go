@@ -133,7 +133,10 @@ func (pk *ProxyKeyring) Remove(key ssh.PublicKey) error {
 	err := pk.keyring.Remove(key)
 
 	if pk.upstream != nil {
-		pk.upstream.Remove(key)
+		uerr := pk.upstream.Remove(key)
+		if uerr == nil {
+			err = nil
+		}
 	}
 
 	return err
