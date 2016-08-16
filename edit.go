@@ -19,6 +19,12 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+var (
+	green = color.New(color.FgGreen)
+	cyan  = color.New(color.FgCyan)
+	blue  = color.New(color.FgBlue)
+)
+
 func (cli VaultedCLI) Edit() {
 	if len(cli) != 2 {
 		fmt.Fprintln(os.Stderr, "You must specify a vault to edit")
@@ -75,7 +81,7 @@ func awsMenu() {
 	print("m - MFA")
 	print("r - Role")
 	print("s - Show Key")
-	print("d - Delete")
+	print("D - Delete")
 	print("? - Help")
 	print("b - Back")
 	color.Unset()
@@ -85,7 +91,7 @@ func sshKeysHelp() {
 	color.Set(color.FgYellow)
 	print("")
 	print("a - Add")
-	print("d - Delete")
+	print("D - Delete")
 	print("? - Help")
 	print("b - Back")
 	color.Unset()
@@ -95,7 +101,7 @@ func variableMenu() {
 	color.Set(color.FgYellow)
 	print("")
 	print("a - Add")
-	print("d - Delete")
+	print("D - Delete")
 	print("? - Help")
 	print("b - Back")
 	color.Unset()
@@ -104,7 +110,6 @@ func variableMenu() {
 func edit(name string, v *vaulted.Vault) {
 	exit := false
 	for exit == false {
-		cyan := color.New(color.FgCyan)
 		cyan.Printf("\nVault: ")
 		fmt.Printf("%s", name)
 		printVariables(v)
@@ -152,7 +157,7 @@ func aws(v *vaulted.Vault) {
 		if v.AWSKey == nil {
 			input = readMenu("\nEdit AWS key [k,?,b]: ")
 		} else {
-			input = readMenu("\nEdit AWS key [k,m,r,s,d,?,b]: ")
+			input = readMenu("\nEdit AWS key [k,m,r,s,D,?,b]: ")
 		}
 
 		switch input {
@@ -185,7 +190,7 @@ func aws(v *vaulted.Vault) {
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
 			}
-		case "d":
+		case "D":
 			if v.AWSKey != nil {
 				removeKey := readValue("Delete your AWS key? (y/n): ")
 				if removeKey == "y" {
@@ -209,11 +214,11 @@ func sshKeysMenu(v *vaulted.Vault) {
 
 	for exit == false {
 		printSSHKeys(v)
-		input := readMenu("\nEdit ssh keys: [a,d,?,b]: ")
+		input := readMenu("\nEdit ssh keys: [a,D,?,b]: ")
 		switch input {
 		case "a":
 			addSSHKey(v)
-		case "d":
+		case "D":
 			key := readValue("Key: ")
 			_, ok := v.SSHKeys[key]
 			if ok {
@@ -352,7 +357,7 @@ func variables(v *vaulted.Vault) {
 
 	for exit == false {
 		printVariables(v)
-		input := readMenu("\nEdit environment variables: [a,d,?,b]: ")
+		input := readMenu("\nEdit environment variables: [a,D,?,b]: ")
 		switch input {
 		case "a":
 			variableKey := readValue("Name: ")
@@ -361,7 +366,7 @@ func variables(v *vaulted.Vault) {
 				v.Vars = make(map[string]string)
 			}
 			v.Vars[variableKey] = variableValue
-		case "d":
+		case "D":
 			variable := readValue("Variable name: ")
 			_, ok := v.Vars[variable]
 			if ok {
@@ -393,7 +398,8 @@ func printVariables(v *vaulted.Vault) {
 		sort.Strings(keys)
 
 		for _, key := range keys {
-			fmt.Printf("  %s: %s\n", key, v.Vars[key])
+			green.Printf("  %s: ", key)
+			fmt.Printf("%s\n", v.Vars[key])
 		}
 	} else {
 		print("  [Empty]")
@@ -403,17 +409,21 @@ func printVariables(v *vaulted.Vault) {
 func printAWS(v *vaulted.Vault, show bool) {
 	color.Cyan("\nAWS Key:")
 	if v.AWSKey != nil {
-		fmt.Printf("  Key ID: %s\n", v.AWSKey.ID)
+		green.Printf("  Key ID: ")
+		fmt.Printf("%s\n", v.AWSKey.ID)
+		green.Printf("  Secret: ")
 		if !show {
-			fmt.Printf("  Secret: %s\n", "<hidden>")
+			fmt.Printf("%s\n", "<hidden>")
 		} else {
-			fmt.Printf("  Secret: %s\n", v.AWSKey.Secret)
+			fmt.Printf("%s\n", v.AWSKey.Secret)
 		}
 		if v.AWSKey.MFA != "" {
-			fmt.Printf("  MFA: %s\n", v.AWSKey.MFA)
+			green.Printf("  MFA: ")
+			fmt.Printf("%s\n", v.AWSKey.MFA)
 		}
 		if v.AWSKey.Role != "" {
-			fmt.Printf("  Role: %s\n", v.AWSKey.Role)
+			green.Printf("  Role: ")
+			fmt.Printf("%s\n", v.AWSKey.Role)
 		}
 	} else {
 		print("  [Empty]")
@@ -430,7 +440,7 @@ func printSSHKeys(v *vaulted.Vault) {
 		sort.Strings(keys)
 
 		for _, key := range keys {
-			fmt.Printf("  %s\n", key)
+			green.Printf("  %s\n", key)
 		}
 	} else {
 		print("  [Empty]")
@@ -438,9 +448,8 @@ func printSSHKeys(v *vaulted.Vault) {
 }
 
 func printDuration(v *vaulted.Vault) {
-	cyan := color.New(color.FgCyan)
 	cyan.Println("\nEnvironment:")
-	fmt.Print("  Duration: ")
+	green.Print("  Duration: ")
 	var duration time.Duration
 	if v.Duration == 0 {
 		duration = vaulted.STSDurationDefault
@@ -451,7 +460,6 @@ func printDuration(v *vaulted.Vault) {
 }
 
 func readMenu(message string) string {
-	blue := color.New(color.FgBlue)
 	blue.Printf(message)
 	input := readInput(message)
 	print("")
@@ -459,7 +467,6 @@ func readMenu(message string) string {
 }
 
 func readValue(message string) string {
-	green := color.New(color.FgGreen)
 	green.Printf(message)
 	return readInput(message)
 }
