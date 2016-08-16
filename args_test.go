@@ -1,41 +1,70 @@
 package main
 
 import (
+	"reflect"
 	"testing"
 )
 
-func TestParseArgs_Copy(t *testing.T) {
-	good := [][]string{
-		[]string{"cp", "one", "two"},
-		[]string{"copy", "One", "Two"},
+type parseCase struct {
+	Args    []string
+	Command Command
+}
+
+var (
+	goodParseCases = []parseCase{
+		{
+			Args: []string{"cp", "one", "two"},
+			Command: &Copy{
+				OldVaultName: "one",
+				NewVaultName: "two",
+			},
+		},
+		{
+			Args: []string{"copy", "one", "two"},
+			Command: &Copy{
+				OldVaultName: "one",
+				NewVaultName: "two",
+			},
+		},
 	}
 
-	for _, args := range good {
-		cmd, err := ParseArgs(args)
+	badParseCases = []parseCase{
+		{
+			Args: []string{"cp", "one"},
+		},
+		{
+			Args: []string{"cp", "one", "two", "three"},
+		},
+		{
+			Args: []string{"copy", "one"},
+		},
+		{
+			Args: []string{"copy", "one", "two", "three"},
+		},
+	}
+)
+
+type parseExpectation struct {
+	Args    []string
+	Command Command
+}
+
+func TestParseArgs(t *testing.T) {
+	for _, good := range goodParseCases {
+		cmd, err := ParseArgs(good.Args)
 		if err != nil {
-			t.Fatalf("Expected %v to parse, error: %v", args, err)
+			t.Fatalf("Failed to parse '%v': %v", good.Args, err)
 		}
 
-		if cmd == nil {
-			t.Fatalf("Expected %v to parse", args)
-		}
-
-		if _, ok := cmd.(*Copy); !ok {
-			t.Fatalf("Expected %v to produce a Copy command", args)
+		if !reflect.DeepEqual(good.Command, cmd) {
+			t.Fatalf("Expected command: %#v, got: %#v", good.Command, cmd)
 		}
 	}
 
-	bad := [][]string{
-		[]string{"cp", "one"},
-		[]string{"cp", "one", "two", "three"},
-		[]string{"copy", "one"},
-		[]string{"copy", "one", "two", "three"},
-	}
-
-	for _, args := range bad {
-		_, err := ParseArgs(args)
+	for _, bad := range badParseCases {
+		_, err := ParseArgs(bad.Args)
 		if err == nil {
-			t.Fatalf("Expected %v to fail to parse", args)
+			t.Fatalf("Expected '%v' to fail to parse", bad.Args)
 		}
 	}
 }
