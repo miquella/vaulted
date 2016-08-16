@@ -36,7 +36,7 @@ COMMANDS
   Lists all vaults.
 
 `rm`
-  Removes existing vaults.
+  Removes existing vaults. See vaulted-rm(1).
 
 `shell`
   Starts an interactive shell with the secrets for the vault loaded into the shell.

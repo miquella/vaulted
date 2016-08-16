@@ -12,6 +12,7 @@ type parseCase struct {
 
 var (
 	goodParseCases = []parseCase{
+		// Copy
 		{
 			Args: []string{"cp", "one", "two"},
 			Command: &Copy{
@@ -26,9 +27,27 @@ var (
 				NewVaultName: "two",
 			},
 		},
+
+		// Remove
+		{
+			Args: []string{"rm", "one"},
+			Command: &Remove{
+				VaultNames: []string{"one"},
+			},
+		},
+		{
+			Args: []string{"rm", "one", "two", "three", "four"},
+			Command: &Remove{
+				VaultNames: []string{"one", "two", "three", "four"},
+			},
+		},
 	}
 
 	badParseCases = []parseCase{
+		// Copy
+		{
+			Args: []string{"cp"},
+		},
 		{
 			Args: []string{"cp", "one"},
 		},
@@ -36,10 +55,18 @@ var (
 			Args: []string{"cp", "one", "two", "three"},
 		},
 		{
+			Args: []string{"copy"},
+		},
+		{
 			Args: []string{"copy", "one"},
 		},
 		{
 			Args: []string{"copy", "one", "two", "three"},
+		},
+
+		// Remove
+		{
+			Args: []string{"rm"},
 		},
 	}
 )

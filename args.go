@@ -20,6 +20,9 @@ func ParseArgs(args []string) (Command, error) {
 	case "cp", "copy":
 		return parseCopyArgs(args[1:])
 
+	case "rm":
+		return parseRemoveArgs(args[1:])
+
 	default:
 		return nil, nil
 	}
@@ -44,4 +47,20 @@ func parseCopyArgs(args []string) (Command, error) {
 	c.OldVaultName = flag.Arg(0)
 	c.NewVaultName = flag.Arg(1)
 	return c, nil
+}
+
+func parseRemoveArgs(args []string) (Command, error) {
+	flag := pflag.NewFlagSet("remove", pflag.ContinueOnError)
+	err := flag.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	if flag.NArg() < 1 {
+		return nil, ErrNotEnoughArguments
+	}
+
+	r := &Remove{}
+	r.VaultNames = flag.Args()
+	return r, nil
 }

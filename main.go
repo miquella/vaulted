@@ -16,6 +16,11 @@ import (
 	"github.com/spf13/pflag"
 )
 
+type ErrorWithExitCode struct {
+	error
+	ExitCode int
+}
+
 var (
 	ErrUnknownShell = errors.New("Unknown shell")
 )
@@ -32,7 +37,9 @@ func main() {
 		err := command.Run(steward)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+		}
+		if exiterr, ok := err.(ErrorWithExitCode); ok {
+			os.Exit(exiterr.ExitCode)
 		}
 		return
 	}
@@ -135,9 +142,6 @@ func (cli VaultedCLI) Run() {
 
 	case "load":
 		cli.Load()
-
-	case "rm":
-		cli.Remove()
 
 	case "shell":
 		cli.Shell()
@@ -306,24 +310,6 @@ func (cli VaultedCLI) Load() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-}
-
-func (cli VaultedCLI) Remove() {
-	if len(cli) <= 1 {
-		fmt.Fprintln(os.Stderr, "You must specify which vaults to remove")
-		os.Exit(255)
-	}
-
-	failures := 0
-	for _, name := range cli[1:] {
-		err := vaulted.RemoveVault(name)
-		if err != nil {
-			failures++
-			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s: %v", name, err))
-		}
-	}
-
-	os.Exit(failures)
 }
 
 func (cli VaultedCLI) Shell() {
