@@ -21,7 +21,7 @@ COMMANDS
   Copies the content of a vault and saves it as a new vault with a new password. See vaulted-cp(1).
 
 `dump`
-  Writes the content of a vault to stdout as JSON.
+  Writes the content of a vault to stdout as JSON. See vaulted-dump(1).
 
 `edit`
   Interactively edits the content of an existing vault.
@@ -30,7 +30,7 @@ COMMANDS
   Outputs shell commands that load secrets for a vault into the shell.
 
 `load`
-  Uses JSON provided to stdin to create or replace the content of a vault.
+  Uses JSON provided to stdin to create or replace the content of a vault. See vaulted-load(1).
 
 `ls` / `list`
   Lists all vaults. See vaulted-ls(1).

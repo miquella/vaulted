@@ -28,6 +28,14 @@ var (
 			},
 		},
 
+		// Dump
+		{
+			Args: []string{"dump", "one"},
+			Command: &Dump{
+				VaultName: "one",
+			},
+		},
+
 		// List
 		{
 			Args:    []string{"ls"},
@@ -36,6 +44,14 @@ var (
 		{
 			Args:    []string{"list"},
 			Command: &List{},
+		},
+
+		// Load
+		{
+			Args: []string{"load", "one"},
+			Command: &Load{
+				VaultName: "one",
+			},
 		},
 
 		// Remove
@@ -74,12 +90,28 @@ var (
 			Args: []string{"copy", "one", "two", "three"},
 		},
 
+		// Dump
+		{
+			Args: []string{"dump"},
+		},
+		{
+			Args: []string{"dump", "one", "two"},
+		},
+
 		// List
 		{
 			Args: []string{"ls", "one"},
 		},
 		{
 			Args: []string{"list", "one"},
+		},
+
+		// Load
+		{
+			Args: []string{"load"},
+		},
+		{
+			Args: []string{"load", "one", "two"},
 		},
 
 		// Remove
