@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/miquella/ask"
@@ -61,6 +62,7 @@ func mainMenu() {
 	print("a - AWS Key")
 	print("s - SSH Keys")
 	print("v - Variables")
+	print("d - Environment Duration")
 	print("? - Help")
 	print("q - Quit")
 	color.Unset()
@@ -108,8 +110,9 @@ func edit(name string, v *vaulted.Vault) {
 		printVariables(v)
 		printAWS(v, false)
 		printSSHKeys(v)
+		printDuration(v)
 
-		input := readMenu("\nEdit vault: [a,s,v,?,q]: ")
+		input := readMenu("\nEdit vault: [a,s,v,d,?,q]: ")
 		switch input {
 		case "a":
 			aws(v)
@@ -117,6 +120,18 @@ func edit(name string, v *vaulted.Vault) {
 			sshKeysMenu(v)
 		case "v":
 			variables(v)
+		case "d":
+			dur := readValue("Duration (e.g. 15m or 36h): ")
+			duration, err := time.ParseDuration(dur)
+			if err != nil {
+				color.Red("%s", err)
+				break
+			}
+			if duration < 15*time.Minute || duration > 36*time.Hour {
+				color.Red("Duration must be between 15m and 36h")
+				break
+			}
+			v.Duration = duration
 		case "q":
 			exit = true
 		case "?", "help":
@@ -420,6 +435,19 @@ func printSSHKeys(v *vaulted.Vault) {
 	} else {
 		print("  [Empty]")
 	}
+}
+
+func printDuration(v *vaulted.Vault) {
+	cyan := color.New(color.FgCyan)
+	cyan.Println("\nEnvironment:")
+	fmt.Print("  Duration: ")
+	var duration time.Duration
+	if v.Duration == 0 {
+		duration = vaulted.STSDurationDefault
+	} else {
+		duration = v.Duration
+	}
+	fmt.Printf("%s\n", duration.String())
 }
 
 func readMenu(message string) string {
