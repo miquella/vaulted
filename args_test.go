@@ -28,6 +28,16 @@ var (
 			},
 		},
 
+		// List
+		{
+			Args:    []string{"ls"},
+			Command: &List{},
+		},
+		{
+			Args:    []string{"list"},
+			Command: &List{},
+		},
+
 		// Remove
 		{
 			Args: []string{"rm", "one"},
@@ -62,6 +72,14 @@ var (
 		},
 		{
 			Args: []string{"copy", "one", "two", "three"},
+		},
+
+		// List
+		{
+			Args: []string{"ls", "one"},
+		},
+		{
+			Args: []string{"list", "one"},
 		},
 
 		// Remove

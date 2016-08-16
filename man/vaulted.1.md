@@ -33,7 +33,7 @@ COMMANDS
   Uses JSON provided to stdin to create or replace the content of a vault.
 
 `ls` / `list`
-  Lists all vaults.
+  Lists all vaults. See vaulted-ls(1).
 
 `rm`
   Removes existing vaults. See vaulted-rm(1).

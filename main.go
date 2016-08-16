@@ -137,9 +137,6 @@ func (cli VaultedCLI) Run() {
 	case "env":
 		cli.Env()
 
-	case "list", "ls":
-		cli.List()
-
 	case "load":
 		cli.Load()
 
@@ -265,18 +262,6 @@ func (cli VaultedCLI) Env() {
 
 	for _, key := range keys {
 		fmt.Fprintln(os.Stdout, fmt.Sprintf(setVar, key, strings.Replace(env.Vars[key], "\"", quoteReplacement, -1)))
-	}
-}
-
-func (cli VaultedCLI) List() {
-	vaults, err := vaulted.ListVaults()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, fmt.Sprintf("Failed to list vaults: %v", err))
-		os.Exit(1)
-	}
-
-	for _, vault := range vaults {
-		fmt.Fprintln(os.Stdout, vault)
 	}
 }
 
