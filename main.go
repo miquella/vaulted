@@ -21,6 +21,22 @@ var (
 )
 
 func main() {
+	command, err := ParseArgs(os.Args[1:])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(255)
+	}
+
+	if command != nil {
+		steward := &TTYSteward{}
+		err := command.Run(steward)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	// omit the command name that is passed to VaultedCLI
 	var cli VaultedCLI
 	if len(os.Args) > 0 {
