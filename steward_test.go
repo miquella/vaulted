@@ -1,13 +1,61 @@
 package main
 
 import (
+	"bytes"
 	"encoding/base64"
+	"io"
 	"math/rand"
 	"os"
 
 	"github.com/miquella/vaulted/lib"
 	"github.com/miquella/vaulted/lib/legacy"
 )
+
+func CaptureStdout(f func()) []byte {
+	// Save/restore stdout
+	stdout := os.Stdout
+	defer func() {
+		os.Stdout = stdout
+	}()
+
+	// Capture stdout
+	r, w, _ := os.Pipe()
+	defer w.Close()
+	os.Stdout = w
+
+	captured := make(chan []byte)
+	go func() {
+		var buf bytes.Buffer
+		io.Copy(&buf, r)
+		captured <- buf.Bytes()
+		close(captured)
+	}()
+
+	f()
+
+	w.Close()
+	return <-captured
+}
+
+func WriteStdin(b []byte, f func()) {
+	// Save/restore stdin
+	stdin := os.Stdin
+	defer func() {
+		os.Stdin = stdin
+	}()
+
+	// Write to stdin
+	r, w, _ := os.Pipe()
+	defer r.Close()
+	os.Stdin = r
+	go func() {
+		vr := bytes.NewReader(b)
+		io.Copy(w, vr)
+		w.Close()
+	}()
+
+	f()
+}
 
 func NewTestSteward() *TestSteward {
 	return &TestSteward{

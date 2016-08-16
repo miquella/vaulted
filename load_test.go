@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
-	"os"
 	"reflect"
 	"testing"
 
@@ -12,12 +9,6 @@ import (
 )
 
 func TestLoad(t *testing.T) {
-	// Save/restore stdin
-	stdin := os.Stdin
-	defer func() {
-		os.Stdin = stdin
-	}()
-
 	v := &vaulted.Vault{
 		AWSKey: &vaulted.AWSKey{
 			ID:     "id",
@@ -39,24 +30,16 @@ func TestLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Write to stdin
-	r, w, _ := os.Pipe()
-	defer r.Close()
-	os.Stdin = r
-	go func() {
-		vr := bytes.NewReader(b)
-		io.Copy(w, vr)
-		w.Close()
-	}()
-
 	steward := NewTestSteward()
-	l := Load{
-		VaultName: "one",
-	}
-	err = l.Run(steward)
-	if err != nil {
-		t.Fatal(err)
-	}
+	WriteStdin(b, func() {
+		l := Load{
+			VaultName: "one",
+		}
+		err = l.Run(steward)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
 
 	if !steward.VaultExists("one") {
 		t.Fatal("The 'one' vault does not exist")

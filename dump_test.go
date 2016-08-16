@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
-	"os"
 	"reflect"
 	"testing"
 
@@ -12,24 +9,6 @@ import (
 )
 
 func TestDump(t *testing.T) {
-	// Save/restore stdout
-	stdout := os.Stdout
-	defer func() {
-		os.Stdout = stdout
-	}()
-
-	// Capture stdout
-	r, w, _ := os.Pipe()
-	defer w.Close()
-	os.Stdout = w
-	captured := make(chan []byte)
-	go func() {
-		var buf bytes.Buffer
-		io.Copy(&buf, r)
-		captured <- buf.Bytes()
-		close(captured)
-	}()
-
 	steward := NewTestSteward()
 	steward.Vaults["one"] = &vaulted.Vault{
 		AWSKey: &vaulted.AWSKey{
@@ -48,18 +27,18 @@ func TestDump(t *testing.T) {
 		},
 	}
 
-	d := Dump{
-		VaultName: "one",
-	}
-	err := d.Run(steward)
-	if err != nil {
-		t.Fatal(err)
-	}
-	w.Close()
+	output := CaptureStdout(func() {
+		d := Dump{
+			VaultName: "one",
+		}
+		err := d.Run(steward)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
 
-	output := <-captured
 	var v vaulted.Vault
-	err = json.Unmarshal(output, &v)
+	err := json.Unmarshal(output, &v)
 	if err != nil {
 		t.Fatalf("Failed to read vault: %v", err)
 	}
