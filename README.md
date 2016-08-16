@@ -1,12 +1,12 @@
 # vaulted
-Spawning and storage of secure environments
+Spawn environments from securely stored secrets.
 
 With so many secrets floating around in our modern lives, it's a wonder we're
 able to keep track of any of them!
 
 `vaulted` allows you to create vaults of related secrets and then spawn
 environments with these secrets. Vaults can contain secure environment
-variables, AWS credentials, or SSH keys (RSA & ECDSA).
+variables, AWS credentials, or SSH keys (RSA, DSA, & ECDSA).
 
 `vaulted` also attempts to insulate spawned environments from other
 environments on the system. Temporary AWS credentials are created for each
