@@ -4,7 +4,7 @@ vaulted-rm 1
 NAME
 ----
 
-vaulted rm - copies the content of a vault and saves it as a new vault with a new password
+vaulted rm - removes existing vaults
 
 SYNOPSIS
 --------
