@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 )
 
 type List struct{}
@@ -12,6 +13,7 @@ func (l *List) Run(steward Steward) error {
 		return err
 	}
 
+	sort.Strings(vaults)
 	for _, vault := range vaults {
 		fmt.Println(vault)
 	}
