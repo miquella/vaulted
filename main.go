@@ -124,9 +124,6 @@ func (cli VaultedCLI) Run() {
 	case "add", "edit":
 		cli.Edit()
 
-	case "copy", "cp":
-		cli.Copy()
-
 	case "dump":
 		cli.Dump()
 
@@ -180,31 +177,6 @@ func (cli VaultedCLI) PrintUsage() {
 	fmt.Fprintln(os.Stderr, "  vaulted load VAULT           - Load the VAULT from JSON format")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "  vaulted upgrade              - Upgrade from a legacy vaulted format")
-}
-
-func (cli VaultedCLI) Copy() {
-	if len(cli) != 3 {
-		fmt.Fprintln(os.Stderr, "You must specify a vault to copy from and to")
-		os.Exit(255)
-	}
-
-	_, vault, err := openVault(cli[1])
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	password, err := ask.HiddenAsk("New Password: ")
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	err = vaulted.SealVault(password, cli[2], vault)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
 }
 
 func (cli VaultedCLI) Dump() {

@@ -18,7 +18,7 @@ COMMANDS
   Interactively creates the content of a new vault.
 
 `cp` / `copy`
-  Copies the content of a vault and saves it as a new vault with a new password.
+  Copies the content of a vault and saves it as a new vault with a new password. See vaulted-cp(1).
 
 `dump`
   Writes the content of a vault to stdout as JSON.
