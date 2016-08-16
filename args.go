@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"os"
 
 	"github.com/spf13/pflag"
 )
@@ -31,6 +33,9 @@ func ParseArgs(args []string) (Command, error) {
 
 	case "rm":
 		return parseRemoveArgs(args[1:])
+
+	case "shell":
+		return parseShellArgs(args[1:])
 
 	default:
 		return nil, nil
@@ -125,4 +130,29 @@ func parseRemoveArgs(args []string) (Command, error) {
 	r := &Remove{}
 	r.VaultNames = flag.Args()
 	return r, nil
+}
+
+func parseShellArgs(args []string) (Command, error) {
+	flag := pflag.NewFlagSet("shell", pflag.ContinueOnError)
+	err := flag.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	currentVaultedEnv := os.Getenv("VAULTED_ENV")
+	if currentVaultedEnv != "" {
+		return nil, fmt.Errorf("Refusing to spawn a new shell when already in environment '%s'.", currentVaultedEnv)
+	}
+
+	if flag.NArg() < 1 {
+		return nil, ErrNotEnoughArguments
+	}
+
+	if flag.NArg() > 1 {
+		return nil, ErrTooManyArguments
+	}
+
+	s := &Shell{}
+	s.VaultName = flag.Arg(0)
+	return s, nil
 }

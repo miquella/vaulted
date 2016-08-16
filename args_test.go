@@ -67,6 +67,14 @@ var (
 				VaultNames: []string{"one", "two", "three", "four"},
 			},
 		},
+
+		// Shell
+		{
+			Args: []string{"shell", "one"},
+			Command: &Shell{
+				VaultName: "one",
+			},
+		},
 	}
 
 	badParseCases = []parseCase{
@@ -117,6 +125,14 @@ var (
 		// Remove
 		{
 			Args: []string{"rm"},
+		},
+
+		// Shell
+		{
+			Args: []string{"shell"},
+		},
+		{
+			Args: []string{"shell", "one", "two"},
 		},
 	}
 )

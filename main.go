@@ -21,6 +21,7 @@ type ErrorWithExitCode struct {
 
 var (
 	ErrUnknownShell = errors.New("Unknown shell")
+	ErrNoError      = errors.New("")
 )
 
 func main() {
@@ -34,10 +35,15 @@ func main() {
 		steward := &TTYSteward{}
 		err := command.Run(steward)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-		}
-		if exiterr, ok := err.(ErrorWithExitCode); ok {
-			os.Exit(exiterr.ExitCode)
+			exiterr, ok := err.(ErrorWithExitCode)
+			if !ok || exiterr.error != ErrNoError {
+				fmt.Fprintln(os.Stderr, err)
+			}
+			if ok {
+				os.Exit(exiterr.ExitCode)
+			} else {
+				os.Exit(1)
+			}
 		}
 		return
 	}
@@ -132,9 +138,6 @@ func (cli VaultedCLI) Run() {
 	case "env":
 		cli.Env()
 
-	case "shell":
-		cli.Shell()
-
 	case "upgrade":
 		cli.Upgrade()
 
@@ -226,32 +229,6 @@ func (cli VaultedCLI) Env() {
 	for _, key := range keys {
 		fmt.Fprintln(os.Stdout, fmt.Sprintf(setVar, key, strings.Replace(env.Vars[key], "\"", quoteReplacement, -1)))
 	}
-}
-
-func (cli VaultedCLI) Shell() {
-	if len(cli) != 2 {
-		fmt.Fprintln(os.Stderr, "You must specify a vault to spawn a shell with")
-		os.Exit(255)
-	}
-
-	currentVaultedEnv := os.Getenv("VAULTED_ENV")
-	if currentVaultedEnv != "" {
-		fmt.Fprintln(os.Stderr, fmt.Sprintf("Refusing to spawn a new shell when already in environment '%s'.", currentVaultedEnv))
-		os.Exit(255)
-	}
-
-	_, env, err := openEnvironment(cli[1])
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	code, err := env.Spawn([]string{os.Getenv("SHELL"), "--login"}, nil)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(2)
-	}
-	os.Exit(*code)
 }
 
 func (cli VaultedCLI) Spawn() {

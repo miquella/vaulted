@@ -39,7 +39,7 @@ COMMANDS
   Removes existing vaults. See vaulted-rm(1).
 
 `shell`
-  Starts an interactive shell with the secrets for the vault loaded into the shell.
+  Starts an interactive shell with the secrets for the vault loaded into the shell. See vaulted-shell(1).
 
 `upgrade`
   Upgrades legacy vaults to the current vault format.
