@@ -36,6 +36,15 @@ var (
 			},
 		},
 
+		// Env
+		{
+			Args: []string{"env", "one"},
+			Command: &Env{
+				VaultName: "one",
+				Shell:     "fish",
+			},
+		},
+
 		// List
 		{
 			Args:    []string{"ls"},
@@ -112,6 +121,14 @@ var (
 			Args: []string{"dump", "one", "two"},
 		},
 
+		// Env
+		{
+			Args: []string{"env"},
+		},
+		{
+			Args: []string{"env", "one", "two"},
+		},
+
 		// List
 		{
 			Args: []string{"ls", "one"},
@@ -155,7 +172,11 @@ type parseExpectation struct {
 
 func TestParseArgs(t *testing.T) {
 	for _, good := range goodParseCases {
-		cmd, err := ParseArgs(good.Args)
+		var cmd Command
+		var err error
+		CaptureStdout(func() {
+			cmd, err = ParseArgs(good.Args)
+		})
 		if err != nil {
 			t.Fatalf("Failed to parse '%v': %v", good.Args, err)
 		}

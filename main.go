@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/miquella/ask"
@@ -20,8 +18,7 @@ type ErrorWithExitCode struct {
 }
 
 var (
-	ErrUnknownShell = errors.New("Unknown shell")
-	ErrNoError      = errors.New("")
+	ErrNoError = errors.New("")
 )
 
 func main() {
@@ -135,9 +132,6 @@ func (cli VaultedCLI) Run() {
 	case "add", "edit":
 		cli.Edit()
 
-	case "env":
-		cli.Env()
-
 	case "help":
 		cli.PrintUsage()
 		os.Exit(255)
@@ -170,62 +164,6 @@ func (cli VaultedCLI) PrintUsage() {
 	fmt.Fprintln(os.Stderr, "  vaulted load VAULT           - Load the VAULT from JSON format")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "  vaulted upgrade              - Upgrade from a legacy vaulted format")
-}
-
-func (cli VaultedCLI) Env() {
-	if len(cli) != 2 {
-		fmt.Fprintln(os.Stderr, "You must specify a vault for which to get the environment")
-		os.Exit(255)
-	}
-
-	_, env, err := openEnvironment(cli[1])
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	// detect the correct shell
-	shell, err := detectShell()
-	if err == ErrUnknownShell {
-		shell = "sh"
-	}
-
-	usageHint := ""
-	setVar := ""
-	quoteReplacement := "\""
-	switch shell {
-	case "fish":
-		usageHint = "# To load these variables into your shell, execute:\n#   eval (%s)"
-		setVar = "set -x %s \"%s\";"
-		quoteReplacement = "\\\""
-	default:
-		usageHint = "# To load these variables into your shell, execute:\n#   eval $(%s)"
-		setVar = "export %s=\"%s\""
-		quoteReplacement = "\\\""
-	}
-
-	// sort the vars
-	var keys []string
-	for key, _ := range env.Vars {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-
-	// display the vars using the format string for the shell
-	displayUsageHint := true
-	fi, err := os.Stdout.Stat()
-	if err == nil {
-		if fi.Mode()&os.ModeCharDevice == 0 {
-			displayUsageHint = false
-		}
-	}
-	if displayUsageHint {
-		fmt.Fprintln(os.Stdout, fmt.Sprintf(usageHint, strings.Join(os.Args, " ")))
-	}
-
-	for _, key := range keys {
-		fmt.Fprintln(os.Stdout, fmt.Sprintf(setVar, key, strings.Replace(env.Vars[key], "\"", quoteReplacement, -1)))
-	}
 }
 
 func (cli VaultedCLI) Spawn() {
@@ -285,13 +223,4 @@ func (cli VaultedCLI) Spawn() {
 		os.Exit(2)
 	}
 	os.Exit(*code)
-}
-
-func detectShell() (string, error) {
-	shell := os.Getenv("SHELL")
-	if shell != "" {
-		return filepath.Base(shell), nil
-	}
-
-	return "", ErrUnknownShell
 }

@@ -4,11 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/pflag"
 )
 
 var (
+	ErrUnknownShell       = errors.New("Unknown shell")
 	ErrTooManyArguments   = errors.New("too many arguments provided")
 	ErrNotEnoughArguments = errors.New("not enough arguments provided")
 )
@@ -24,6 +26,9 @@ func ParseArgs(args []string) (Command, error) {
 
 	case "dump":
 		return parseDumpArgs(args[1:])
+
+	case "env":
+		return parseEnvArgs(args[1:])
 
 	case "ls", "list":
 		return parseListArgs(args[1:])
@@ -84,6 +89,41 @@ func parseDumpArgs(args []string) (Command, error) {
 	d := &Dump{}
 	d.VaultName = flag.Arg(0)
 	return d, nil
+}
+
+func parseEnvArgs(args []string) (Command, error) {
+	flag := pflag.NewFlagSet("env", pflag.ContinueOnError)
+	err := flag.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	if flag.NArg() < 1 {
+		return nil, ErrNotEnoughArguments
+	}
+
+	if flag.NArg() > 1 {
+		return nil, ErrTooManyArguments
+	}
+
+	shell, err := detectShell()
+	if err == ErrUnknownShell {
+		shell = "sh"
+	}
+
+	usageHint := true
+	fi, err := os.Stdout.Stat()
+	if err == nil {
+		if fi.Mode()&os.ModeCharDevice == 0 {
+			usageHint = false
+		}
+	}
+
+	e := &Env{}
+	e.VaultName = flag.Arg(0)
+	e.Shell = shell
+	e.UsageHint = usageHint
+	return e, nil
 }
 
 func parseListArgs(args []string) (Command, error) {
@@ -173,4 +213,13 @@ func parseUpgradeArgs(args []string) (Command, error) {
 	}
 
 	return &Upgrade{}, nil
+}
+
+func detectShell() (string, error) {
+	shell := os.Getenv("SHELL")
+	if shell != "" {
+		return filepath.Base(shell), nil
+	}
+
+	return "", ErrUnknownShell
 }

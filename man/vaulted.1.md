@@ -27,7 +27,7 @@ COMMANDS
   Interactively edits the content of an existing vault.
 
 `env`
-  Outputs shell commands that load secrets for a vault into the shell.
+  Outputs shell commands that load secrets for a vault into the shell. See vaulted-env(1).
 
 `load`
   Uses JSON provided to stdin to create or replace the content of a vault. See vaulted-load(1).
