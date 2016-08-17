@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"reflect"
 	"testing"
 )
@@ -82,6 +83,7 @@ var (
 			Args: []string{"shell", "one"},
 			Command: &Shell{
 				VaultName: "one",
+				Command:   []string{"/bin/fish", "--login"},
 			},
 		},
 
@@ -171,6 +173,10 @@ type parseExpectation struct {
 }
 
 func TestParseArgs(t *testing.T) {
+	shell := os.Getenv("SHELL")
+	defer os.Setenv("SHELL", shell)
+	os.Setenv("SHELL", "/bin/fish")
+
 	for _, good := range goodParseCases {
 		var cmd Command
 		var err error

@@ -1,11 +1,8 @@
 package main
 
-import (
-	"os"
-)
-
 type Shell struct {
 	VaultName string
+	Command   []string
 }
 
 func (s *Shell) Run(steward Steward) error {
@@ -14,12 +11,7 @@ func (s *Shell) Run(steward Steward) error {
 		return err
 	}
 
-	shell := os.Getenv("SHELL")
-	if shell == "" {
-		shell = "/bin/sh"
-	}
-
-	code, err := env.Spawn([]string{shell, "--login"}, nil)
+	code, err := env.Spawn(s.Command, nil)
 	if err != nil {
 		return ErrorWithExitCode{err, 2}
 	} else if *code != 0 {

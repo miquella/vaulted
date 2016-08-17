@@ -196,8 +196,14 @@ func parseShellArgs(args []string) (Command, error) {
 		return nil, ErrTooManyArguments
 	}
 
+	shell := os.Getenv("SHELL")
+	if shell == "" {
+		shell = "/bin/sh"
+	}
+
 	s := &Shell{}
 	s.VaultName = flag.Arg(0)
+	s.Command = []string{shell, "--login"}
 	return s, nil
 }
 

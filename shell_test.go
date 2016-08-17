@@ -13,6 +13,7 @@ func TestShell(t *testing.T) {
 	WriteStdin([]byte{}, func() {
 		s := Shell{
 			VaultName: "one",
+			Command:   []string{"/bin/sh", "--login"},
 		}
 		err := s.Run(steward)
 		if err != nil {
