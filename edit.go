@@ -25,41 +25,36 @@ var (
 	blue  = color.New(color.FgBlue)
 )
 
-func (cli VaultedCLI) Edit() {
-	if len(cli) != 2 {
-		fmt.Fprintln(os.Stderr, "You must specify a vault to edit")
-		os.Exit(255)
-	}
+type Edit struct {
+	VaultName string
+}
 
+func (e *Edit) Run(steward Steward) error {
 	var password string
 	var vault *vaulted.Vault
 	var err error
 
-	if vaulted.VaultExists(cli[1]) {
-		password, vault, err = openVault(cli[1])
+	if vaulted.VaultExists(e.VaultName) {
+		password, vault, err = steward.OpenVault(e.VaultName, nil)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			return err
 		}
 	} else {
 		vault = &vaulted.Vault{}
 	}
 
-	edit(cli[1], vault)
+	edit(e.VaultName, vault)
 
-	if password == "" {
-		password, err = ask.HiddenAsk("New Password: ")
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
+	var newPassword *string
+	if password != "" {
+		newPassword = &password
 	}
-
-	err = vaulted.SealVault(password, cli[1], vault)
+	err = steward.SealVault(e.VaultName, newPassword, vault)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return err
 	}
+
+	return nil
 }
 
 func mainMenu() {

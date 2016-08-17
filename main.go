@@ -129,9 +129,6 @@ func (cli VaultedCLI) Run() {
 	}
 
 	switch cli[0] {
-	case "add", "edit":
-		cli.Edit()
-
 	case "help":
 		cli.PrintUsage()
 		os.Exit(255)

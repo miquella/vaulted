@@ -21,11 +21,17 @@ func ParseArgs(args []string) (Command, error) {
 	}
 
 	switch args[0] {
+	case "add":
+		return parseAddArgs(args[1:])
+
 	case "cp", "copy":
 		return parseCopyArgs(args[1:])
 
 	case "dump":
 		return parseDumpArgs(args[1:])
+
+	case "edit":
+		return parseEditArgs(args[1:])
 
 	case "env":
 		return parseEnvArgs(args[1:])
@@ -48,6 +54,26 @@ func ParseArgs(args []string) (Command, error) {
 	default:
 		return nil, nil
 	}
+}
+
+func parseAddArgs(args []string) (Command, error) {
+	flag := pflag.NewFlagSet("add", pflag.ContinueOnError)
+	err := flag.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	if flag.NArg() < 1 {
+		return nil, ErrNotEnoughArguments
+	}
+
+	if flag.NArg() > 1 {
+		return nil, ErrTooManyArguments
+	}
+
+	e := &Edit{}
+	e.VaultName = flag.Arg(0)
+	return e, nil
 }
 
 func parseCopyArgs(args []string) (Command, error) {
@@ -89,6 +115,26 @@ func parseDumpArgs(args []string) (Command, error) {
 	d := &Dump{}
 	d.VaultName = flag.Arg(0)
 	return d, nil
+}
+
+func parseEditArgs(args []string) (Command, error) {
+	flag := pflag.NewFlagSet("edit", pflag.ContinueOnError)
+	err := flag.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	if flag.NArg() < 1 {
+		return nil, ErrNotEnoughArguments
+	}
+
+	if flag.NArg() > 1 {
+		return nil, ErrTooManyArguments
+	}
+
+	e := &Edit{}
+	e.VaultName = flag.Arg(0)
+	return e, nil
 }
 
 func parseEnvArgs(args []string) (Command, error) {

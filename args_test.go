@@ -13,6 +13,14 @@ type parseCase struct {
 
 var (
 	goodParseCases = []parseCase{
+		// Add
+		{
+			Args: []string{"add", "one"},
+			Command: &Edit{
+				VaultName: "one",
+			},
+		},
+
 		// Copy
 		{
 			Args: []string{"cp", "one", "two"},
@@ -33,6 +41,14 @@ var (
 		{
 			Args: []string{"dump", "one"},
 			Command: &Dump{
+				VaultName: "one",
+			},
+		},
+
+		// Edit
+		{
+			Args: []string{"edit", "one"},
+			Command: &Edit{
 				VaultName: "one",
 			},
 		},
@@ -95,6 +111,14 @@ var (
 	}
 
 	badParseCases = []parseCase{
+		// Add
+		{
+			Args: []string{"add"},
+		},
+		{
+			Args: []string{"add", "one", "two"},
+		},
+
 		// Copy
 		{
 			Args: []string{"cp"},
@@ -121,6 +145,14 @@ var (
 		},
 		{
 			Args: []string{"dump", "one", "two"},
+		},
+
+		// Edit
+		{
+			Args: []string{"edit"},
+		},
+		{
+			Args: []string{"edit", "one", "two"},
 		},
 
 		// Env

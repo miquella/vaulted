@@ -15,7 +15,7 @@ COMMANDS
 --------
 
 `add`
-  Interactively creates the content of a new vault.
+  Interactively creates the content of a new vault. See vaulted-add(1).
 
 `cp` / `copy`
   Copies the content of a vault and saves it as a new vault with a new password. See vaulted-cp(1).
@@ -24,7 +24,7 @@ COMMANDS
   Writes the content of a vault to stdout as JSON. See vaulted-dump(1).
 
 `edit`
-  Interactively edits the content of an existing vault.
+  Interactively edits the content of an existing vault. See vaulted-edit(1).
 
 `env`
   Outputs shell commands that load secrets for a vault into the shell. See vaulted-env(1).
