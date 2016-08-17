@@ -75,6 +75,12 @@ var (
 				VaultName: "one",
 			},
 		},
+
+		// Upgrade
+		{
+			Args:    []string{"upgrade"},
+			Command: &Upgrade{},
+		},
 	}
 
 	badParseCases = []parseCase{
@@ -133,6 +139,11 @@ var (
 		},
 		{
 			Args: []string{"shell", "one", "two"},
+		},
+
+		// Upgrade
+		{
+			Args: []string{"upgrade", "one"},
 		},
 	}
 )

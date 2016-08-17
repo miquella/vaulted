@@ -37,6 +37,9 @@ func ParseArgs(args []string) (Command, error) {
 	case "shell":
 		return parseShellArgs(args[1:])
 
+	case "upgrade":
+		return parseUpgradeArgs(args[1:])
+
 	default:
 		return nil, nil
 	}
@@ -116,6 +119,7 @@ func parseLoadArgs(args []string) (Command, error) {
 	l.VaultName = flag.Arg(0)
 	return l, nil
 }
+
 func parseRemoveArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("remove", pflag.ContinueOnError)
 	err := flag.Parse(args)
@@ -155,4 +159,18 @@ func parseShellArgs(args []string) (Command, error) {
 	s := &Shell{}
 	s.VaultName = flag.Arg(0)
 	return s, nil
+}
+
+func parseUpgradeArgs(args []string) (Command, error) {
+	flag := pflag.NewFlagSet("upgrade", pflag.ContinueOnError)
+	err := flag.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	if flag.NArg() > 0 {
+		return nil, ErrTooManyArguments
+	}
+
+	return &Upgrade{}, nil
 }

@@ -138,9 +138,6 @@ func (cli VaultedCLI) Run() {
 	case "env":
 		cli.Env()
 
-	case "upgrade":
-		cli.Upgrade()
-
 	case "help":
 		cli.PrintUsage()
 		os.Exit(255)
@@ -288,42 +285,6 @@ func (cli VaultedCLI) Spawn() {
 		os.Exit(2)
 	}
 	os.Exit(*code)
-}
-
-func (cli VaultedCLI) Upgrade() {
-	password, environments, err := openLegacyVault()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	// collect the current list of vaults (so we don't overwrite any)
-	vaults, _ := vaulted.ListVaults()
-	existingVaults := map[string]bool{}
-	for _, name := range vaults {
-		existingVaults[name] = true
-	}
-
-	failed := 0
-	for name, env := range environments {
-		if existingVaults[name] {
-			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s: skipped (vault already exists)", name))
-			continue
-		}
-
-		vault := vaulted.Vault{
-			Vars: env.Vars,
-		}
-		err = vaulted.SealVault(password, name, &vault)
-		if err != nil {
-			failed++
-			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s: %v", name, err))
-		} else {
-			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s: upgraded", name))
-		}
-	}
-
-	os.Exit(failed)
 }
 
 func detectShell() (string, error) {

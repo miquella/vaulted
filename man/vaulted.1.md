@@ -42,4 +42,4 @@ COMMANDS
   Starts an interactive shell with the secrets for the vault loaded into the shell. See vaulted-shell(1).
 
 `upgrade`
-  Upgrades legacy vaults to the current vault format.
+  Upgrades legacy vaults to the current vault format. See vaulted-upgrade(1).

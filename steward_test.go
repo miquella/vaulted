@@ -67,6 +67,9 @@ func NewTestSteward() *TestSteward {
 type TestSteward struct {
 	Passwords map[string]string
 	Vaults    map[string]*vaulted.Vault
+
+	LegacyPassword     string
+	LegacyEnvironments map[string]legacy.Environment
 }
 
 func (ts TestSteward) VaultExists(name string) bool {
@@ -155,7 +158,7 @@ func (ts TestSteward) GetEnvironment(name string, password *string) (string, *va
 }
 
 func (ts TestSteward) OpenLegacyVault() (password string, environments map[string]legacy.Environment, err error) {
-	return "", nil, os.ErrNotExist
+	return ts.LegacyPassword, ts.LegacyEnvironments, nil
 }
 
 func cloneVault(vault *vaulted.Vault) *vaulted.Vault {
