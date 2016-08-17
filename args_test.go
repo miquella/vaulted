@@ -106,6 +106,20 @@ var (
 			},
 		},
 
+		// Help
+		{
+			Args:    []string{},
+			Command: &Help{},
+		},
+		{
+			Args:    []string{"-h"},
+			Command: &Help{},
+		},
+		{
+			Args:    []string{"--help"},
+			Command: &Help{},
+		},
+
 		// List
 		{
 			Args:    []string{"ls"},

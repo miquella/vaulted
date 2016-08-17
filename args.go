@@ -20,10 +20,15 @@ var (
 
 func ParseArgs(args []string) (Command, error) {
 	flag := spawnFlagSet()
+	help := flag.BoolP("help", "h", false, "Show usage information")
 	flag.SetInterspersed(false)
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
+	}
+
+	if *help {
+		return &Help{}, nil
 	}
 
 	if flag.Changed("name") || flag.Changed("interactive") {
@@ -33,7 +38,7 @@ func ParseArgs(args []string) (Command, error) {
 	// Parse command
 	commandArgs := flag.Args()
 	if len(commandArgs) == 0 || flag.ArgsLenAtDash() == 0 {
-		return nil, nil
+		return &Help{}, nil
 	}
 
 	if flag.ArgsLenAtDash() > -1 {

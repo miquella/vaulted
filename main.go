@@ -22,12 +22,6 @@ func main() {
 		os.Exit(255)
 	}
 
-	if command == nil {
-		// no command, display usage help instead
-		PrintUsage()
-		os.Exit(255)
-	}
-
 	steward := &TTYSteward{}
 	err = command.Run(steward)
 	if err != nil {
@@ -43,7 +37,9 @@ func main() {
 	}
 }
 
-func PrintUsage() {
+type Help struct{}
+
+func (h *Help) Run(steward Steward) error {
 	fmt.Fprintln(os.Stderr, "NAME")
 	fmt.Fprintln(os.Stderr, "    vaulted - spawn environments from securely stored secrets")
 	fmt.Fprintln(os.Stderr, "")
@@ -67,4 +63,5 @@ func PrintUsage() {
 	fmt.Fprintln(os.Stderr, "    shell      - Starts an interactive shell with the secrets for the vault loaded into the shell.")
 	fmt.Fprintln(os.Stderr, "    upgrade    - Upgrades legacy vaults to the current vault format.")
 
+	return ErrorWithExitCode{ErrNoError, 255}
 }
