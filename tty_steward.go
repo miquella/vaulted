@@ -102,7 +102,7 @@ func (*TTYSteward) GetEnvironment(name string, password *string) (string, *vault
 	var env *vaulted.Environment
 	var err error
 	if password != nil {
-		env, err = vaulted.GetEnvironment(*password, name)
+		env, err = vaulted.GetEnvironment(name, *password)
 	} else {
 		for i := 0; i < 3; i++ {
 			var requestedPassword string
@@ -111,7 +111,7 @@ func (*TTYSteward) GetEnvironment(name string, password *string) (string, *vault
 				break
 			}
 
-			env, err = vaulted.GetEnvironment(requestedPassword, name)
+			env, err = vaulted.GetEnvironment(name, requestedPassword)
 			if err != vaulted.ErrInvalidPassword {
 				password = &requestedPassword
 				break
