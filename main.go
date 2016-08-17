@@ -4,12 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
-
-	"github.com/miquella/ask"
-	"github.com/miquella/vaulted/lib"
-	"github.com/miquella/vaulted/lib/legacy"
-	"github.com/spf13/pflag"
 )
 
 type ErrorWithExitCode struct {
@@ -28,196 +22,49 @@ func main() {
 		os.Exit(255)
 	}
 
-	if command != nil {
-		steward := &TTYSteward{}
-		err := command.Run(steward)
-		if err != nil {
-			exiterr, ok := err.(ErrorWithExitCode)
-			if !ok || exiterr.error != ErrNoError {
-				fmt.Fprintln(os.Stderr, err)
-			}
-			if ok {
-				os.Exit(exiterr.ExitCode)
-			} else {
-				os.Exit(1)
-			}
-		}
-		return
+	if command == nil {
+		// no command, display usage help instead
+		PrintUsage()
+		os.Exit(255)
 	}
 
-	// omit the command name that is passed to VaultedCLI
-	var cli VaultedCLI
-	if len(os.Args) > 0 {
-		cli = VaultedCLI(os.Args[1:])
-	}
-
-	cli.Run()
-}
-
-func openEnvironment(name string) (password string, env *vaulted.Environment, err error) {
-	password = os.Getenv("VAULTED_PASSWORD")
-	if password != "" {
-		env, err = vaulted.GetEnvironment(name, password)
-	} else {
-		for i := 0; i < 3; i++ {
-			password, err = ask.HiddenAsk("Password: ")
-			if err != nil {
-				break
-			}
-
-			env, err = vaulted.GetEnvironment(name, password)
-			if err != vaulted.ErrInvalidPassword {
-				break
-			}
-		}
-	}
-	return
-}
-
-func openVault(name string) (password string, vault *vaulted.Vault, err error) {
-	password = os.Getenv("VAULTED_PASSWORD")
-	if password != "" {
-		vault, err = vaulted.OpenVault(password, name)
-	} else {
-		for i := 0; i < 3; i++ {
-			password, err = ask.HiddenAsk("Password: ")
-			if err != nil {
-				break
-			}
-
-			vault, err = vaulted.OpenVault(password, name)
-			if err != vaulted.ErrInvalidPassword {
-				break
-			}
-		}
-	}
-	return
-}
-
-func openLegacyVault() (password string, environments map[string]legacy.Environment, err error) {
-	legacyVault, err := legacy.ReadVault()
+	steward := &TTYSteward{}
+	err = command.Run(steward)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	password = os.Getenv("VAULTED_PASSWORD")
-	if password != "" {
-		environments, err = legacyVault.DecryptEnvironments(password)
-	} else {
-		for i := 0; i < 3; i++ {
-			password, err = ask.HiddenAsk("Legacy Password: ")
-			if err != nil {
-				break
-			}
-
-			environments, err = legacyVault.DecryptEnvironments(password)
-			if err != legacy.ErrInvalidPassword {
-				break
-			}
+		exiterr, ok := err.(ErrorWithExitCode)
+		if !ok || exiterr.error != ErrNoError {
+			fmt.Fprintln(os.Stderr, err)
 		}
-	}
-	return
-}
-
-type VaultedCLI []string
-
-func (cli VaultedCLI) Run() {
-	if len(cli) == 0 {
-		cli.PrintUsage()
-		os.Exit(255)
-	}
-
-	switch cli[0] {
-	case "help":
-		cli.PrintUsage()
-		os.Exit(255)
-
-	default:
-		if strings.HasPrefix(cli[0], "-") {
-			cli.Spawn()
+		if ok {
+			os.Exit(exiterr.ExitCode)
 		} else {
-			fmt.Fprintf(os.Stderr, "Invalid command: %s\n", cli[0])
-			cli.PrintUsage()
-			os.Exit(255)
+			os.Exit(1)
 		}
 	}
 }
 
-func (cli VaultedCLI) PrintUsage() {
-	fmt.Fprintln(os.Stderr, "USAGE:")
-	fmt.Fprintln(os.Stderr, "  vaulted -n VAULT [--] CMD    - Spawn CMD in the VAULT environment")
-	fmt.Fprintln(os.Stderr, "  vaulted -n VAULT [-i]        - Spawn an interactive shell in the VAULT environment")
+func PrintUsage() {
+	fmt.Fprintln(os.Stderr, "NAME")
+	fmt.Fprintln(os.Stderr, "    vaulted - spawn environments from securely stored secrets")
 	fmt.Fprintln(os.Stderr, "")
-	fmt.Fprintln(os.Stderr, "  vaulted ls                   - List all vaults")
-	fmt.Fprintln(os.Stderr, "  vaulted add VAULT            - Interactively add the VAULT")
-	fmt.Fprintln(os.Stderr, "  vaulted edit VAULT           - Interactively edit the VAULT")
-	fmt.Fprintln(os.Stderr, "  vaulted cp VAULT NEWVAULT    - Creates a copy of VAULT as NEWVAULT")
-	fmt.Fprintln(os.Stderr, "  vaulted rm VAULT [VAULT...]  - Remove the VAULT environment(s)")
-	fmt.Fprintln(os.Stderr, "  vaulted env VAULT            - Displays the environment variables for the VAULT environment")
-	fmt.Fprintln(os.Stderr, "  vaulted shell VAULT          - Spawn an interactive shell in the VAULT environment")
+	fmt.Fprintln(os.Stderr, "SYNOPSIS")
+	fmt.Fprintln(os.Stderr, "    vaulted -n VAULT [-i]")
+	fmt.Fprintln(os.Stderr, "    vaulted -n VAULT [--] CMD")
+	fmt.Fprintln(os.Stderr, "    vaulted COMMAND [args...]")
 	fmt.Fprintln(os.Stderr, "")
-	fmt.Fprintln(os.Stderr, "  vaulted dump VAULT           - Dump the VAULT in JSON format")
-	fmt.Fprintln(os.Stderr, "  vaulted load VAULT           - Load the VAULT from JSON format")
+	fmt.Fprintln(os.Stderr, "DESCRIPTION")
+	fmt.Fprintln(os.Stderr, "    If no *COMMAND* is provided, `vaulted` either spawns *CMD* (if provided) or spawns an interactive shell.")
 	fmt.Fprintln(os.Stderr, "")
-	fmt.Fprintln(os.Stderr, "  vaulted upgrade              - Upgrade from a legacy vaulted format")
-}
+	fmt.Fprintln(os.Stderr, "COMMANDS")
+	fmt.Fprintln(os.Stderr, "    add        - Interactively creates the content of a new vault.")
+	fmt.Fprintln(os.Stderr, "    cp / copy  - Copies the content of a vault and saves it as a new vault with a new password.")
+	fmt.Fprintln(os.Stderr, "    dump       - Writes the content of a vault to stdout as JSON.")
+	fmt.Fprintln(os.Stderr, "    edit       - Interactively edits the content of an existing vault.")
+	fmt.Fprintln(os.Stderr, "    env        - Outputs shell commands that load secrets for a vault into the shell.")
+	fmt.Fprintln(os.Stderr, "    load       - Uses JSON provided to stdin to create or replace the content of a vault.")
+	fmt.Fprintln(os.Stderr, "    ls / list  - Lists all vaults.")
+	fmt.Fprintln(os.Stderr, "    rm         - Removes existing vaults.")
+	fmt.Fprintln(os.Stderr, "    shell      - Starts an interactive shell with the secrets for the vault loaded into the shell.")
+	fmt.Fprintln(os.Stderr, "    upgrade    - Upgrades legacy vaults to the current vault format.")
 
-func (cli VaultedCLI) Spawn() {
-	spawnFlags := pflag.NewFlagSet("spawn", pflag.ContinueOnError)
-	spawnFlags.SetInterspersed(false)
-
-	name := spawnFlags.StringP("name", "n", "", "Name of the vault to spawn")
-	interactive := spawnFlags.BoolP("interactive", "i", false, "Spawn an interactive shell")
-	force := spawnFlags.BoolP("force", "f", false, "Bypass protective checks and force spawning of the environment")
-	help := spawnFlags.Bool("help", false, "Show usage help")
-	err := spawnFlags.Parse([]string(cli))
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(255)
-	}
-
-	if *help {
-		cli.PrintUsage()
-		os.Exit(255)
-	}
-
-	currentVaultedEnv := os.Getenv("VAULTED_ENV")
-	if !*force && currentVaultedEnv != "" {
-		fmt.Fprintln(os.Stderr, fmt.Sprintf("Refusing to spawn a new environment when already in environment '%s'. Use --force to override.", currentVaultedEnv))
-		os.Exit(255)
-	}
-
-	if spawnFlags.ArgsLenAtDash() > 0 {
-		fmt.Fprintln(os.Stderr, fmt.Sprintf("Unknown argument(s): %v", spawnFlags.Args()[:spawnFlags.ArgsLenAtDash()]))
-		os.Exit(255)
-	}
-
-	if *name == "" {
-		*name = os.Getenv("VAULTED_DEFAULT_ENV")
-	}
-
-	if *name == "" {
-		fmt.Fprintln(os.Stderr, "A vault must be specified when spawning")
-		os.Exit(255)
-	}
-
-	_, env, err := openEnvironment(cli[1])
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	var cmd []string
-	if *interactive || len(spawnFlags.Args()) == 0 {
-		cmd = append(cmd, os.Getenv("SHELL"), "--login")
-	}
-	cmd = append(cmd, spawnFlags.Args()...)
-
-	code, err := env.Spawn(cmd, nil)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(2)
-	}
-	os.Exit(*code)
 }

@@ -5,55 +5,122 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/pflag"
 )
 
 var (
-	ErrUnknownShell       = errors.New("Unknown shell")
-	ErrTooManyArguments   = errors.New("too many arguments provided")
-	ErrNotEnoughArguments = errors.New("not enough arguments provided")
+	ErrUnknownShell                = errors.New("Unknown shell")
+	ErrTooManyArguments            = errors.New("too many arguments provided")
+	ErrNotEnoughArguments          = errors.New("not enough arguments provided")
+	ErrVaultNameRequired           = errors.New("A vault name must be specified")
+	ErrMixingCommandAndInteractive = errors.New("Cannot mix an interactive shell with command arguments")
 )
 
 func ParseArgs(args []string) (Command, error) {
-	if len(args) == 0 {
+	flag := spawnFlagSet()
+	flag.SetInterspersed(false)
+	err := flag.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	if flag.Changed("name") || flag.Changed("interactive") {
+		return parseSpawnArgs(args)
+	}
+
+	// Parse command
+	commandArgs := flag.Args()
+	if len(commandArgs) == 0 || flag.ArgsLenAtDash() == 0 {
 		return nil, nil
 	}
 
-	switch args[0] {
+	if flag.ArgsLenAtDash() > -1 {
+		commandArgsWithDash := append([]string{}, commandArgs[:flag.ArgsLenAtDash()]...)
+		commandArgsWithDash = append(commandArgsWithDash, "--")
+		commandArgsWithDash = append(commandArgsWithDash, commandArgs[flag.ArgsLenAtDash():]...)
+		commandArgs = commandArgsWithDash
+	}
+
+	switch commandArgs[0] {
 	case "add":
-		return parseAddArgs(args[1:])
+		return parseAddArgs(commandArgs[1:])
 
 	case "cp", "copy":
-		return parseCopyArgs(args[1:])
+		return parseCopyArgs(commandArgs[1:])
 
 	case "dump":
-		return parseDumpArgs(args[1:])
+		return parseDumpArgs(commandArgs[1:])
 
 	case "edit":
-		return parseEditArgs(args[1:])
+		return parseEditArgs(commandArgs[1:])
 
 	case "env":
-		return parseEnvArgs(args[1:])
+		return parseEnvArgs(commandArgs[1:])
 
 	case "ls", "list":
-		return parseListArgs(args[1:])
+		return parseListArgs(commandArgs[1:])
 
 	case "load":
-		return parseLoadArgs(args[1:])
+		return parseLoadArgs(commandArgs[1:])
 
 	case "rm":
-		return parseRemoveArgs(args[1:])
+		return parseRemoveArgs(commandArgs[1:])
 
 	case "shell":
-		return parseShellArgs(args[1:])
+		return parseShellArgs(commandArgs[1:])
 
 	case "upgrade":
-		return parseUpgradeArgs(args[1:])
+		return parseUpgradeArgs(commandArgs[1:])
 
 	default:
-		return nil, nil
+		return nil, fmt.Errorf("Unknown command: %s", commandArgs[0])
 	}
+}
+
+func spawnFlagSet() *pflag.FlagSet {
+	flag := pflag.NewFlagSet("vaulted", pflag.ContinueOnError)
+	flag.StringP("name", "n", "", "Name of the vault to use")
+	flag.BoolP("interactive", "i", false, "Spawn interactive shell (if -n is used, but no additional arguments a provided, interactive is the default)")
+	return flag
+}
+
+func parseSpawnArgs(args []string) (Command, error) {
+	flag := spawnFlagSet()
+	err := flag.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	name, _ := flag.GetString("name")
+	interactive, _ := flag.GetBool("interactive")
+
+	if name == "" {
+		return nil, ErrVaultNameRequired
+	}
+
+	if flag.ArgsLenAtDash() > 0 {
+		return nil, fmt.Errorf("Unknown arguments: %s", strings.Join(flag.Args()[:flag.ArgsLenAtDash()], " "))
+	}
+
+	if interactive && flag.NArg() > 0 {
+		return nil, ErrMixingCommandAndInteractive
+	}
+
+	currentVaultedEnv := os.Getenv("VAULTED_ENV")
+	if currentVaultedEnv != "" {
+		return nil, fmt.Errorf("Refusing to spawn a new shell when already in environment '%s'.", currentVaultedEnv)
+	}
+
+	s := &Spawn{}
+	s.VaultName = name
+	if interactive || flag.NArg() == 0 {
+		s.Command = interactiveShellCommand()
+	} else {
+		s.Command = flag.Args()
+	}
+	return s, nil
 }
 
 func parseAddArgs(args []string) (Command, error) {
@@ -242,14 +309,9 @@ func parseShellArgs(args []string) (Command, error) {
 		return nil, ErrTooManyArguments
 	}
 
-	shell := os.Getenv("SHELL")
-	if shell == "" {
-		shell = "/bin/sh"
-	}
-
 	s := &Spawn{}
 	s.VaultName = flag.Arg(0)
-	s.Command = []string{shell, "--login"}
+	s.Command = interactiveShellCommand()
 	return s, nil
 }
 
@@ -265,6 +327,15 @@ func parseUpgradeArgs(args []string) (Command, error) {
 	}
 
 	return &Upgrade{}, nil
+}
+
+func interactiveShellCommand() []string {
+	shell := os.Getenv("SHELL")
+	if shell == "" {
+		shell = "/bin/sh"
+	}
+
+	return []string{shell, "--login"}
 }
 
 func detectShell() (string, error) {

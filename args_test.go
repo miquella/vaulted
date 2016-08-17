@@ -13,6 +13,50 @@ type parseCase struct {
 
 var (
 	goodParseCases = []parseCase{
+		// Spawn
+		{
+			Args: []string{"-n", "one"},
+			Command: &Spawn{
+				VaultName: "one",
+				Command:   []string{"/bin/fish", "--login"},
+			},
+		},
+		{
+			Args: []string{"-n", "one", "-i"},
+			Command: &Spawn{
+				VaultName: "one",
+				Command:   []string{"/bin/fish", "--login"},
+			},
+		},
+		{
+			Args: []string{"-i", "-n", "one"},
+			Command: &Spawn{
+				VaultName: "one",
+				Command:   []string{"/bin/fish", "--login"},
+			},
+		},
+		{
+			Args: []string{"-in", "one"},
+			Command: &Spawn{
+				VaultName: "one",
+				Command:   []string{"/bin/fish", "--login"},
+			},
+		},
+		{
+			Args: []string{"-n", "one", "some", "command"},
+			Command: &Spawn{
+				VaultName: "one",
+				Command:   []string{"some", "command"},
+			},
+		},
+		{
+			Args: []string{"-n", "one", "--", "some", "command"},
+			Command: &Spawn{
+				VaultName: "one",
+				Command:   []string{"some", "command"},
+			},
+		},
+
 		// Add
 		{
 			Args: []string{"add", "one"},
@@ -111,6 +155,20 @@ var (
 	}
 
 	badParseCases = []parseCase{
+		// Spawn
+		{
+			Args: []string{"-i"},
+		},
+		{
+			Args: []string{"-n", "one", "-i", "some", "command"},
+		},
+		{
+			Args: []string{"-n", "one", "-i", "--", "some", "command"},
+		},
+		{
+			Args: []string{"-n", "one", "some", "--", "command"},
+		},
+
 		// Add
 		{
 			Args: []string{"add"},
@@ -196,6 +254,11 @@ var (
 		{
 			Args: []string{"upgrade", "one"},
 		},
+
+		// Misc
+		{
+			Args: []string{"bobby"},
+		},
 	}
 )
 
@@ -216,18 +279,18 @@ func TestParseArgs(t *testing.T) {
 			cmd, err = ParseArgs(good.Args)
 		})
 		if err != nil {
-			t.Fatalf("Failed to parse '%v': %v", good.Args, err)
+			t.Errorf("Failed to parse '%v': %v", good.Args, err)
 		}
 
 		if !reflect.DeepEqual(good.Command, cmd) {
-			t.Fatalf("Expected command: %#v, got: %#v", good.Command, cmd)
+			t.Errorf("Expected command: %#v, got: %#v", good.Command, cmd)
 		}
 	}
 
 	for _, bad := range badParseCases {
 		_, err := ParseArgs(bad.Args)
 		if err == nil {
-			t.Fatalf("Expected '%v' to fail to parse", bad.Args)
+			t.Errorf("Expected '%v' to fail to parse", bad.Args)
 		}
 	}
 }

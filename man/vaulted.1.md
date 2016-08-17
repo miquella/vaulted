@@ -9,7 +9,18 @@ vaulted - spawn environments from securely stored secrets
 SYNOPSIS
 --------
 
+`vaulted` `-n` *name* [`-i`]  
+`vaulted` `-n` *name* [`--`] *CMD*
+
 `vaulted` *COMMAND* [*args...*]
+
+DESCRIPTION
+-----------
+
+If no *COMMAND* is provided, `vaulted` either spawns *CMD* (if provided) or
+spawns an interactive shell.
+
+`--` may be used to differentiate the *CMD* from `vaulted`'s own arguments.
 
 COMMANDS
 --------
