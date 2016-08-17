@@ -6,14 +6,14 @@ import (
 	"github.com/miquella/vaulted/lib"
 )
 
-func TestShell(t *testing.T) {
+func TestSpawn(t *testing.T) {
 	steward := NewTestSteward()
 	steward.Vaults["one"] = &vaulted.Vault{}
 
-	WriteStdin([]byte{}, func() {
-		s := Shell{
+	CaptureStdout(func() {
+		s := Spawn{
 			VaultName: "one",
-			Command:   []string{"/bin/sh", "--login"},
+			Command:   []string{"go", "version"},
 		}
 		err := s.Run(steward)
 		if err != nil {

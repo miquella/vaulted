@@ -1,11 +1,11 @@
 package main
 
-type Shell struct {
+type Spawn struct {
 	VaultName string
 	Command   []string
 }
 
-func (s *Shell) Run(steward Steward) error {
+func (s *Spawn) Run(steward Steward) error {
 	_, env, err := steward.GetEnvironment(s.VaultName, nil)
 	if err != nil {
 		return err

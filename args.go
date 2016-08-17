@@ -201,7 +201,7 @@ func parseShellArgs(args []string) (Command, error) {
 		shell = "/bin/sh"
 	}
 
-	s := &Shell{}
+	s := &Spawn{}
 	s.VaultName = flag.Arg(0)
 	s.Command = []string{shell, "--login"}
 	return s, nil

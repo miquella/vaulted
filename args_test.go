@@ -81,7 +81,7 @@ var (
 		// Shell
 		{
 			Args: []string{"shell", "one"},
-			Command: &Shell{
+			Command: &Spawn{
 				VaultName: "one",
 				Command:   []string{"/bin/fish", "--login"},
 			},
