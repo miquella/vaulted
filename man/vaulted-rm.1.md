@@ -9,7 +9,7 @@ vaulted rm - removes existing vaults
 SYNOPSIS
 --------
 
-`vaulted rm` *&lt;name&gt;* *...*
+`vaulted rm` *name* *...*
 
 DESCRIPTION
 -----------

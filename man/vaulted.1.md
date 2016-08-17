@@ -9,7 +9,7 @@ vaulted - spawn environments from securely stored secrets
 SYNOPSIS
 --------
 
-`vaulted` COMMAND [*args...*]
+`vaulted` *COMMAND* [*args...*]
 
 COMMANDS
 --------

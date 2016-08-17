@@ -9,7 +9,7 @@ vaulted dump - writes the content of a vault to stdout as JSON
 SYNOPSIS
 --------
 
-`vaulted dump` *&lt;name&gt;*
+`vaulted dump` *name*
 
 DESCRIPTION
 -----------

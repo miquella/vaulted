@@ -9,7 +9,7 @@ vaulted env - outputs shell commands that load secrets for a vault into the shel
 SYNOPSIS
 --------
 
-`vaulted env` *&lt;name&gt;*
+`vaulted env` *name*
 
 DESCRIPTION
 -----------

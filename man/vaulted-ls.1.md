@@ -9,8 +9,7 @@ vaulted ls - lists all vaults
 SYNOPSIS
 --------
 
-`vaulted ls`
-
+`vaulted ls`  
 `vaulted list`
 
 DESCRIPTION

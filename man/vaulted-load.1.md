@@ -9,7 +9,7 @@ vaulted load - uses JSON provided to stdin to create or replace the content of a
 SYNOPSIS
 --------
 
-`vaulted load` *&lt;name&gt;*
+`vaulted load` *name*
 
 DESCRIPTION
 -----------

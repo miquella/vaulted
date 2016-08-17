@@ -9,9 +9,8 @@ vaulted cp - copies the content of a vault and saves it as a new vault with a ne
 SYNOPSIS
 --------
 
-`vaulted cp` *&lt;old&gt;* *&lt;new&gt;*
-
-`vaulted copy` *&lt;old&gt;* *&lt;new&gt;*
+`vaulted cp` *old* *new*  
+`vaulted copy` *old* *new*
 
 DESCRIPTION
 -----------

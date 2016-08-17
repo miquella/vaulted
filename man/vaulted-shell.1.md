@@ -9,7 +9,7 @@ vaulted shell - starts an interactive shell with the secrets for the vault loade
 SYNOPSIS
 --------
 
-`vaulted shell` *&lt;name&gt;*
+`vaulted shell` *name*
 
 DESCRIPTION
 -----------

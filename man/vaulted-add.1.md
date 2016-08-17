@@ -9,7 +9,7 @@ vaulted add - interactively creates the content of a new vault
 SYNOPSIS
 --------
 
-`vaulted add` *&lt;name&gt;*
+`vaulted add` *name*
 
 DESCRIPTION
 -----------

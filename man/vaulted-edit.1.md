@@ -9,7 +9,7 @@ vaulted edit - interactively edits the content of an existing vault
 SYNOPSIS
 --------
 
-`vaulted edit` *&lt;name&gt;*
+`vaulted edit` *name*
 
 DESCRIPTION
 -----------
