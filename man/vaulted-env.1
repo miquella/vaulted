@@ -1,0 +1,19 @@
+.TH vaulted\-env 1
+.SH NAME
+.PP
+vaulted env \- outputs shell commands that load secrets for a vault into the shell
+.SH SYNOPSIS
+.PP
+\fB\fCvaulted env\fR \fIname\fP
+.SH DESCRIPTION
+.PP
+Creates an environment using variables and the AWS key stored in the vault. The
+resulting environment variables are used to generate shell commands that will
+load the secrets into a shell.
+.PP
+The shell is autodetected from the \fB\fCSHELL\fR environment variable, if the shell
+is unknown or unspecified, \fB\fCsh\fR compatible commands are emitted.
+.PP
+\fINote:\fP SSH keys are ignored when generating environments this way. This is due
+to the inability to track the lifetime of the environment, which means the SSH
+agent would exist indefinitely.

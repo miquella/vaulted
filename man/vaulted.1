@@ -1,0 +1,58 @@
+.TH vaulted 1
+.SH NAME
+.PP
+vaulted \- spawn environments from securely stored secrets
+.SH SYNOPSIS
+.PP
+\fB\fCvaulted\fR \fB\fC\-n\fR \fIname\fP [\fB\fC\-i\fR]
+.br
+\fB\fCvaulted\fR \fB\fC\-n\fR \fIname\fP [\fB\fC\-\-\fR] \fICMD\fP
+.PP
+\fB\fCvaulted\fR \fICOMMAND\fP [\fIargs...\fP]
+.SH DESCRIPTION
+.PP
+If no \fICOMMAND\fP is provided, \fB\fCvaulted\fR either spawns \fICMD\fP (if provided) or
+spawns an interactive shell.
+.PP
+\fB\fC\-\-\fR may be used to differentiate the \fICMD\fP from \fB\fCvaulted\fR\&'s own arguments.
+.SH COMMANDS
+.TP
+\fB\fCadd\fR
+Interactively creates the content of a new vault. See 
+.BR vaulted-add (1).
+.TP
+\fB\fCcp\fR / \fB\fCcopy\fR
+Copies the content of a vault and saves it as a new vault with a new password. See 
+.BR vaulted-cp (1).
+.TP
+\fB\fCdump\fR
+Writes the content of a vault to stdout as JSON. See 
+.BR vaulted-dump (1).
+.TP
+\fB\fCedit\fR
+Interactively edits the content of an existing vault. See 
+.BR vaulted-edit (1).
+.TP
+\fB\fCenv\fR
+Outputs shell commands that load secrets for a vault into the shell. See 
+.BR vaulted-env (1).
+.TP
+\fB\fCload\fR
+Uses JSON provided to stdin to create or replace the content of a vault. See 
+.BR vaulted-load (1).
+.TP
+\fB\fCls\fR / \fB\fClist\fR
+Lists all vaults. See 
+.BR vaulted-ls (1).
+.TP
+\fB\fCrm\fR
+Removes existing vaults. See 
+.BR vaulted-rm (1).
+.TP
+\fB\fCshell\fR
+Starts an interactive shell with the secrets for the vault loaded into the shell. See 
+.BR vaulted-shell (1).
+.TP
+\fB\fCupgrade\fR
+Upgrades legacy vaults to the current vault format. See 
+.BR vaulted-upgrade (1).

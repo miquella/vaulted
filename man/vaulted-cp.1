@@ -1,0 +1,18 @@
+.TH vaulted\-cp 1
+.SH NAME
+.PP
+vaulted cp \- copies the content of a vault and saves it as a new vault with a new password
+.SH SYNOPSIS
+.PP
+\fB\fCvaulted cp\fR \fIold\fP \fInew\fP
+.br
+\fB\fCvaulted copy\fR \fIold\fP \fInew\fP
+.SH DESCRIPTION
+.PP
+Content in the \fInew\fP vault is created or replaced by content from \fIold\fP\&.
+.PP
+If the \fB\fCVAULTED_PASSWORD\fR environment variable is set, it will be used as the
+password for \fIold\fP, otherwise the password will be requested via the tty.
+.PP
+If the \fB\fCVAULTED_NEW_PASSWORD\fR environment variable is set, it will be used as
+the password for \fInew\fP, otherwise the password will be requested via the tty.
