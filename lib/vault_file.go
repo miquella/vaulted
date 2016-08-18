@@ -85,13 +85,19 @@ func newVaultKey(previous *VaultKey) *VaultKey {
 	} else {
 		method = "pbkdf2-sha512"
 		details = make(Details)
+
+		iterations := 65536
+		r, err := rand.Int(rand.Reader, big.NewInt(32768))
+		if err == nil {
+			iterations = 65536 + int(r.Int64())
+		}
+
+		details.SetInt("iterations", iterations)
 	}
 
-	// Adjust cost parameters
+	// Generate new salt
 	switch method {
 	case "pbkdf2-sha512":
-		details.SetInt("iterations", adjustIterations(details.Int("iterations")))
-
 		salt := make([]byte, 32)
 		_, err := rand.Read(salt)
 		if err != nil {
@@ -118,33 +124,6 @@ func (vk *VaultKey) key(password string, keyLength int) ([]byte, error) {
 	}
 
 	return nil, fmt.Errorf("Invalid key derivation method: %s", vk.Method)
-}
-
-func adjustIterations(iterations int) int {
-	if iterations < 65536 {
-		r, err := rand.Int(rand.Reader, big.NewInt(32768))
-		if err != nil {
-			return 65536
-		}
-
-		return 65536 + int(r.Int64())
-	}
-
-	if iterations > 1048576 {
-		r, err := rand.Int(rand.Reader, big.NewInt(32768))
-		if err != nil {
-			return 1048576
-		}
-
-		return 1048576 - int(r.Int64())
-	}
-
-	r, err := rand.Int(rand.Reader, big.NewInt(256))
-	if err != nil {
-		return iterations + 1
-	}
-
-	return iterations + int(r.Int64()) - 32
 }
 
 type Details map[string]interface{}
