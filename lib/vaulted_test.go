@@ -54,7 +54,7 @@ func TestOpenVault(t *testing.T) {
 	}
 	defer teardownVaults()
 
-	vault, err := vaulted.OpenVault("password", "bbb")
+	vault, err := vaulted.OpenVault("bbb", "password")
 	if err != nil {
 		t.Fatalf("failed to open vault: %v", err)
 	}
@@ -71,7 +71,7 @@ func TestSealVault(t *testing.T) {
 	}
 	defer teardownVaults()
 
-	_, err = vaulted.OpenVault("password", "doesn't exist")
+	_, err = vaulted.OpenVault("doesn't exist", "password")
 	if err != os.ErrNotExist {
 		t.Fatalf("expected: %v, got %v", os.ErrNotExist, err)
 	}
@@ -81,17 +81,17 @@ func TestSealVault(t *testing.T) {
 			"TEST": "TESTING",
 		},
 	}
-	err = vaulted.SealVault("another password", "testing", &v1)
+	err = vaulted.SealVault("testing", "another password", &v1)
 	if err != nil {
 		t.Fatalf("failed to seal vault: %v", err)
 	}
 
-	_, err = vaulted.OpenVault("invalid password", "testing")
+	_, err = vaulted.OpenVault("testing", "invalid password")
 	if err != vaulted.ErrInvalidPassword {
 		t.Fatalf("expected: %v, got: %v", vaulted.ErrInvalidPassword, err)
 	}
 
-	v2, err := vaulted.OpenVault("another password", "testing")
+	v2, err := vaulted.OpenVault("testing", "another password")
 	if err != nil {
 		t.Fatalf("failed to open vault: %v", err)
 	}

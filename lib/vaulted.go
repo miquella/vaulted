@@ -54,7 +54,7 @@ func ListVaults() ([]string, error) {
 	return found, nil
 }
 
-func SealVault(password string, name string, vault *Vault) error {
+func SealVault(name, password string, vault *Vault) error {
 	vf := &VaultFile{
 		Method:  "secretbox",
 		Details: make(Details),
@@ -107,7 +107,7 @@ func SealVault(password string, name string, vault *Vault) error {
 	return nil
 }
 
-func OpenVault(password string, name string) (*Vault, error) {
+func OpenVault(name, password string) (*Vault, error) {
 	vf, err := readVaultFile(name)
 	if err != nil {
 		return nil, err
@@ -167,7 +167,7 @@ func RemoveVault(name string) error {
 }
 
 func GetEnvironment(name, password string) (*Environment, error) {
-	v, err := OpenVault(password, name)
+	v, err := OpenVault(name, password)
 	if err != nil {
 		return nil, err
 	}

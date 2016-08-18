@@ -45,7 +45,7 @@ func (*TTYSteward) SealVault(name string, password *string, vault *vaulted.Vault
 		}
 	}
 
-	return vaulted.SealVault(*password, name, vault)
+	return vaulted.SealVault(name, *password, vault)
 }
 
 func (*TTYSteward) OpenVault(name string, password *string) (string, *vaulted.Vault, error) {
@@ -61,7 +61,7 @@ func (*TTYSteward) OpenVault(name string, password *string) (string, *vaulted.Va
 	var vault *vaulted.Vault
 	var err error
 	if password != nil {
-		vault, err = vaulted.OpenVault(*password, name)
+		vault, err = vaulted.OpenVault(name, *password)
 	} else {
 		for i := 0; i < 3; i++ {
 			var requestedPassword string
@@ -70,7 +70,7 @@ func (*TTYSteward) OpenVault(name string, password *string) (string, *vaulted.Va
 				break
 			}
 
-			vault, err = vaulted.OpenVault(requestedPassword, name)
+			vault, err = vaulted.OpenVault(name, requestedPassword)
 			if err != vaulted.ErrInvalidPassword {
 				password = &requestedPassword
 				break
