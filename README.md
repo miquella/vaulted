@@ -1,4 +1,6 @@
-# vaulted
+vaulted
+=======
+
 Spawn environments from securely stored secrets.
 
 With so many secrets floating around in our modern lives, it's a wonder we're
@@ -14,98 +16,83 @@ spawned environment as well as a new SSH agent. The SSH agent still allows
 access keys in the parent environment's SSH agent, but any keys added inside
 the environment are only available in the spawned environment.
 
-# Usage
+Installation
+------------
 
-When decrypting a vault, `vaulted` will prompt for the vault's password.
-Optionally, the password may be provided through the `VAULTED_PASSWORD`
-environment variable.
+### macOS
 
-## `vaulted add`
-
-Interactively add a new environment named `NAME`.
+The easiest way to install `vaulted` on macOS is through
+[Homebrew](http://brew.sh/).
 
 ```sh
-vaulted add NAME
+brew install vaulted
 ```
 
-## `vaulted edit`
+### Manual
 
-Interactively edit an environment named `NAME`.
+Installation on other platforms should be simple enough through `go get` as
+long as you have a proper Go environment setup:
 
 ```sh
-vaulted edit NAME
+go get -u github.com/miquella/vaulted
 ```
 
-## `vaulted copy` / `vaulted cp`
+Don't forget to add `$GOPATH/bin` to your `$PATH`!
 
-Creates a new vault with the content of an existing vault. The new vault is
-re-encrypted with a new password.
+Getting Started
+---------------
+
+`vaulted` is oriented around vaults of secrets that are used to spawn
+environments. To get started, add a new vault:
 
 ```sh
-vaulted copy VAULT NEWVAULT
+vaulted add my-vault
 ```
 
-## `vaulted dump`
+This will start an interactive editing mode that will help you create your
+first vault. AWS keys, SSH keys, and arbitrary environment variables can be
+added to the vault. Once you have your vault arranged how you would like, use
+`q` to exit the interactive mode and save the vault to disk.
 
-Dumps a JSON formatted version of the `NAME` vault.
+While editing a vault, `Ctrl+C` may be used to discard changes to the
+vault.
+
+Now that your vault has been saved, the list of vaults will reflect your newly
+saved vault:
 
 ```sh
-vaulted dump NAME
+vaulted ls
 ```
 
-## `vaulted env`
-
-Outputs the commands to run to load the `NAME` vault's secrets into the shell.
+And you can use `vaulted` to spawn a command in an environment generated from
+the secrets stored in the vault:
 
 ```sh
-vaulted env NAME
+vaulted -n my-vault -- aws s3 ls
 ```
 
-## `vaulted list` / `vaulted ls`
-
-Lists all vaults.
+Sometimes it is useful to be able to issue multiple commands that require the
+vault's secrets. In this case, you can spawn an interactive shell:
 
 ```sh
-vaulted list
+vaulted shell my-vault
 ```
 
-## `vaulted load`
+_**Warning!** Leaving interactive shells with your credentials loaded can be
+dangerous as you may inadvertently provide credentials to an application you
+didn't intend!_
 
-Creates or replaces the `NAME` vault with the JSON formatted version provided.
+Going Further
+-------------
 
-```sh
-vaulted load NAME
-```
+While `vaulted` supports basic modification methods like copying, editing, and
+removing, more advanced methods such as JSON-formatted dumping and loading are
+also available. An environment can even be loaded into a running shell! See
+`vaulted --help` for available commands.
 
-## `vaulted rm`
+### Spawned Environment
 
-Removes the `NAME` vault.
-
-```sh
-vaulted rm NAME
-```
-
-## `vaulted shell`
-
-Spawns an interactive shell using the `NAME` vault's secrets.
-
-The `SHELL` environment variable is used as the interactive shell to spawn.
-
-```sh
-vaulted shell NAME
-```
-
-## `vaulted upgrade`
-
-Upgrades all vaults in the legacy vault format to the current format.
-
-```sh
-vaulted upgrade
-```
-
-# Spawned Environment
-
-In addition to secrets, spawned environments also include the name of the
-spawned environment in the `VAULTED_ENV` environment variable. This is
-particularly useful if you would like to indicate the spawned environment in
-your shell prompt.
+In addition to secrets, spawned environments also include the name of the vault
+that was used to spawn the environment in the `VAULTED_ENV` environment
+variable. This is particularly useful if you would like to indicate the spawned
+environment in your shell prompt.
