@@ -1,10 +1,7 @@
 package vaulted
 
 import (
-	"bufio"
 	"errors"
-	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -12,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/miquella/ask"
 )
 
 var STSDurationDefault = time.Hour
@@ -95,7 +93,7 @@ func (k *AWSKey) stsClient() *sts.STS {
 	return sts.New(sess)
 }
 
-func (k *AWSKey) getAssumeRoleInput(duration time.Duration) *sts.AssumeRoleInput {
+func (k *AWSKey) getAssumeRoleInput(duration time.Duration) (*sts.AssumeRoleInput, error) {
 	roleSessionName := "VaultedSession"
 	input := &sts.AssumeRoleInput{
 		DurationSeconds: aws.Int64(int64(duration.Seconds())),
@@ -104,16 +102,24 @@ func (k *AWSKey) getAssumeRoleInput(duration time.Duration) *sts.AssumeRoleInput
 	}
 
 	if k.MFA != "" {
-		tokenCode := getTokenCode()
+		tokenCode, err := getTokenCode()
+		if err != nil {
+			return nil, err
+		}
 		input.SerialNumber = &k.MFA
 		input.TokenCode = &tokenCode
 	}
 
-	return input
+	return input, nil
 }
 
 func (k *AWSKey) assumeRole(duration time.Duration) (map[string]string, error) {
-	resp, err := k.stsClient().AssumeRole(k.getAssumeRoleInput(duration))
+	assumeRoleInput, err := k.getAssumeRoleInput(duration)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := k.stsClient().AssumeRole(assumeRoleInput)
 	if err != nil {
 		return nil, err
 	}
@@ -125,22 +131,30 @@ func (k *AWSKey) assumeRole(duration time.Duration) (map[string]string, error) {
 	}, nil
 }
 
-func (k *AWSKey) buildSessionTokenInput(duration time.Duration) *sts.GetSessionTokenInput {
+func (k *AWSKey) buildSessionTokenInput(duration time.Duration) (*sts.GetSessionTokenInput, error) {
 	input := &sts.GetSessionTokenInput{
 		DurationSeconds: aws.Int64(int64(duration.Seconds())),
 	}
 
 	if k.MFA != "" {
-		tokenCode := getTokenCode()
+		tokenCode, err := getTokenCode()
+		if err != nil {
+			return nil, err
+		}
 		input.SerialNumber = &k.MFA
 		input.TokenCode = &tokenCode
 	}
 
-	return input
+	return input, nil
 }
 
 func (k *AWSKey) generateSTS(duration time.Duration) (map[string]string, error) {
-	resp, err := k.stsClient().GetSessionToken(k.buildSessionTokenInput(duration))
+	sessionTokenInput, err := k.buildSessionTokenInput(duration)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := k.stsClient().GetSessionToken(sessionTokenInput)
 	if err != nil {
 		return nil, err
 	}
@@ -152,13 +166,11 @@ func (k *AWSKey) generateSTS(duration time.Duration) (map[string]string, error) 
 	}, nil
 }
 
-func getTokenCode() string {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter your MFA code: ")
-	tokenCode, err := reader.ReadString('\n')
+func getTokenCode() (string, error) {
+	tokenCode, err := ask.Ask("Enter your MFA code: ")
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	tokenCode = strings.TrimSpace(tokenCode)
-	return tokenCode
+	return tokenCode, nil
 }
