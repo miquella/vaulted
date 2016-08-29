@@ -387,7 +387,7 @@ func printVariables(v *vaulted.Vault) {
 	color.Cyan("\nVariables:")
 	if len(v.Vars) > 0 {
 		var keys []string
-		for key, _ := range v.Vars {
+		for key := range v.Vars {
 			keys = append(keys, key)
 		}
 		sort.Strings(keys)
@@ -429,7 +429,7 @@ func printSSHKeys(v *vaulted.Vault) {
 	color.Cyan("\nSSH Keys:")
 	if len(v.SSHKeys) > 0 {
 		keys := []string{}
-		for key, _ := range v.SSHKeys {
+		for key := range v.SSHKeys {
 			keys = append(keys, key)
 		}
 		sort.Strings(keys)
