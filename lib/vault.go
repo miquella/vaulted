@@ -122,6 +122,7 @@ func (k *AWSKey) assumeRole(duration time.Duration) (map[string]string, error) {
 		"AWS_ACCESS_KEY_ID":     *resp.Credentials.AccessKeyId,
 		"AWS_SECRET_ACCESS_KEY": *resp.Credentials.SecretAccessKey,
 		"AWS_SESSION_TOKEN":     *resp.Credentials.SessionToken,
+		"AWS_SECURITY_TOKEN":    *resp.Credentials.SessionToken,
 	}, nil
 }
 
@@ -149,6 +150,7 @@ func (k *AWSKey) generateSTS(duration time.Duration) (map[string]string, error) 
 		"AWS_ACCESS_KEY_ID":     *resp.Credentials.AccessKeyId,
 		"AWS_SECRET_ACCESS_KEY": *resp.Credentials.SecretAccessKey,
 		"AWS_SESSION_TOKEN":     *resp.Credentials.SessionToken,
+		"AWS_SECURITY_TOKEN":    *resp.Credentials.SessionToken,
 	}, nil
 }
 
