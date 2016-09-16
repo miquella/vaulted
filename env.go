@@ -35,7 +35,7 @@ func (e *Env) Run(steward Steward) error {
 
 	// sort the vars
 	var keys []string
-	for key, _ := range env.Vars {
+	for key := range env.Vars {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)

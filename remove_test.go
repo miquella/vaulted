@@ -34,10 +34,10 @@ func TestRemove(t *testing.T) {
 		}
 		exiterr, ok := err.(ErrorWithExitCode)
 		if !ok {
-			t.Fatal("Expected ErrorWithExitCode, got %#v", err)
+			t.Fatalf("Expected ErrorWithExitCode, got %#v", err)
 		}
 		if exiterr.ExitCode != 2 {
-			t.Fatal("Expected ExitCode: 2, got ExitCode: %v", exiterr.ExitCode)
+			t.Fatalf("Expected ExitCode: 2, got ExitCode: %v", exiterr.ExitCode)
 		}
 	})
 	if steward.VaultExists("two") {

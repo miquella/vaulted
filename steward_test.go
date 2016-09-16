@@ -79,7 +79,7 @@ func (ts TestSteward) VaultExists(name string) bool {
 
 func (ts TestSteward) ListVaults() ([]string, error) {
 	var vaults []string
-	for name, _ := range ts.Vaults {
+	for name := range ts.Vaults {
 		vaults = append(vaults, name)
 	}
 	return vaults, nil

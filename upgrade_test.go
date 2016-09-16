@@ -25,12 +25,12 @@ func TestUpgrade(t *testing.T) {
 	steward.Passwords["one"] = "hablam wookie"
 	steward.LegacyPassword = "robby bobby"
 	steward.LegacyEnvironments = map[string]legacy.Environment{
-		"one": legacy.Environment{
+		"one": {
 			Vars: map[string]string{
 				"OLD": "LEGACY",
 			},
 		},
-		"two": legacy.Environment{
+		"two": {
 			Vars: map[string]string{
 				"OTHER": "LEGACY",
 			},

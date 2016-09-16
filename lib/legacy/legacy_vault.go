@@ -29,7 +29,7 @@ type Vault struct {
 	Cipher     string `json:"cipher"`
 	CipherMode string `json:"cipherMode"`
 
-	MAC          []byte `json:mac"`
+	MAC          []byte `json:"mac"`
 	IV           []byte `json:"iv"`
 	Environments []byte `json:"environments"`
 }
