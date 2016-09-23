@@ -30,6 +30,7 @@ type AWSKey struct {
 	Secret string `json:"secret"`
 	MFA    string `json:"mfa,omitempty"`
 	Role   string `json:"role,omitempty"`
+	Token  string `json:"-"`
 }
 
 func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, error) {
@@ -66,7 +67,17 @@ func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, er
 		var err error
 		var stsCreds map[string]string
 		if v.AWSKey.Role != "" {
-			stsCreds, err = v.AWSKey.assumeRole(duration)
+			tmpCreds, err := v.AWSKey.generateSTS(duration)
+			if err == nil {
+				tmpKey := AWSKey{
+					ID:     tmpCreds["AWS_ACCESS_KEY_ID"],
+					Secret: tmpCreds["AWS_SECRET_ACCESS_KEY"],
+					Token:  tmpCreds["AWS_SESSION_TOKEN"],
+					Role:   v.AWSKey.Role,
+				}
+
+				stsCreds, err = tmpKey.assumeRole(duration)
+			}
 		} else {
 			stsCreds, err = v.AWSKey.generateSTS(duration)
 		}
@@ -87,7 +98,7 @@ func (k *AWSKey) stsClient() *sts.STS {
 		Credentials: credentials.NewStaticCredentials(
 			k.ID,
 			k.Secret,
-			"", // Temporary session token
+			k.Token,
 		),
 	})
 	return sts.New(sess)
