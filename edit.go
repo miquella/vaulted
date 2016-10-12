@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -13,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chzyer/readline"
 	"github.com/fatih/color"
 	"github.com/miquella/ask"
 	"github.com/miquella/vaulted/lib"
@@ -27,6 +27,8 @@ var (
 
 type Edit struct {
 	VaultName string
+	rlMenu    *readline.Instance
+	rlValue   *readline.Instance
 }
 
 func (e *Edit) Run(steward Steward) error {
@@ -43,7 +45,7 @@ func (e *Edit) Run(steward Steward) error {
 		vault = &vaulted.Vault{}
 	}
 
-	edit(e.VaultName, vault)
+	e.edit(e.VaultName, vault)
 
 	var newPassword *string
 	if password != "" {
@@ -102,7 +104,7 @@ func variableMenu() {
 	color.Unset()
 }
 
-func edit(name string, v *vaulted.Vault) {
+func (e *Edit) edit(name string, v *vaulted.Vault) {
 	exit := false
 	for exit == false {
 		cyan.Printf("\nVault: ")
@@ -112,16 +114,16 @@ func edit(name string, v *vaulted.Vault) {
 		printSSHKeys(v)
 		printDuration(v)
 
-		input := readMenu("\nEdit vault: [a,s,v,d,?,q]: ")
+		input := e.readMenu("Edit vault: [a,s,v,d,?,q]: ")
 		switch input {
 		case "a":
-			aws(v)
+			e.aws(v)
 		case "s":
-			sshKeysMenu(v)
+			e.sshKeysMenu(v)
 		case "v":
-			variables(v)
+			e.variables(v)
 		case "d":
-			dur := readValue("Duration (e.g. 15m or 36h): ")
+			dur := e.readValue("Duration (e.g. 15m or 36h): ")
 			duration, err := time.ParseDuration(dur)
 			if err != nil {
 				color.Red("%s", err)
@@ -142,7 +144,7 @@ func edit(name string, v *vaulted.Vault) {
 	}
 }
 
-func aws(v *vaulted.Vault) {
+func (e *Edit) aws(v *vaulted.Vault) {
 	exit := false
 	show := false
 
@@ -150,15 +152,15 @@ func aws(v *vaulted.Vault) {
 		var input string
 		printAWS(v, show)
 		if v.AWSKey == nil {
-			input = readMenu("\nEdit AWS key [k,?,b]: ")
+			input = e.readMenu("Edit AWS key [k,?,b]: ")
 		} else {
-			input = readMenu("\nEdit AWS key [k,m,r,s,D,?,b]: ")
+			input = e.readMenu("Edit AWS key [k,m,r,s,D,?,b]: ")
 		}
 
 		switch input {
 		case "k":
-			awsAccesskey := readValue("Key ID: ")
-			awsSecretkey := readValue("Secret: ")
+			awsAccesskey := e.readValue("Key ID: ")
+			awsSecretkey := e.readValue("Secret: ")
 			v.AWSKey = &vaulted.AWSKey{
 				ID:     awsAccesskey,
 				Secret: awsSecretkey,
@@ -167,14 +169,14 @@ func aws(v *vaulted.Vault) {
 			}
 		case "m":
 			if v.AWSKey != nil {
-				awsMfa := readValue("MFA ARN or serial number: ")
+				awsMfa := e.readValue("MFA ARN or serial number: ")
 				v.AWSKey.MFA = awsMfa
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
 			}
 		case "r":
 			if v.AWSKey != nil {
-				awsRole := readValue("Role ARN: ")
+				awsRole := e.readValue("Role ARN: ")
 				v.AWSKey.Role = awsRole
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
@@ -187,7 +189,7 @@ func aws(v *vaulted.Vault) {
 			}
 		case "D":
 			if v.AWSKey != nil {
-				removeKey := readValue("Delete your AWS key? (y/n): ")
+				removeKey := e.readValue("Delete your AWS key? (y/n): ")
 				if removeKey == "y" {
 					v.AWSKey = nil
 				}
@@ -204,17 +206,17 @@ func aws(v *vaulted.Vault) {
 	}
 }
 
-func sshKeysMenu(v *vaulted.Vault) {
+func (e *Edit) sshKeysMenu(v *vaulted.Vault) {
 	exit := false
 
 	for exit == false {
 		printSSHKeys(v)
-		input := readMenu("\nEdit ssh keys: [a,D,?,b]: ")
+		input := e.readMenu("Edit ssh keys: [a,D,?,b]: ")
 		switch input {
 		case "a":
-			addSSHKey(v)
+			e.addSSHKey(v)
 		case "D":
-			key := readValue("Key: ")
+			key := e.readValue("Key: ")
 			_, ok := v.SSHKeys[key]
 			if ok {
 				delete(v.SSHKeys, key)
@@ -231,7 +233,7 @@ func sshKeysMenu(v *vaulted.Vault) {
 	}
 }
 
-func addSSHKey(v *vaulted.Vault) {
+func (e *Edit) addSSHKey(v *vaulted.Vault) {
 	homeDir := ""
 	user, err := user.Current()
 	if err == nil {
@@ -244,7 +246,7 @@ func addSSHKey(v *vaulted.Vault) {
 	filename := ""
 	if homeDir != "" {
 		defaultFilename = filepath.Join(homeDir, ".ssh", "id_rsa")
-		filename = readValue(fmt.Sprintf("Key file (default: %s): ", defaultFilename))
+		filename = e.readValue(fmt.Sprintf("Key file (default: %s): ", defaultFilename))
 		if filename == "" {
 			filename = defaultFilename
 		}
@@ -252,7 +254,7 @@ func addSSHKey(v *vaulted.Vault) {
 			filename = filepath.Join(filepath.Join(homeDir, ".ssh"), filename)
 		}
 	} else {
-		filename = readValue("Key file: ")
+		filename = e.readValue("Key file: ")
 	}
 
 	decryptedBlock, err := loadAndDecryptKey(filename)
@@ -264,12 +266,12 @@ func addSSHKey(v *vaulted.Vault) {
 	comment := loadPublicKeyComment(filename + ".pub")
 	var name string
 	if comment != "" {
-		name = readValue(fmt.Sprintf("Name (default: %s): ", comment))
+		name = e.readValue(fmt.Sprintf("Name (default: %s): ", comment))
 		if name == "" {
 			name = comment
 		}
 	} else {
-		name = readValue("Name: ")
+		name = e.readValue("Name: ")
 		if name == "" {
 			name = filename
 		}
@@ -347,22 +349,22 @@ func loadPublicKeyComment(filename string) string {
 	return comment
 }
 
-func variables(v *vaulted.Vault) {
+func (e *Edit) variables(v *vaulted.Vault) {
 	exit := false
 
 	for exit == false {
 		printVariables(v)
-		input := readMenu("\nEdit environment variables: [a,D,?,b]: ")
+		input := e.readMenu("Edit environment variables: [a,D,?,b]: ")
 		switch input {
 		case "a":
-			variableKey := readValue("Name: ")
-			variableValue := readValue("Value: ")
+			variableKey := e.readValue("Name: ")
+			variableValue := e.readValue("Value: ")
 			if v.Vars == nil {
 				v.Vars = make(map[string]string)
 			}
 			v.Vars[variableKey] = variableValue
 		case "D":
-			variable := readValue("Variable name: ")
+			variable := e.readValue("Variable name: ")
 			_, ok := v.Vars[variable]
 			if ok {
 				delete(v.Vars, variable)
@@ -454,23 +456,39 @@ func printDuration(v *vaulted.Vault) {
 	fmt.Printf("%s\n", duration.String())
 }
 
-func readMenu(message string) string {
-	blue.Printf(message)
-	input := readInput(message)
+func (e *Edit) readMenu(message string) string {
+	if e.rlMenu == nil {
+		var err error
+		e.rlMenu, err = readline.New("")
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	print("")
+	input := e.readInput(color.BlueString(message), e.rlMenu)
 	print("")
 	return input
 }
 
-func readValue(message string) string {
-	green.Printf(message)
-	return readInput(message)
+func (e *Edit) readValue(message string) string {
+	if e.rlValue == nil {
+		var err error
+		e.rlValue, err = readline.New("")
+		if err != nil {
+			panic(err)
+		}
+	}
+	return e.readInput(color.GreenString(message), e.rlValue)
 }
 
-func readInput(message string) string {
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
+func (e *Edit) readInput(message string, rl *readline.Instance) string {
+
+	rl.SetPrompt(message)
+	line, err := rl.Readline()
 	if err != nil {
 		panic(err)
 	}
-	return strings.TrimSpace(input)
+
+	return strings.TrimSpace(line)
 }
