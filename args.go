@@ -21,7 +21,6 @@ var (
 func ParseArgs(args []string) (Command, error) {
 	flag := spawnFlagSet()
 	help := flag.BoolP("help", "h", false, "Show usage information")
-	flag.SetInterspersed(false)
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -86,6 +85,7 @@ func ParseArgs(args []string) (Command, error) {
 
 func spawnFlagSet() *pflag.FlagSet {
 	flag := pflag.NewFlagSet("vaulted", pflag.ContinueOnError)
+	flag.SetInterspersed(false)
 	flag.StringP("name", "n", "", "Name of the vault to use")
 	flag.BoolP("interactive", "i", false, "Spawn interactive shell (if -n is used, but no additional arguments a provided, interactive is the default)")
 	return flag
