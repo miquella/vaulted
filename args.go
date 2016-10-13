@@ -30,6 +30,10 @@ func ParseArgs(args []string) (Command, error) {
 		return &Help{}, nil
 	}
 
+	if flag.Changed("version") {
+		return &Version{}, nil
+	}
+
 	if flag.Changed("name") || flag.Changed("interactive") {
 		return parseSpawnArgs(args)
 	}
@@ -78,6 +82,9 @@ func ParseArgs(args []string) (Command, error) {
 	case "upgrade":
 		return parseUpgradeArgs(commandArgs[1:])
 
+	case "version":
+		return &Version{}, nil
+
 	default:
 		return nil, fmt.Errorf("Unknown command: %s", commandArgs[0])
 	}
@@ -88,6 +95,7 @@ func spawnFlagSet() *pflag.FlagSet {
 	flag.SetInterspersed(false)
 	flag.StringP("name", "n", "", "Name of the vault to use")
 	flag.BoolP("interactive", "i", false, "Spawn interactive shell (if -n is used, but no additional arguments a provided, interactive is the default)")
+	flag.BoolP("version", "V", false, "Specify current version of Vaulted")
 	return flag
 }
 

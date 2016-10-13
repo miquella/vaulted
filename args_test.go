@@ -194,6 +194,16 @@ var (
 			Args:    []string{"upgrade"},
 			Command: &Upgrade{},
 		},
+
+		//Version
+		{
+			Args:    []string{"version"},
+			Command: &Version{},
+		},
+		{
+			Args:    []string{"-V"},
+			Command: &Version{},
+		},
 	}
 
 	badParseCases = []parseCase{
