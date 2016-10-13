@@ -50,10 +50,38 @@ var (
 			},
 		},
 		{
+			Args: []string{"-n", "one", "command", "--command-flag"},
+			Command: &Spawn{
+				VaultName: "one",
+				Command:   []string{"command", "--command-flag"},
+			},
+		},
+		{
 			Args: []string{"-n", "one", "--", "some", "command"},
 			Command: &Spawn{
 				VaultName: "one",
 				Command:   []string{"some", "command"},
+			},
+		},
+		{
+			Args: []string{"-n", "one", "some", "--", "command"},
+			Command: &Spawn{
+				VaultName: "one",
+				Command:   []string{"some", "--", "command"},
+			},
+		},
+		{
+			Args: []string{"-n", "one", "--", "some", "--", "command"},
+			Command: &Spawn{
+				VaultName: "one",
+				Command:   []string{"some", "--", "command"},
+			},
+		},
+		{
+			Args: []string{"-n", "one", "--", "--", "some", "--", "command"},
+			Command: &Spawn{
+				VaultName: "one",
+				Command:   []string{"--", "some", "--", "command"},
 			},
 		},
 
@@ -178,9 +206,6 @@ var (
 		},
 		{
 			Args: []string{"-n", "one", "-i", "--", "some", "command"},
-		},
-		{
-			Args: []string{"-n", "one", "some", "--", "command"},
 		},
 
 		// Add
