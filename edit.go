@@ -62,6 +62,7 @@ func (e *Edit) Run(steward Steward) error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Vault '%s' successfully saved!\n", e.VaultName)
 
 	return nil
 }
