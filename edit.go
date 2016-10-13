@@ -69,46 +69,46 @@ func (e *Edit) Run(steward Steward) error {
 
 func mainMenu() {
 	color.Set(color.FgYellow)
-	print("")
-	print("a - AWS Key")
-	print("s - SSH Keys")
-	print("v - Variables")
-	print("d - Environment Duration")
-	print("? - Help")
-	print("q - Quit")
+	output("")
+	output("a - AWS Key")
+	output("s - SSH Keys")
+	output("v - Variables")
+	output("d - Environment Duration")
+	output("? - Help")
+	output("q - Quit")
 	color.Unset()
 }
 
 func awsMenu() {
 	color.Set(color.FgYellow)
-	print("")
-	print("k - Key")
-	print("m - MFA")
-	print("r - Role")
-	print("s - Show Key")
-	print("D - Delete")
-	print("? - Help")
-	print("b - Back")
+	output("")
+	output("k - Key")
+	output("m - MFA")
+	output("r - Role")
+	output("s - Show Key")
+	output("D - Delete")
+	output("? - Help")
+	output("b - Back")
 	color.Unset()
 }
 
 func sshKeysHelp() {
 	color.Set(color.FgYellow)
-	print("")
-	print("a - Add")
-	print("D - Delete")
-	print("? - Help")
-	print("b - Back")
+	output("")
+	output("a - Add")
+	output("D - Delete")
+	output("? - Help")
+	output("b - Back")
 	color.Unset()
 }
 
 func variableMenu() {
 	color.Set(color.FgYellow)
-	print("")
-	print("a - Add")
-	print("D - Delete")
-	print("? - Help")
-	print("b - Back")
+	output("")
+	output("a - Add")
+	output("D - Delete")
+	output("? - Help")
+	output("b - Back")
 	color.Unset()
 }
 
@@ -474,7 +474,7 @@ func (e *Edit) variables(v *vaulted.Vault) error {
 	return nil
 }
 
-func print(message string) {
+func output(message string) {
 	fmt.Printf("%s\n", message)
 }
 
@@ -492,7 +492,7 @@ func printVariables(v *vaulted.Vault) {
 			fmt.Printf("%s\n", v.Vars[key])
 		}
 	} else {
-		print("  [Empty]")
+		output("  [Empty]")
 	}
 }
 
@@ -516,7 +516,7 @@ func printAWS(v *vaulted.Vault, show bool) {
 			fmt.Printf("%s\n", v.AWSKey.Role)
 		}
 	} else {
-		print("  [Empty]")
+		output("  [Empty]")
 	}
 }
 
@@ -533,7 +533,7 @@ func printSSHKeys(v *vaulted.Vault) {
 			green.Printf("  %s\n", key)
 		}
 	} else {
-		print("  [Empty]")
+		output("  [Empty]")
 	}
 }
 
@@ -558,9 +558,9 @@ func (e *Edit) readMenu(message string) (string, error) {
 		}
 	}
 
-	print("")
+	output("")
 	input, err := e.readInput(color.BlueString(message), e.rlMenu)
-	print("")
+	output("")
 	return input, err
 }
 
