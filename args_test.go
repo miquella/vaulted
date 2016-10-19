@@ -94,6 +94,10 @@ var (
 				VaultName: "one",
 			},
 		},
+		{
+			Args:    []string{"add", "--help"},
+			Command: &Help{Subcommand: "add"},
+		},
 
 		// Copy
 		{
@@ -110,6 +114,14 @@ var (
 				NewVaultName: "two",
 			},
 		},
+		{
+			Args:    []string{"copy", "--help"},
+			Command: &Help{Subcommand: "copy"},
+		},
+		{
+			Args:    []string{"cp", "--help"},
+			Command: &Help{Subcommand: "cp"},
+		},
 
 		// Dump
 		{
@@ -118,6 +130,10 @@ var (
 				VaultName: "one",
 			},
 		},
+		{
+			Args:    []string{"dump", "--help"},
+			Command: &Help{Subcommand: "dump"},
+		},
 
 		// Edit
 		{
@@ -125,6 +141,10 @@ var (
 			Command: &Edit{
 				VaultName: "one",
 			},
+		},
+		{
+			Args:    []string{"edit", "--help"},
+			Command: &Help{Subcommand: "edit"},
 		},
 
 		// Env
@@ -135,11 +155,59 @@ var (
 				Shell:     "fish",
 			},
 		},
+		{
+			Args:    []string{"env", "--help"},
+			Command: &Help{Subcommand: "env"},
+		},
 
 		// Help
 		{
-			Args:    []string{},
-			Command: &Help{},
+			Args:    []string{"help", "add"},
+			Command: &Help{Subcommand: "add"},
+		},
+		{
+			Args:    []string{"help", "cp"},
+			Command: &Help{Subcommand: "cp"},
+		},
+		{
+			Args:    []string{"help", "copy"},
+			Command: &Help{Subcommand: "copy"},
+		},
+		{
+			Args:    []string{"help", "dump"},
+			Command: &Help{Subcommand: "dump"},
+		},
+		{
+			Args:    []string{"help", "edit"},
+			Command: &Help{Subcommand: "edit"},
+		},
+		{
+			Args:    []string{"help", "env"},
+			Command: &Help{Subcommand: "env"},
+		},
+		{
+			Args:    []string{"help", "list"},
+			Command: &Help{Subcommand: "list"},
+		},
+		{
+			Args:    []string{"help", "ls"},
+			Command: &Help{Subcommand: "ls"},
+		},
+		{
+			Args:    []string{"help", "load"},
+			Command: &Help{Subcommand: "load"},
+		},
+		{
+			Args:    []string{"help", "rm"},
+			Command: &Help{Subcommand: "rm"},
+		},
+		{
+			Args:    []string{"help", "shell"},
+			Command: &Help{Subcommand: "shell"},
+		},
+		{
+			Args:    []string{"help", "upgrade"},
+			Command: &Help{Subcommand: "upgrade"},
 		},
 		{
 			Args:    []string{"-h"},
@@ -177,6 +245,14 @@ var (
 				Active: "active-env",
 			},
 		},
+		{
+			Args:    []string{"list", "--help"},
+			Command: &Help{Subcommand: "list"},
+		},
+		{
+			Args:    []string{"ls", "--help"},
+			Command: &Help{Subcommand: "ls"},
+		},
 
 		// Load
 		{
@@ -184,6 +260,10 @@ var (
 			Command: &Load{
 				VaultName: "one",
 			},
+		},
+		{
+			Args:    []string{"load", "--help"},
+			Command: &Help{Subcommand: "load"},
 		},
 
 		// Remove
@@ -199,6 +279,10 @@ var (
 				VaultNames: []string{"one", "two", "three", "four"},
 			},
 		},
+		{
+			Args:    []string{"rm", "--help"},
+			Command: &Help{Subcommand: "rm"},
+		},
 
 		// Shell
 		{
@@ -208,11 +292,19 @@ var (
 				Command:   []string{"/bin/fish", "--login"},
 			},
 		},
+		{
+			Args:    []string{"shell", "--help"},
+			Command: &Help{Subcommand: "shell"},
+		},
 
 		// Upgrade
 		{
 			Args:    []string{"upgrade"},
 			Command: &Upgrade{},
+		},
+		{
+			Args:    []string{"upgrade", "--help"},
+			Command: &Help{Subcommand: "upgrade"},
 		},
 
 		//Version
@@ -326,7 +418,13 @@ var (
 
 		// Misc
 		{
+			Args: []string{},
+		},
+		{
 			Args: []string{"bobby"},
+		},
+		{
+			Args: []string{"blah", "--help"},
 		},
 	}
 )

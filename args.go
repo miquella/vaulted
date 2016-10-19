@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	ErrSubcommandRequired          = errors.New("A subcommand must be specified. See 'vaulted --help' for details.")
 	ErrUnknownShell                = errors.New("Unknown shell")
 	ErrTooManyArguments            = errors.New("too many arguments provided")
 	ErrNotEnoughArguments          = errors.New("not enough arguments provided")
@@ -19,15 +20,22 @@ var (
 )
 
 func ParseArgs(args []string) (Command, error) {
+	command, err := parseArgs(args)
+	if err == pflag.ErrHelp {
+		if HelpAliases[args[0]] == "" {
+			return parseHelpArgs(nil)
+		} else {
+			return parseHelpArgs(args)
+		}
+	}
+	return command, err
+}
+
+func parseArgs(args []string) (Command, error) {
 	flag := spawnFlagSet()
-	help := flag.BoolP("help", "h", false, "Show usage information")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
-	}
-
-	if *help {
-		return &Help{}, nil
 	}
 
 	if flag.Changed("version") {
@@ -41,7 +49,7 @@ func ParseArgs(args []string) (Command, error) {
 	// Parse command
 	commandArgs := flag.Args()
 	if len(commandArgs) == 0 || flag.ArgsLenAtDash() == 0 {
-		return &Help{}, nil
+		return nil, ErrSubcommandRequired
 	}
 
 	if flag.ArgsLenAtDash() > -1 {
@@ -66,6 +74,9 @@ func ParseArgs(args []string) (Command, error) {
 
 	case "env":
 		return parseEnvArgs(commandArgs[1:])
+
+	case "help":
+		return parseHelpArgs(commandArgs[1:])
 
 	case "ls", "list":
 		return parseListArgs(commandArgs[1:])
@@ -92,6 +103,7 @@ func ParseArgs(args []string) (Command, error) {
 
 func spawnFlagSet() *pflag.FlagSet {
 	flag := pflag.NewFlagSet("vaulted", pflag.ContinueOnError)
+	flag.Usage = func() {}
 	flag.SetInterspersed(false)
 	flag.StringP("name", "n", "", "Name of the vault to use")
 	flag.BoolP("interactive", "i", false, "Spawn interactive shell (if -n is used, but no additional arguments a provided, interactive is the default)")
@@ -138,6 +150,7 @@ func parseSpawnArgs(args []string) (Command, error) {
 
 func parseAddArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("add", pflag.ContinueOnError)
+	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -158,6 +171,7 @@ func parseAddArgs(args []string) (Command, error) {
 
 func parseCopyArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("copy", pflag.ContinueOnError)
+	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -179,6 +193,7 @@ func parseCopyArgs(args []string) (Command, error) {
 
 func parseDumpArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("dump", pflag.ContinueOnError)
+	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -199,6 +214,7 @@ func parseDumpArgs(args []string) (Command, error) {
 
 func parseEditArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("edit", pflag.ContinueOnError)
+	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -219,6 +235,7 @@ func parseEditArgs(args []string) (Command, error) {
 
 func parseEnvArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("env", pflag.ContinueOnError)
+	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -252,8 +269,17 @@ func parseEnvArgs(args []string) (Command, error) {
 	return e, nil
 }
 
+func parseHelpArgs(args []string) (Command, error) {
+	h := Help{}
+	if len(args) > 0 {
+		h.Subcommand = args[0]
+	}
+	return &h, nil
+}
+
 func parseListArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("list", pflag.ContinueOnError)
+	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -268,6 +294,7 @@ func parseListArgs(args []string) (Command, error) {
 
 func parseLoadArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("load", pflag.ContinueOnError)
+	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -288,6 +315,7 @@ func parseLoadArgs(args []string) (Command, error) {
 
 func parseRemoveArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("remove", pflag.ContinueOnError)
+	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -304,6 +332,7 @@ func parseRemoveArgs(args []string) (Command, error) {
 
 func parseShellArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("shell", pflag.ContinueOnError)
+	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -330,6 +359,7 @@ func parseShellArgs(args []string) (Command, error) {
 
 func parseUpgradeArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("upgrade", pflag.ContinueOnError)
+	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
