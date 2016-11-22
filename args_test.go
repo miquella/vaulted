@@ -7,7 +7,9 @@ import (
 )
 
 type parseCase struct {
-	Args    []string
+	Args        []string
+	Environment map[string]string
+
 	Command Command
 }
 
@@ -154,8 +156,26 @@ var (
 			Command: &List{},
 		},
 		{
+			Args: []string{"ls"},
+			Environment: map[string]string{
+				"VAULTED_ENV": "active-env",
+			},
+			Command: &List{
+				Active: "active-env",
+			},
+		},
+		{
 			Args:    []string{"list"},
 			Command: &List{},
+		},
+		{
+			Args: []string{"list"},
+			Environment: map[string]string{
+				"VAULTED_ENV": "active-env",
+			},
+			Command: &List{
+				Active: "active-env",
+			},
 		},
 
 		// Load
@@ -322,24 +342,48 @@ func TestParseArgs(t *testing.T) {
 	os.Setenv("SHELL", "/bin/fish")
 
 	for _, good := range goodParseCases {
+		// Temporarily set environment variables
+		savedEnv := make(map[string]string)
+		for key, value := range good.Environment {
+			savedEnv[key] = os.Getenv(key)
+			os.Setenv(key, value)
+		}
+
 		var cmd Command
 		var err error
 		CaptureStdout(func() {
 			cmd, err = ParseArgs(good.Args)
 		})
 		if err != nil {
-			t.Errorf("Failed to parse '%v': %v", good.Args, err)
+			t.Errorf("Failed to parse %#v: %v", good.Args, err)
 		}
 
 		if !reflect.DeepEqual(good.Command, cmd) {
 			t.Errorf("Expected command: %#v, got: %#v", good.Command, cmd)
 		}
+
+		// Restore environment variables
+		for key, value := range savedEnv {
+			os.Setenv(key, value)
+		}
 	}
 
 	for _, bad := range badParseCases {
+		// Temporarily set environment variables
+		savedEnv := make(map[string]string)
+		for key, value := range bad.Environment {
+			savedEnv[key] = os.Getenv(key)
+			os.Setenv(key, value)
+		}
+
 		_, err := ParseArgs(bad.Args)
 		if err == nil {
-			t.Errorf("Expected '%v' to fail to parse", bad.Args)
+			t.Errorf("Expected %#v to fail to parse", bad.Args)
+		}
+
+		// Restore environment variables
+		for key, value := range savedEnv {
+			os.Setenv(key, value)
 		}
 	}
 }
