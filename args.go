@@ -263,7 +263,7 @@ func parseListArgs(args []string) (Command, error) {
 		return nil, ErrTooManyArguments
 	}
 
-	return &List{}, nil
+	return &List{Active: os.Getenv("VAULTED_ENV")}, nil
 }
 
 func parseLoadArgs(args []string) (Command, error) {

@@ -5,7 +5,9 @@ import (
 	"sort"
 )
 
-type List struct{}
+type List struct {
+	Active string
+}
 
 func (l *List) Run(steward Steward) error {
 	vaults, err := steward.ListVaults()
@@ -15,6 +17,9 @@ func (l *List) Run(steward Steward) error {
 
 	sort.Strings(vaults)
 	for _, vault := range vaults {
+		if vault == l.Active {
+			vault = fmt.Sprintf("%s (active)", vault)
+		}
 		fmt.Println(vault)
 	}
 
