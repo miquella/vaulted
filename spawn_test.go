@@ -12,8 +12,8 @@ func TestSpawn(t *testing.T) {
 
 	CaptureStdout(func() {
 		s := Spawn{
-			VaultName: "one",
-			Command:   []string{"go", "version"},
+			VaultNames: []string{"one"},
+			Command:    []string{"go", "version"},
 		}
 		err := s.Run(steward)
 		if err != nil {

@@ -19,71 +19,78 @@ var (
 		{
 			Args: []string{"-n", "one"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"/bin/fish", "--login"},
+				VaultNames: []string{"one"},
+				Command:    []string{"/bin/fish", "--login"},
+			},
+		},
+		{
+			Args: []string{"-n", "one", "-n", "two"},
+			Command: &Spawn{
+				VaultNames: []string{"one", "two"},
+				Command:    []string{"/bin/fish", "--login"},
 			},
 		},
 		{
 			Args: []string{"-n", "one", "-i"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"/bin/fish", "--login"},
+				VaultNames: []string{"one"},
+				Command:    []string{"/bin/fish", "--login"},
 			},
 		},
 		{
 			Args: []string{"-i", "-n", "one"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"/bin/fish", "--login"},
+				VaultNames: []string{"one"},
+				Command:    []string{"/bin/fish", "--login"},
 			},
 		},
 		{
 			Args: []string{"-in", "one"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"/bin/fish", "--login"},
+				VaultNames: []string{"one"},
+				Command:    []string{"/bin/fish", "--login"},
 			},
 		},
 		{
 			Args: []string{"-n", "one", "some", "command"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"some", "command"},
+				VaultNames: []string{"one"},
+				Command:    []string{"some", "command"},
 			},
 		},
 		{
 			Args: []string{"-n", "one", "command", "--command-flag"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"command", "--command-flag"},
+				VaultNames: []string{"one"},
+				Command:    []string{"command", "--command-flag"},
 			},
 		},
 		{
 			Args: []string{"-n", "one", "--", "some", "command"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"some", "command"},
+				VaultNames: []string{"one"},
+				Command:    []string{"some", "command"},
 			},
 		},
 		{
 			Args: []string{"-n", "one", "some", "--", "command"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"some", "--", "command"},
+				VaultNames: []string{"one"},
+				Command:    []string{"some", "--", "command"},
 			},
 		},
 		{
 			Args: []string{"-n", "one", "--", "some", "--", "command"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"some", "--", "command"},
+				VaultNames: []string{"one"},
+				Command:    []string{"some", "--", "command"},
 			},
 		},
 		{
 			Args: []string{"-n", "one", "--", "--", "some", "--", "command"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"--", "some", "--", "command"},
+				VaultNames: []string{"one"},
+				Command:    []string{"--", "some", "--", "command"},
 			},
 		},
 
@@ -161,7 +168,16 @@ var (
 				"VAULTED_ENV": "active-env",
 			},
 			Command: &List{
-				Active: "active-env",
+				Active: []string{"active-env"},
+			},
+		},
+		{
+			Args: []string{"ls"},
+			Environment: map[string]string{
+				"VAULTED_ENV": "active-env\nother-active-env",
+			},
+			Command: &List{
+				Active: []string{"active-env", "other-active-env"},
 			},
 		},
 		{
@@ -174,7 +190,16 @@ var (
 				"VAULTED_ENV": "active-env",
 			},
 			Command: &List{
-				Active: "active-env",
+				Active: []string{"active-env"},
+			},
+		},
+		{
+			Args: []string{"list"},
+			Environment: map[string]string{
+				"VAULTED_ENV": "active-env\nother-active-env",
+			},
+			Command: &List{
+				Active: []string{"active-env", "other-active-env"},
 			},
 		},
 
@@ -204,8 +229,8 @@ var (
 		{
 			Args: []string{"shell", "one"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"/bin/fish", "--login"},
+				VaultNames: []string{"one"},
+				Command:    []string{"/bin/fish", "--login"},
 			},
 		},
 
@@ -314,9 +339,6 @@ var (
 		// Shell
 		{
 			Args: []string{"shell"},
-		},
-		{
-			Args: []string{"shell", "one", "two"},
 		},
 
 		// Upgrade

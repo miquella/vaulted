@@ -6,7 +6,7 @@ import (
 )
 
 type List struct {
-	Active string
+	Active []string
 }
 
 func (l *List) Run(steward Steward) error {
@@ -15,9 +15,14 @@ func (l *List) Run(steward Steward) error {
 		return err
 	}
 
+	active := map[string]bool{}
+	for _, name := range l.Active {
+		active[name] = true
+	}
+
 	sort.Strings(vaults)
 	for _, vault := range vaults {
-		if vault == l.Active {
+		if active[vault] {
 			vault = fmt.Sprintf("%s (active)", vault)
 		}
 		fmt.Println(vault)

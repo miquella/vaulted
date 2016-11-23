@@ -34,7 +34,7 @@ func TestListWithActive(t *testing.T) {
 
 	output := CaptureStdout(func() {
 		l := List{
-			Active: "second",
+			Active: []string{"first", "third"},
 		}
 		err := l.Run(steward)
 		if err != nil {
@@ -42,7 +42,7 @@ func TestListWithActive(t *testing.T) {
 		}
 	})
 
-	expected := []byte("first\nsecond (active)\nthird\n")
+	expected := []byte("first (active)\nsecond\nthird (active)\n")
 	if bytes.Compare(output, expected) != 0 {
 		t.Fatalf("Expected:\n%s\nGot:\n%s", expected, output)
 	}
