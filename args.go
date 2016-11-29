@@ -105,7 +105,7 @@ func spawnFlagSet() *pflag.FlagSet {
 	flag := pflag.NewFlagSet("vaulted", pflag.ContinueOnError)
 	flag.Usage = func() {}
 	flag.SetInterspersed(false)
-	flag.StringP("name", "n", "", "Name of the vault to use")
+	flag.StringArrayP("name", "n", nil, "Name of the vault(s) to use")
 	flag.BoolP("interactive", "i", false, "Spawn interactive shell (if -n is used, but no additional arguments a provided, interactive is the default)")
 	flag.BoolP("version", "V", false, "Specify current version of Vaulted")
 	return flag
@@ -118,10 +118,10 @@ func parseSpawnArgs(args []string) (Command, error) {
 		return nil, err
 	}
 
-	name, _ := flag.GetString("name")
+	names, _ := flag.GetStringArray("name")
 	interactive, _ := flag.GetBool("interactive")
 
-	if name == "" {
+	if len(names) == 0 {
 		return nil, ErrVaultNameRequired
 	}
 
@@ -139,7 +139,7 @@ func parseSpawnArgs(args []string) (Command, error) {
 	}
 
 	s := &Spawn{}
-	s.VaultName = name
+	s.VaultNames = names
 	if interactive || flag.NArg() == 0 {
 		s.Command = interactiveShellCommand()
 	} else {
@@ -289,7 +289,13 @@ func parseListArgs(args []string) (Command, error) {
 		return nil, ErrTooManyArguments
 	}
 
-	return &List{Active: os.Getenv("VAULTED_ENV")}, nil
+	var active []string
+	vaultedEnv := os.Getenv("VAULTED_ENV")
+	if vaultedEnv != "" {
+		active = strings.Split(vaultedEnv, "\n")
+	}
+
+	return &List{Active: active}, nil
 }
 
 func parseLoadArgs(args []string) (Command, error) {
@@ -347,12 +353,8 @@ func parseShellArgs(args []string) (Command, error) {
 		return nil, ErrNotEnoughArguments
 	}
 
-	if flag.NArg() > 1 {
-		return nil, ErrTooManyArguments
-	}
-
 	s := &Spawn{}
-	s.VaultName = flag.Arg(0)
+	s.VaultNames = flag.Args()
 	s.Command = interactiveShellCommand()
 	return s, nil
 }
