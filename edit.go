@@ -85,6 +85,7 @@ func awsMenu() {
 	output("k - Key")
 	output("m - MFA")
 	output("r - Role")
+	output("t - Substitute with temporary credentials")
 	output("s - Show Key")
 	output("D - Delete")
 	output("? - Help")
@@ -182,7 +183,7 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 		if v.AWSKey == nil {
 			input, err = e.readMenu("Edit AWS key [k,?,b]: ")
 		} else {
-			input, err = e.readMenu("Edit AWS key [k,m,r,s,D,?,b]: ")
+			input, err = e.readMenu("Edit AWS key [k,m,r,t,s,D,?,b]: ")
 		}
 
 		if err != nil {
@@ -191,6 +192,8 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 
 		switch input {
 		case "k":
+			output("Note: By default, Vaulted substitutes a temporary set of credentials when spawning an environment.\n" +
+				"      The AWS key input here may not match the key loaded into your environment.")
 			awsAccesskey, keyErr := e.readValue("Key ID: ")
 			if keyErr != nil {
 				return keyErr
@@ -204,6 +207,7 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 				Secret: awsSecretkey,
 				MFA:    "",
 				Role:   "",
+				ForgoTempCredGeneration: false,
 			}
 		case "m":
 			if v.AWSKey != nil {
@@ -221,6 +225,21 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 				awsRole, err = e.readValue("Role ARN: ")
 				if err == nil {
 					v.AWSKey.Role = awsRole
+				}
+			} else {
+				color.Red("Must associate an AWS key with the vault first")
+			}
+		case "t":
+			if v.AWSKey != nil {
+				var substituteTemporaryCredentials string
+				substituteTemporaryCredentials, err = e.readValue("Substitute with temporary credentials? (i.e. AWS STS) (y/n): ")
+				if err == nil {
+					if substituteTemporaryCredentials == "y" {
+						v.AWSKey.ForgoTempCredGeneration = false
+					}
+					if substituteTemporaryCredentials == "n" {
+						v.AWSKey.ForgoTempCredGeneration = true
+					}
 				}
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
@@ -515,6 +534,8 @@ func printAWS(v *vaulted.Vault, show bool) {
 			green.Printf("  Role: ")
 			fmt.Printf("%s\n", v.AWSKey.Role)
 		}
+		green.Printf("  Substitute with temporary credentials: ")
+		fmt.Printf("%t\n", !v.AWSKey.ForgoTempCredGeneration)
 	} else {
 		output("  [Empty]")
 	}

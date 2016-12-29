@@ -9,3 +9,29 @@ vaulted shell \- starts an interactive shell with the secrets for the vault load
 .PP
 Starts an interactive shell (uses the \fB\fCSHELL\fR environment variable, if set;
 otherwise defaults to \fB\fC/bin/sh\fR).
+.SH AWS KEY
+.PP
+Note: By default, Vaulted substitutes a temporary set of credentials when spawning an environment.
+The AWS key input here may not match the key loaded into your environment. This feature can be toggled in the
+\fB\fCvaulted edit\fR menu.
+.PP
+Vaulted uses your stored credentials to generate a set of temporary STS tokens
+that remain active for the duration specified in the vault.
+.PP
+This impacts the following environment variables:
+.RS
+.IP \(bu 2
+\fB\fCAWS_ACCESS_KEY_ID\fR
+.br
+This is the temporary access key id or the access key id stored in the vault,
+depending on whether substitution is enabled.
+.IP \(bu 2
+\fB\fCAWS_SECRET_ACCESS_KEY\fR
+.br
+This is the temporary secret access key or the secret access key stored in the vault,
+depending on whether substitution is enabled.
+.IP \(bu 2
+\fB\fCAWS_SESSION_TOKEN\fR (additionally, \fB\fCAWS_SECURITY_TOKEN\fR is set to support legacy SDKs)
+.br
+This is set to "" if temporary credential substitution is disabled.
+.RE

@@ -26,10 +26,11 @@ type Vault struct {
 }
 
 type AWSKey struct {
-	ID     string `json:"id"`
-	Secret string `json:"secret"`
-	MFA    string `json:"mfa,omitempty"`
-	Role   string `json:"role,omitempty"`
+	ID                      string `json:"id"`
+	Secret                  string `json:"secret"`
+	MFA                     string `json:"mfa,omitempty"`
+	Role                    string `json:"role,omitempty"`
+	ForgoTempCredGeneration bool   `json:"forgoTempCredGeneration"`
 }
 
 func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, error) {
@@ -65,11 +66,21 @@ func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, er
 	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
 		var err error
 		var stsCreds map[string]string
-		if v.AWSKey.Role != "" {
-			stsCreds, err = v.AWSKey.assumeRole(duration)
+		if v.AWSKey.ForgoTempCredGeneration {
+			stsCreds = map[string]string{
+				"AWS_KEY_ID":            v.AWSKey.ID,
+				"AWS_SECRET_ACCESS_KEY": v.AWSKey.Secret,
+			}
+			e.Vars["AWS_SESSION_TOKEN"] = ""
+			e.Vars["AWS_SECURITY_TOKEN"] = ""
 		} else {
-			stsCreds, err = v.AWSKey.generateSTS(duration)
+			if v.AWSKey.Role != "" {
+				stsCreds, err = v.AWSKey.assumeRole(duration)
+			} else {
+				stsCreds, err = v.AWSKey.generateSTS(duration)
+			}
 		}
+
 		if err != nil {
 			return nil, err
 		}
