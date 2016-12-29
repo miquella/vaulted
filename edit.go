@@ -86,7 +86,7 @@ func awsMenu() {
 	output("m - MFA")
 	output("r - Role")
 	output("t - Substitute with temporary credentials")
-	output("s - Show Key")
+	output("S - Show/Hide Key")
 	output("D - Delete")
 	output("? - Help")
 	output("b - Back")
@@ -183,7 +183,7 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 		if v.AWSKey == nil {
 			input, err = e.readMenu("Edit AWS key [k,?,b]: ")
 		} else {
-			input, err = e.readMenu("Edit AWS key [k,m,r,t,s,D,?,b]: ")
+			input, err = e.readMenu("Edit AWS key [k,m,r,t,S,D,?,b]: ")
 		}
 
 		if err != nil {
@@ -244,7 +244,7 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
 			}
-		case "s":
+		case "S":
 			if v.AWSKey != nil {
 				show = !show
 			} else {
