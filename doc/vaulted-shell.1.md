@@ -16,3 +16,24 @@ DESCRIPTION
 
 Starts an interactive shell (uses the `SHELL` environment variable, if set;
 otherwise defaults to `/bin/sh`).
+
+AWS KEY
+-------
+
+Note: By default, Vaulted substitutes a temporary set of credentials when spawning an environment.
+The AWS key input here may not match the key loaded into your environment. This feature can be toggled in the
+`vaulted edit` menu.
+
+Vaulted uses your stored credentials to generate a set of temporary STS tokens
+that remain active for the duration specified in the vault.
+
+This impacts the following environment variables:
+
+ * `AWS_ACCESS_KEY_ID`  
+   This is the temporary access key id or the access key id stored in the vault,
+   depending on whether substitution is enabled.
+ * `AWS_SECRET_ACCESS_KEY`  
+   This is the temporary secret access key or the secret access key stored in the vault,
+   depending on whether substitution is enabled.
+ * `AWS_SESSION_TOKEN` (additionally, `AWS_SECURITY_TOKEN` is set to support legacy SDKs)  
+   This is set to "" if temporary credential substitution is disabled.
