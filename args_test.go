@@ -19,29 +19,33 @@ var (
 		{
 			Args: []string{"-n", "one"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"/bin/fish", "--login"},
+				VaultName:     "one",
+				Command:       []string{"/bin/fish", "--login"},
+				DisplayStatus: true,
 			},
 		},
 		{
 			Args: []string{"-n", "one", "-i"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"/bin/fish", "--login"},
+				VaultName:     "one",
+				Command:       []string{"/bin/fish", "--login"},
+				DisplayStatus: true,
 			},
 		},
 		{
 			Args: []string{"-i", "-n", "one"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"/bin/fish", "--login"},
+				VaultName:     "one",
+				Command:       []string{"/bin/fish", "--login"},
+				DisplayStatus: true,
 			},
 		},
 		{
 			Args: []string{"-in", "one"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"/bin/fish", "--login"},
+				VaultName:     "one",
+				Command:       []string{"/bin/fish", "--login"},
+				DisplayStatus: true,
 			},
 		},
 		{
@@ -204,8 +208,9 @@ var (
 		{
 			Args: []string{"shell", "one"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"/bin/fish", "--login"},
+				VaultName:     "one",
+				Command:       []string{"/bin/fish", "--login"},
+				DisplayStatus: true,
 			},
 		},
 
