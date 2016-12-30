@@ -142,6 +142,7 @@ func parseSpawnArgs(args []string) (Command, error) {
 	s.VaultName = name
 	if interactive || flag.NArg() == 0 {
 		s.Command = interactiveShellCommand()
+		s.DisplayStatus = true
 	} else {
 		s.Command = flag.Args()
 	}
@@ -354,6 +355,7 @@ func parseShellArgs(args []string) (Command, error) {
 	s := &Spawn{}
 	s.VaultName = flag.Arg(0)
 	s.Command = interactiveShellCommand()
+	s.DisplayStatus = true
 	return s, nil
 }
 
