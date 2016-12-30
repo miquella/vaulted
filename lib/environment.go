@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
@@ -77,8 +78,10 @@ func (e *Environment) startProxyKeyring() (string, error) {
 
 	// load ssh keys
 	for comment, key := range e.SSHKeys {
+		timeRemaining := time.Unix(e.Expiration, 0).Sub(time.Now())
 		addedKey := agent.AddedKey{
-			Comment: comment,
+			Comment:      comment,
+			LifetimeSecs: uint32(timeRemaining.Seconds()),
 		}
 
 		addedKey.PrivateKey, err = ssh.ParseRawPrivateKey([]byte(key))
