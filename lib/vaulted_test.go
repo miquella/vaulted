@@ -20,20 +20,12 @@ const (
 )
 
 var (
-	xdg_data_home xdg.Path
-	xdg_data_dirs xdg.Paths
-	xdg_data      xdg.Paths
-
-	dir1 string
-	dir2 string
+	xdgBackup xdg.XDG
 )
 
 func TestListVaults(t *testing.T) {
-	err := setupVaults()
-	if err != nil {
-		t.Fatalf("failted to setup vaults: %v", err)
-	}
-	defer teardownVaults()
+	setupVaults(t)
+	defer teardownVaults(t)
 
 	vaults, err := vaulted.ListVaults()
 	if err != nil {
@@ -48,11 +40,8 @@ func TestListVaults(t *testing.T) {
 }
 
 func TestOpenVault(t *testing.T) {
-	err := setupVaults()
-	if err != nil {
-		t.Fatalf("failted to setup vaults: %v", err)
-	}
-	defer teardownVaults()
+	setupVaults(t)
+	defer teardownVaults(t)
 
 	vault, err := vaulted.OpenVault("bbb", "password")
 	if err != nil {
@@ -65,13 +54,10 @@ func TestOpenVault(t *testing.T) {
 }
 
 func TestSealVault(t *testing.T) {
-	err := setupVaults()
-	if err != nil {
-		t.Fatalf("failed to setup vaults: %v", err)
-	}
-	defer teardownVaults()
+	setupVaults(t)
+	defer teardownVaults(t)
 
-	_, err = vaulted.OpenVault("doesn't exist", "password")
+	_, err := vaulted.OpenVault("doesn't exist", "password")
 	if err != os.ErrNotExist {
 		t.Fatalf("expected: %v, got %v", os.ErrNotExist, err)
 	}
@@ -100,57 +86,119 @@ func TestSealVault(t *testing.T) {
 	}
 }
 
-func setupVaults() error {
-	var err error
-	if err == nil {
-		dir1, err = ioutil.TempDir("", "vaulted")
-	}
-	if err == nil {
-		err = os.Mkdir(filepath.Join(dir1, "vaulted"), 0700)
-	}
-	if err == nil {
-		err = ioutil.WriteFile(filepath.Join(dir1, "vaulted", "aaa"), []byte(VAULT_AAA), 0600)
-	}
-	if err == nil {
-		err = ioutil.WriteFile(filepath.Join(dir1, "vaulted", "bbb"), []byte(VAULT_BBB), 0600)
+func TestRemoveVault(t *testing.T) {
+	setupVaults(t)
+	defer teardownVaults(t)
+
+	err := vaulted.RemoveVault("aaa")
+	if err != nil {
+		t.Fatalf("failed to remove vault: %v", err)
 	}
 
-	if err == nil {
-		dir2, err = ioutil.TempDir("", "vaulted")
+	if _, err := os.Stat(filepath.Join(string(xdg.CACHE_HOME), "vaulted", "aaa")); !os.IsNotExist(err) {
+		t.Error("cache for 'aaa' should have been removed and wasn't")
 	}
-	if err == nil {
-		err = os.Mkdir(filepath.Join(dir2, "vaulted"), 0700)
-	}
-	if err == nil {
-		err = ioutil.WriteFile(filepath.Join(dir2, "vaulted", "bbb"), []byte(VAULT_HIDDEN), 0600)
-	}
-	if err == nil {
-		err = ioutil.WriteFile(filepath.Join(dir2, "vaulted", "ccc"), []byte(VAULT_CCC), 0600)
-	}
-
-	if err == nil {
-		xdg_data_home = xdg.DATA_HOME
-		xdg.DATA_HOME = xdg.Path(dir1)
-
-		xdg_data_dirs = xdg.DATA_DIRS
-		xdg.DATA_DIRS = xdg.Paths{xdg.Path(dir2)}
-
-		xdg_data = xdg.DATA
-		xdg.DATA = append(xdg.Paths{xdg.DATA_HOME}, xdg.DATA_DIRS...)
-	}
-
-	return err
 }
 
-func teardownVaults() {
-	xdg.DATA_HOME = xdg_data_home
-	xdg.DATA_DIRS = xdg_data_dirs
-	xdg.DATA = xdg_data
+func setupVaults(t *testing.T) {
+	setupXDG(t)
 
-	if dir1 != "" {
-		os.RemoveAll(dir1)
+	// XDG_DATA_HOME
+	err := os.Mkdir(filepath.Join(string(xdg.DATA_HOME), "vaulted"), 0700)
+	if err != nil {
+		t.Fatalf("failed to create vaulted DATA_HOME dir: %v", err)
 	}
-	if dir2 != "" {
-		os.RemoveAll(dir2)
+
+	err = ioutil.WriteFile(filepath.Join(string(xdg.DATA_HOME), "vaulted", "aaa"), []byte(VAULT_AAA), 0600)
+	if err != nil {
+		t.Fatalf("failed to write 'aaa' home vault file: %v", err)
 	}
+
+	err = ioutil.WriteFile(filepath.Join(string(xdg.DATA_HOME), "vaulted", "bbb"), []byte(VAULT_BBB), 0600)
+	if err != nil {
+		t.Fatalf("failed to write 'bbb' home vault file: %v", err)
+	}
+
+	// XDG_DATA_DIRS
+	err = os.Mkdir(filepath.Join(string(xdg.DATA_DIRS[0]), "vaulted"), 0700)
+	if err != nil {
+		t.Fatalf("failed to create vaulted DATA_DIRS dir: %v", err)
+	}
+
+	err = ioutil.WriteFile(filepath.Join(string(xdg.DATA_DIRS[0]), "vaulted", "bbb"), []byte(VAULT_HIDDEN), 0600)
+	if err != nil {
+		t.Fatalf("failed to write 'bbb' data vault file: %v", err)
+	}
+
+	err = ioutil.WriteFile(filepath.Join(string(xdg.DATA_DIRS[0]), "vaulted", "ccc"), []byte(VAULT_CCC), 0600)
+	if err != nil {
+		t.Fatalf("failed to write 'ccc' data vault file: %v", err)
+	}
+
+	// XDG_CACHE_HOME
+	err = os.Mkdir(filepath.Join(string(xdg.CACHE_HOME), "vaulted"), 0700)
+	if err != nil {
+		t.Fatalf("failed to create vaulted CACHE_HOME dir: %v", err)
+	}
+
+	err = ioutil.WriteFile(filepath.Join(string(xdg.CACHE_HOME), "vaulted", "aaa"), []byte{}, 0600)
+	if err != nil {
+		t.Fatalf("failed to write 'aaa' environment file: %v", err)
+	}
+}
+
+func teardownVaults(t *testing.T) {
+	teardownXDG(t)
+}
+
+func setupXDG(t *testing.T) {
+	xdgBackup.DATA_HOME = xdg.DATA_HOME
+	xdgBackup.DATA_DIRS = xdg.DATA_DIRS
+	xdgBackup.DATA = xdg.DATA
+	xdgBackup.CACHE_HOME = xdg.CACHE_HOME
+
+	// DATA
+	data_home, err := ioutil.TempDir("", "vaulted")
+	if err != nil {
+		t.Fatalf("failed to create XDG_DATA_HOME temp dir: %v", err)
+	}
+	xdg.DATA_HOME = xdg.Path(data_home)
+
+	data_dirs, err := ioutil.TempDir("", "vaulted")
+	if err != nil {
+		t.Fatalf("failed to create XDG_DATA_DIRS temp dir: %v", err)
+	}
+	xdg.DATA_DIRS = xdg.Paths{xdg.Path(data_dirs)}
+
+	xdg.DATA = append(xdg.Paths{xdg.DATA_HOME}, xdg.DATA_DIRS...)
+
+	// CACHE
+	cache_home, err := ioutil.TempDir("", "vaulted")
+	if err != nil {
+		t.Fatalf("failted to create XDG_CACHE_HOME temp dir: %v", err)
+	}
+	xdg.CACHE_HOME = xdg.Path(cache_home)
+}
+
+func teardownXDG(t *testing.T) {
+	err := os.RemoveAll(string(xdg.DATA_HOME))
+	if err != nil {
+		t.Fatalf("failed to remove XDG_DATA_HOME temp dir: %v", err)
+	}
+	for _, dir := range xdg.DATA_DIRS {
+		err := os.RemoveAll(string(dir))
+		if err != nil {
+			t.Fatalf("failed to remove XDG_DATA_HOME temp dir: %v", err)
+		}
+	}
+
+	err = os.RemoveAll(string(xdg.CACHE_HOME))
+	if err != nil {
+		t.Fatalf("failed to remove XDG_CACHE_HOME temp dir: %v", err)
+	}
+
+	xdg.DATA_HOME = xdgBackup.DATA_HOME
+	xdg.DATA_DIRS = xdgBackup.DATA_DIRS
+	xdg.DATA = xdgBackup.DATA
+	xdg.CACHE_HOME = xdgBackup.CACHE_HOME
 }
