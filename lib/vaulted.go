@@ -163,6 +163,8 @@ func RemoveVault(name string) error {
 		return fmt.Errorf("Because %s is outside the vaulted managed directory (%s), it must be removed manually", untouchable[0], xdg.DATA_HOME.Join("vaulted"))
 	}
 
+	removeEnvironment(name)
+
 	return os.Remove(existing)
 }
 
