@@ -155,7 +155,7 @@ func (e *Edit) edit(name string, v *vaulted.Vault) error {
 				}
 				v.Duration = duration
 			}
-		case "q":
+		case "b", "q":
 			return nil
 		case "?", "help":
 			mainMenu()
