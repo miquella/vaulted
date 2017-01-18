@@ -26,7 +26,8 @@ var (
 	cyan  = color.New(color.FgCyan)
 	blue  = color.New(color.FgBlue)
 
-	ErrAbort = errors.New("Aborted by user. Vault unchanged.")
+	ErrAbort       = errors.New("Aborted by user. Vault unchanged.")
+	ErrSaveAndExit = errors.New("Exiting at user request.")
 )
 
 type Edit struct {
@@ -90,6 +91,7 @@ func awsMenu() {
 	output("D - Delete")
 	output("? - Help")
 	output("b - Back")
+	output("q - Quit")
 	color.Unset()
 }
 
@@ -100,6 +102,7 @@ func sshKeysHelp() {
 	output("D - Delete")
 	output("? - Help")
 	output("b - Back")
+	output("q - Quit")
 	color.Unset()
 }
 
@@ -110,14 +113,14 @@ func variableMenu() {
 	output("D - Delete")
 	output("? - Help")
 	output("b - Back")
+	output("q - Quit")
 	color.Unset()
 }
 
 func (e *Edit) edit(name string, v *vaulted.Vault) error {
 	var err error
 
-	exit := false
-	for exit == false {
+	for {
 		cyan.Printf("\nVault: ")
 		fmt.Printf("%s", name)
 		printVariables(v)
@@ -153,7 +156,7 @@ func (e *Edit) edit(name string, v *vaulted.Vault) error {
 				v.Duration = duration
 			}
 		case "q":
-			exit = true
+			return nil
 		case "?", "help":
 			mainMenu()
 		default:
@@ -165,7 +168,7 @@ func (e *Edit) edit(name string, v *vaulted.Vault) error {
 		}
 	}
 
-	if err == io.EOF {
+	if err == io.EOF || err == ErrSaveAndExit {
 		return nil
 	} else {
 		return err
@@ -174,16 +177,15 @@ func (e *Edit) edit(name string, v *vaulted.Vault) error {
 
 func (e *Edit) aws(v *vaulted.Vault) error {
 	var err error
-	exit := false
 	show := false
 
-	for exit == false {
+	for {
 		var input string
 		printAWS(v, show)
 		if v.AWSKey == nil {
-			input, err = e.readMenu("Edit AWS key [k,?,b]: ")
+			input, err = e.readMenu("Edit AWS key [k,?,b,q]: ")
 		} else {
-			input, err = e.readMenu("Edit AWS key [k,m,r,t,S,D,?,b]: ")
+			input, err = e.readMenu("Edit AWS key [k,m,r,t,S,D,?,b,q]: ")
 		}
 
 		if err != nil {
@@ -263,7 +265,15 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 				color.Red("Must associate an AWS key with the vault first")
 			}
 		case "b":
-			exit = true
+			return nil
+		case "q":
+			var confirm string
+			confirm, err = e.readValue("Are you sure you wish to exit the vault? (y/n): ")
+			if err == nil {
+				if confirm == "y" {
+					return ErrSaveAndExit
+				}
+			}
 		case "?", "help":
 			awsMenu()
 		default:
@@ -278,12 +288,10 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 }
 
 func (e *Edit) sshKeysMenu(v *vaulted.Vault) error {
-	exit := false
-
-	for exit == false {
+	for {
 		var err error
 		printSSHKeys(v)
-		input, err := e.readMenu("Edit ssh keys: [a,D,?,b]: ")
+		input, err := e.readMenu("Edit ssh keys: [a,D,?,b,q]: ")
 		if err != nil {
 			return err
 		}
@@ -302,7 +310,15 @@ func (e *Edit) sshKeysMenu(v *vaulted.Vault) error {
 				}
 			}
 		case "b":
-			exit = true
+			return nil
+		case "q":
+			var confirm string
+			confirm, err = e.readValue("Are you sure you wish to exit the vault? (y/n): ")
+			if err == nil {
+				if confirm == "y" {
+					return ErrSaveAndExit
+				}
+			}
 		case "?", "help":
 			sshKeysHelp()
 		default:
@@ -449,11 +465,9 @@ func loadPublicKeyComment(filename string) string {
 }
 
 func (e *Edit) variables(v *vaulted.Vault) error {
-	exit := false
-
-	for exit == false {
+	for {
 		printVariables(v)
-		input, varErr := e.readMenu("Edit environment variables: [a,D,?,b]: ")
+		input, varErr := e.readMenu("Edit environment variables: [a,D,?,b,q]: ")
 		if varErr != nil {
 			return varErr
 		}
@@ -483,7 +497,16 @@ func (e *Edit) variables(v *vaulted.Vault) error {
 				color.Red("Variable '%s' not found", variable)
 			}
 		case "b":
-			exit = true
+			return nil
+		case "q":
+			var confirm string
+			var err error
+			confirm, err = e.readValue("Are you sure you wish to exit the vault? (y/n): ")
+			if err == nil {
+				if confirm == "y" {
+					return ErrSaveAndExit
+				}
+			}
 		case "?", "help":
 			variableMenu()
 		default:
