@@ -65,19 +65,18 @@ func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, er
 	// get aws creds
 	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
 		var err error
-		var stsCreds map[string]string
+		var creds *sts.Credentials
 		if v.AWSKey.ForgoTempCredGeneration {
-			stsCreds = map[string]string{
-				"AWS_ACCESS_KEY_ID":     v.AWSKey.ID,
-				"AWS_SECRET_ACCESS_KEY": v.AWSKey.Secret,
+			creds = &sts.Credentials{
+				AccessKeyId:     aws.String(v.AWSKey.ID),
+				SecretAccessKey: aws.String(v.AWSKey.Secret),
+				SessionToken:    aws.String(""), // permanent key, no session token
 			}
-			e.Vars["AWS_SESSION_TOKEN"] = ""
-			e.Vars["AWS_SECURITY_TOKEN"] = ""
 		} else {
 			if v.AWSKey.Role != "" {
-				stsCreds, err = v.AWSKey.assumeRole(duration)
+				creds, err = v.AWSKey.assumeRole(duration)
 			} else {
-				stsCreds, err = v.AWSKey.generateSTS(duration)
+				creds, err = v.AWSKey.generateSTS(duration)
 			}
 		}
 
@@ -85,9 +84,10 @@ func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, er
 			return nil, err
 		}
 
-		for key, value := range stsCreds {
-			e.Vars[key] = value
-		}
+		e.Vars["AWS_ACCESS_KEY_ID"] = *creds.AccessKeyId
+		e.Vars["AWS_SECRET_ACCESS_KEY"] = *creds.SecretAccessKey
+		e.Vars["AWS_SESSION_TOKEN"] = *creds.SessionToken
+		e.Vars["AWS_SECURITY_TOKEN"] = *creds.SessionToken
 	}
 
 	return e, nil
@@ -112,35 +112,37 @@ func (k *AWSKey) getAssumeRoleInput(duration time.Duration) (*sts.AssumeRoleInpu
 		RoleSessionName: &roleSessionName,
 	}
 
-	if k.MFA != "" {
-		tokenCode, err := getTokenCode()
-		if err != nil {
-			return nil, err
-		}
-		input.SerialNumber = &k.MFA
-		input.TokenCode = &tokenCode
-	}
-
 	return input, nil
 }
 
-func (k *AWSKey) assumeRole(duration time.Duration) (map[string]string, error) {
+func (k *AWSKey) assumeRole(duration time.Duration) (*sts.Credentials, error) {
+	// first generate a session token
+	creds, err := k.generateSTS(duration)
+	if err != nil {
+		return nil, err
+	}
+
+	// now use the generated session token to assume the role
+	sess := session.New(&aws.Config{
+		Credentials: credentials.NewStaticCredentials(
+			*creds.AccessKeyId,
+			*creds.SecretAccessKey,
+			*creds.SessionToken,
+		),
+	})
+	stsClient := sts.New(sess)
+
 	assumeRoleInput, err := k.getAssumeRoleInput(duration)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := k.stsClient().AssumeRole(assumeRoleInput)
+	resp, err := stsClient.AssumeRole(assumeRoleInput)
 	if err != nil {
 		return nil, err
 	}
 
-	return map[string]string{
-		"AWS_ACCESS_KEY_ID":     *resp.Credentials.AccessKeyId,
-		"AWS_SECRET_ACCESS_KEY": *resp.Credentials.SecretAccessKey,
-		"AWS_SESSION_TOKEN":     *resp.Credentials.SessionToken,
-		"AWS_SECURITY_TOKEN":    *resp.Credentials.SessionToken,
-	}, nil
+	return resp.Credentials, nil
 }
 
 func (k *AWSKey) buildSessionTokenInput(duration time.Duration) (*sts.GetSessionTokenInput, error) {
@@ -160,7 +162,7 @@ func (k *AWSKey) buildSessionTokenInput(duration time.Duration) (*sts.GetSession
 	return input, nil
 }
 
-func (k *AWSKey) generateSTS(duration time.Duration) (map[string]string, error) {
+func (k *AWSKey) generateSTS(duration time.Duration) (*sts.Credentials, error) {
 	sessionTokenInput, err := k.buildSessionTokenInput(duration)
 	if err != nil {
 		return nil, err
@@ -171,12 +173,7 @@ func (k *AWSKey) generateSTS(duration time.Duration) (map[string]string, error) 
 		return nil, err
 	}
 
-	return map[string]string{
-		"AWS_ACCESS_KEY_ID":     *resp.Credentials.AccessKeyId,
-		"AWS_SECRET_ACCESS_KEY": *resp.Credentials.SecretAccessKey,
-		"AWS_SESSION_TOKEN":     *resp.Credentials.SessionToken,
-		"AWS_SECURITY_TOKEN":    *resp.Credentials.SessionToken,
-	}, nil
+	return resp.Credentials, nil
 }
 
 func getTokenCode() (string, error) {

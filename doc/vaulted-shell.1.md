@@ -1,5 +1,5 @@
 vaulted-shell 1
-=============
+===============
 
 NAME
 ----
@@ -24,8 +24,12 @@ Note: By default, Vaulted substitutes a temporary set of credentials when spawni
 The AWS key input here may not match the key loaded into your environment. This feature can be toggled in the
 `vaulted edit` menu.
 
-Vaulted uses your stored credentials to generate a set of temporary STS tokens
-that remain active for the duration specified in the vault.
+Vaulted uses the permanent credentials stored in the vault to generate a set of temporary credentials using AWS STS.
+The temporary credentials generated are valid for a specific duration, set in the `vaulted edit` menu. This duration
+may be set between 15m and 36h.
+
+_**Note:** when Vaulted is configured to assume a role, the maximum duration for a vault is `1h`. Configuring higher
+values will cause AWS to return an error when spawning the vault._
 
 This impacts the following environment variables:
 
