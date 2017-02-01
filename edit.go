@@ -134,13 +134,13 @@ func (e *Edit) edit(name string, v *vaulted.Vault) error {
 			break
 		}
 		switch input {
-		case "a":
+		case "a", "aws":
 			err = e.aws(v)
-		case "s":
+		case "s", "ssh":
 			err = e.sshKeysMenu(v)
-		case "v":
+		case "v", "vars", "variables":
 			err = e.variables(v)
-		case "d":
+		case "d", "duration":
 			var dur string
 			dur, err = e.readValue("Duration (e.g. 15m or 36h): ")
 			if err == nil {
@@ -155,7 +155,7 @@ func (e *Edit) edit(name string, v *vaulted.Vault) error {
 				}
 				v.Duration = duration
 			}
-		case "b", "q":
+		case "b", "q", "quit", "exit":
 			return nil
 		case "?", "help":
 			mainMenu()
@@ -193,7 +193,7 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 		}
 
 		switch input {
-		case "k":
+		case "k", "add", "key", "keys":
 			output("Note: By default, Vaulted substitutes a temporary set of credentials when spawning an environment.\n" +
 				"      The AWS key input here may not match the key loaded into your environment.")
 			awsAccesskey, keyErr := e.readValue("Key ID: ")
@@ -211,7 +211,7 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 				Role:   "",
 				ForgoTempCredGeneration: false,
 			}
-		case "m":
+		case "m", "mfa":
 			if v.AWSKey != nil {
 				var awsMfa string
 				awsMfa, err = e.readValue("MFA ARN or serial number: ")
@@ -221,7 +221,7 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
 			}
-		case "r":
+		case "r", "role":
 			if v.AWSKey != nil {
 				var awsRole string
 				awsRole, err = e.readValue("Role ARN: ")
@@ -231,7 +231,7 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
 			}
-		case "t":
+		case "t", "temp", "temporary":
 			if v.AWSKey != nil {
 				var substituteTemporaryCredentials string
 				substituteTemporaryCredentials, err = e.readValue("Substitute with temporary credentials? (i.e. AWS STS) (y/n): ")
@@ -246,13 +246,13 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
 			}
-		case "S":
+		case "S", "show", "hide":
 			if v.AWSKey != nil {
 				show = !show
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
 			}
-		case "D":
+		case "D", "delete", "remove":
 			if v.AWSKey != nil {
 				var removeKey string
 				removeKey, err = e.readValue("Delete your AWS key? (y/n): ")
@@ -264,9 +264,9 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
 			}
-		case "b":
+		case "b", "back":
 			return nil
-		case "q":
+		case "q", "quit", "exit":
 			var confirm string
 			confirm, err = e.readValue("Are you sure you wish to exit the vault? (y/n): ")
 			if err == nil {
@@ -296,9 +296,9 @@ func (e *Edit) sshKeysMenu(v *vaulted.Vault) error {
 			return err
 		}
 		switch input {
-		case "a":
+		case "a", "add", "key", "keys":
 			err = e.addSSHKey(v)
-		case "D":
+		case "D", "delete", "remove":
 			var key string
 			key, err = e.readValue("Key: ")
 			if err == nil {
@@ -309,9 +309,9 @@ func (e *Edit) sshKeysMenu(v *vaulted.Vault) error {
 					color.Red("Key '%s' not found", key)
 				}
 			}
-		case "b":
+		case "b", "back":
 			return nil
-		case "q":
+		case "q", "quit", "exit":
 			var confirm string
 			confirm, err = e.readValue("Are you sure you wish to exit the vault? (y/n): ")
 			if err == nil {
@@ -472,7 +472,7 @@ func (e *Edit) variables(v *vaulted.Vault) error {
 			return varErr
 		}
 		switch input {
-		case "a":
+		case "a", "add", "var", "variable", "variables":
 			variableKey, keyErr := e.readValue("Name: ")
 			if keyErr != nil {
 				return keyErr
@@ -485,7 +485,7 @@ func (e *Edit) variables(v *vaulted.Vault) error {
 				v.Vars = make(map[string]string)
 			}
 			v.Vars[variableKey] = variableValue
-		case "D":
+		case "D", "delete", "remove":
 			variable, valErr := e.readValue("Variable name: ")
 			if valErr != nil {
 				return valErr
@@ -496,9 +496,9 @@ func (e *Edit) variables(v *vaulted.Vault) error {
 			} else {
 				color.Red("Variable '%s' not found", variable)
 			}
-		case "b":
+		case "b", "back":
 			return nil
-		case "q":
+		case "q", "quit", "exit":
 			var confirm string
 			var err error
 			confirm, err = e.readValue("Are you sure you wish to exit the vault? (y/n): ")
