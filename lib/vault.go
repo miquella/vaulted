@@ -68,7 +68,7 @@ func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, er
 		var stsCreds map[string]string
 		if v.AWSKey.ForgoTempCredGeneration {
 			stsCreds = map[string]string{
-				"AWS_KEY_ID":            v.AWSKey.ID,
+				"AWS_ACCESS_KEY_ID":     v.AWSKey.ID,
 				"AWS_SECRET_ACCESS_KEY": v.AWSKey.Secret,
 			}
 			e.Vars["AWS_SESSION_TOKEN"] = ""
