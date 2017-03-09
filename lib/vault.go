@@ -71,8 +71,6 @@ func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, er
 				"AWS_ACCESS_KEY_ID":     v.AWSKey.ID,
 				"AWS_SECRET_ACCESS_KEY": v.AWSKey.Secret,
 			}
-			e.Vars["AWS_SESSION_TOKEN"] = ""
-			e.Vars["AWS_SECURITY_TOKEN"] = ""
 		} else {
 			if v.AWSKey.Role != "" {
 				stsCreds, err = v.AWSKey.assumeRole(duration)
