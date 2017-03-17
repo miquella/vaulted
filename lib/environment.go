@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
 	"syscall"
 	"time"
@@ -43,6 +44,19 @@ func (e *Environment) Spawn(cmd []string, extraVars map[string]string) (*int, er
 
 	vars["SSH_AUTH_SOCK"] = sock
 
+	// trap signals
+	sigs := make(chan os.Signal)
+	signal.Notify(
+		sigs,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGQUIT,
+		syscall.SIGTERM,
+		syscall.SIGUSR1,
+		syscall.SIGUSR2,
+		syscall.SIGWINCH,
+	)
+
 	// start the process
 	var attr os.ProcAttr
 	attr.Env = e.buildEnviron(vars)
@@ -52,6 +66,18 @@ func (e *Environment) Spawn(cmd []string, extraVars map[string]string) (*int, er
 	if err != nil {
 		return nil, fmt.Errorf("Failed to execute command: %v", err)
 	}
+
+	// relay trapped signals to the spawned process
+	go func() {
+		for s := range sigs {
+			proc.Signal(s)
+		}
+	}()
+
+	defer func() {
+		signal.Stop(sigs)
+		close(sigs)
+	}()
 
 	// wait for the process to exit
 	state, _ := proc.Wait()
