@@ -31,9 +31,14 @@ type Vault struct {
 	Duration time.Duration     `json:"duration,omitempty"`
 }
 
+type AWSCredentials struct {
+	ID     string `json:"id"`
+	Secret string `json:"secret"`
+	Token  string `json:"token,omitempty"`
+}
+
 type AWSKey struct {
-	ID                      string `json:"id"`
-	Secret                  string `json:"secret"`
+	AWSCredentials
 	MFA                     string `json:"mfa,omitempty"`
 	Role                    string `json:"role,omitempty"`
 	ForgoTempCredGeneration bool   `json:"forgoTempCredGeneration"`
@@ -70,30 +75,22 @@ func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, er
 
 	// get aws creds
 	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
-		var err error
-		var creds *sts.Credentials
 		if v.AWSKey.ForgoTempCredGeneration {
-			creds = &sts.Credentials{
-				AccessKeyId:     aws.String(v.AWSKey.ID),
-				SecretAccessKey: aws.String(v.AWSKey.Secret),
-				SessionToken:    aws.String(""), // permanent key, no session token
+			e.AWSCreds = &AWSCredentials{
+				ID:     v.AWSKey.ID,
+				Secret: v.AWSKey.Secret,
 			}
 		} else {
+			var err error
 			if v.AWSKey.Role != "" {
-				creds, err = v.AWSKey.assumeRole(duration)
+				e.AWSCreds, err = v.AWSKey.assumeRole(duration)
 			} else {
-				creds, err = v.AWSKey.generateSTS(duration)
+				e.AWSCreds, err = v.AWSKey.generateSTS(duration)
+			}
+			if err != nil {
+				return nil, err
 			}
 		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		e.Vars["AWS_ACCESS_KEY_ID"] = *creds.AccessKeyId
-		e.Vars["AWS_SECRET_ACCESS_KEY"] = *creds.SecretAccessKey
-		e.Vars["AWS_SESSION_TOKEN"] = *creds.SessionToken
-		e.Vars["AWS_SECURITY_TOKEN"] = *creds.SessionToken
 	}
 
 	return e, nil
@@ -110,7 +107,7 @@ func (k *AWSKey) stsClient() *sts.STS {
 	return sts.New(sess)
 }
 
-func (k *AWSKey) assumeRole(duration time.Duration) (*sts.Credentials, error) {
+func (k *AWSKey) assumeRole(duration time.Duration) (*AWSCredentials, error) {
 	// first generate a session token
 	creds, err := k.generateSTS(duration)
 	if err != nil {
@@ -120,9 +117,9 @@ func (k *AWSKey) assumeRole(duration time.Duration) (*sts.Credentials, error) {
 	// now use the generated session token to assume the role
 	sess := session.New(&aws.Config{
 		Credentials: credentials.NewStaticCredentials(
-			*creds.AccessKeyId,
-			*creds.SecretAccessKey,
-			*creds.SessionToken,
+			creds.ID,
+			creds.Secret,
+			creds.Token,
 		),
 	})
 
@@ -130,7 +127,7 @@ func (k *AWSKey) assumeRole(duration time.Duration) (*sts.Credentials, error) {
 	return k.assumeRoleWithClient(client, duration)
 }
 
-func (k *AWSKey) assumeRoleWithClient(client *sts.STS, duration time.Duration) (*sts.Credentials, error) {
+func (k *AWSKey) assumeRoleWithClient(client *sts.STS, duration time.Duration) (*AWSCredentials, error) {
 	roleSessionName := DefaultSessionName
 
 	callerIdentity, err := client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
@@ -152,7 +149,12 @@ func (k *AWSKey) assumeRoleWithClient(client *sts.STS, duration time.Duration) (
 		return nil, err
 	}
 
-	return assumeRoleOutput.Credentials, nil
+	credentials := &AWSCredentials{
+		ID:     *assumeRoleOutput.Credentials.AccessKeyId,
+		Secret: *assumeRoleOutput.Credentials.SecretAccessKey,
+		Token:  *assumeRoleOutput.Credentials.SessionToken,
+	}
+	return credentials, nil
 }
 
 func (k *AWSKey) buildSessionTokenInput(duration time.Duration) (*sts.GetSessionTokenInput, error) {
@@ -172,7 +174,7 @@ func (k *AWSKey) buildSessionTokenInput(duration time.Duration) (*sts.GetSession
 	return input, nil
 }
 
-func (k *AWSKey) generateSTS(duration time.Duration) (*sts.Credentials, error) {
+func (k *AWSKey) generateSTS(duration time.Duration) (*AWSCredentials, error) {
 	sessionTokenInput, err := k.buildSessionTokenInput(duration)
 	if err != nil {
 		return nil, err
@@ -183,7 +185,12 @@ func (k *AWSKey) generateSTS(duration time.Duration) (*sts.Credentials, error) {
 		return nil, err
 	}
 
-	return resp.Credentials, nil
+	credentials := &AWSCredentials{
+		ID:     *resp.Credentials.AccessKeyId,
+		Secret: *resp.Credentials.SecretAccessKey,
+		Token:  *resp.Credentials.SessionToken,
+	}
+	return credentials, nil
 }
 
 func getTokenCode() (string, error) {

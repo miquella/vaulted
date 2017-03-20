@@ -11,10 +11,12 @@ import (
 func TestLoad(t *testing.T) {
 	v := &vaulted.Vault{
 		AWSKey: &vaulted.AWSKey{
-			ID:     "id",
-			Secret: "secret",
-			MFA:    "mfa",
-			Role:   "role",
+			AWSCredentials: vaulted.AWSCredentials{
+				ID:     "id",
+				Secret: "secret",
+			},
+			MFA:  "mfa",
+			Role: "role",
 		},
 		Vars: map[string]string{
 			"VAR1": "TESTING",
