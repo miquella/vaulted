@@ -205,10 +205,12 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 				return secretErr
 			}
 			v.AWSKey = &vaulted.AWSKey{
-				ID:     awsAccesskey,
-				Secret: awsSecretkey,
-				MFA:    "",
-				Role:   "",
+				AWSCredentials: vaulted.AWSCredentials{
+					ID:     awsAccesskey,
+					Secret: awsSecretkey,
+				},
+				MFA:  "",
+				Role: "",
 				ForgoTempCredGeneration: false,
 			}
 		case "m", "mfa":

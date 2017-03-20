@@ -169,10 +169,12 @@ func cloneVault(vault *vaulted.Vault) *vaulted.Vault {
 
 	if vault.AWSKey != nil {
 		newVault.AWSKey = &vaulted.AWSKey{
-			ID:     vault.AWSKey.ID,
-			Secret: vault.AWSKey.Secret,
-			MFA:    vault.AWSKey.MFA,
-			Role:   vault.AWSKey.Role,
+			AWSCredentials: vaulted.AWSCredentials{
+				ID:     vault.AWSKey.ID,
+				Secret: vault.AWSKey.Secret,
+			},
+			MFA:  vault.AWSKey.MFA,
+			Role: vault.AWSKey.Role,
 		}
 	}
 

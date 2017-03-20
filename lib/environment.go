@@ -16,6 +16,7 @@ import (
 type Environment struct {
 	Expiration int64             `json:"expiration"`
 	Vars       map[string]string `json:"vars"`
+	AWSCreds   *AWSCredentials   `json:"aws_creds,omitempty"`
 	SSHKeys    map[string]string `json:"ssh_keys,omitempty"`
 }
 
@@ -145,6 +146,20 @@ func (e *Environment) buildEnviron(extraVars map[string]string) []string {
 	}
 	for key, value := range extraVars {
 		env[key] = value
+	}
+
+	if e.AWSCreds != nil {
+		delete(env, "AWS_ACCESS_KEY_ID")
+		delete(env, "AWS_SECRET_ACCESS_KEY")
+		delete(env, "AWS_SESSION_TOKEN")
+		delete(env, "AWS_SECURITY_TOKEN")
+
+		env["AWS_ACCESS_KEY_ID"] = e.AWSCreds.ID
+		env["AWS_SECRET_ACCESS_KEY"] = e.AWSCreds.Secret
+		if e.AWSCreds.Token != "" {
+			env["AWS_SESSION_TOKEN"] = e.AWSCreds.Token
+			env["AWS_SECURITY_TOKEN"] = e.AWSCreds.Token
+		}
 	}
 
 	// recombine into environ
