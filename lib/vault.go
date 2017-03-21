@@ -2,6 +2,8 @@ package vaulted
 
 import (
 	"errors"
+	"fmt"
+	"path"
 	"strings"
 	"time"
 
@@ -10,6 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/miquella/ask"
+)
+
+const (
+	DefaultSessionName = "VaultedSession"
 )
 
 var STSDurationDefault = time.Hour
@@ -104,17 +110,6 @@ func (k *AWSKey) stsClient() *sts.STS {
 	return sts.New(sess)
 }
 
-func (k *AWSKey) getAssumeRoleInput(duration time.Duration) (*sts.AssumeRoleInput, error) {
-	roleSessionName := "VaultedSession"
-	input := &sts.AssumeRoleInput{
-		DurationSeconds: aws.Int64(int64(duration.Seconds())),
-		RoleArn:         &k.Role,
-		RoleSessionName: &roleSessionName,
-	}
-
-	return input, nil
-}
-
 func (k *AWSKey) assumeRole(duration time.Duration) (*sts.Credentials, error) {
 	// first generate a session token
 	creds, err := k.generateSTS(duration)
@@ -130,19 +125,34 @@ func (k *AWSKey) assumeRole(duration time.Duration) (*sts.Credentials, error) {
 			*creds.SessionToken,
 		),
 	})
-	stsClient := sts.New(sess)
 
-	assumeRoleInput, err := k.getAssumeRoleInput(duration)
+	client := sts.New(sess)
+	return k.assumeRoleWithClient(client, duration)
+}
+
+func (k *AWSKey) assumeRoleWithClient(client *sts.STS, duration time.Duration) (*sts.Credentials, error) {
+	roleSessionName := DefaultSessionName
+
+	callerIdentity, err := client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	if err == nil {
+		parts := strings.SplitN(*callerIdentity.Arn, ":", 6)
+		if len(parts) == 6 {
+			roleSessionName = fmt.Sprintf("%s@%s", path.Base(parts[5]), parts[4])
+		}
+	}
+
+	assumeRoleInput := &sts.AssumeRoleInput{
+		DurationSeconds: aws.Int64(int64(duration.Seconds())),
+		RoleArn:         &k.Role,
+		RoleSessionName: &roleSessionName,
+	}
+
+	assumeRoleOutput, err := client.AssumeRole(assumeRoleInput)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := stsClient.AssumeRole(assumeRoleInput)
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.Credentials, nil
+	return assumeRoleOutput.Credentials, nil
 }
 
 func (k *AWSKey) buildSessionTokenInput(duration time.Duration) (*sts.GetSessionTokenInput, error) {
