@@ -141,20 +141,7 @@ func (e *Edit) edit(name string, v *vaulted.Vault) error {
 		case "v", "vars", "variables":
 			err = e.variables(v)
 		case "d", "duration":
-			var dur string
-			dur, err = e.readValue("Duration (e.g. 15m or 36h): ")
-			if err == nil {
-				duration, durErr := time.ParseDuration(dur)
-				if durErr != nil {
-					color.Red("%s", durErr)
-					break
-				}
-				if duration < 15*time.Minute || duration > 36*time.Hour {
-					color.Red("Duration must be between 15m and 36h")
-					break
-				}
-				v.Duration = duration
-			}
+			e.setDuration(v)
 		case "b", "q", "quit", "exit":
 			return nil
 		case "?", "help":
@@ -228,7 +215,19 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 				var awsRole string
 				awsRole, err = e.readValue("Role ARN: ")
 				if err == nil {
-					v.AWSKey.Role = awsRole
+					if v.Duration > time.Hour {
+						var conf string
+						color.Yellow("\nProceeding will adjust your vault duration to 1h (the maximum when assuming a role).")
+						conf, err = e.readPrompt("Do you wish to proceed? (y/n): ")
+						if conf == "y" {
+							v.Duration = time.Hour
+							v.AWSKey.Role = awsRole
+						} else {
+							output("No role was added.")
+						}
+					} else {
+						v.AWSKey.Role = awsRole
+					}
 				}
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
@@ -518,6 +517,41 @@ func (e *Edit) variables(v *vaulted.Vault) error {
 	return nil
 }
 
+func (e *Edit) setDuration(v *vaulted.Vault) {
+	var dur string
+	var err error
+	maxDuration := 36 * time.Hour
+	if v.AWSKey != nil && v.AWSKey.Role != "" {
+		maxDuration = time.Hour
+	}
+	readMessage := fmt.Sprintf("Duration (e.g. 15m or %s): ", formatDuration(maxDuration))
+	dur, err = e.readValue(readMessage)
+	if err == nil {
+		duration, durErr := time.ParseDuration(dur)
+		if durErr != nil {
+			color.Red("%s", durErr)
+			return
+		}
+		if duration < 15*time.Minute || duration > maxDuration {
+			errorMessage := fmt.Sprintf("Duration must be between 15m and %s", formatDuration(maxDuration))
+			color.Red(errorMessage)
+			return
+		}
+		v.Duration = duration
+	}
+}
+
+func formatDuration(duration time.Duration) string {
+	dur := duration.String()
+	if strings.HasSuffix(dur, "m0s") {
+		dur = dur[:len(dur)-2]
+	}
+	if strings.HasSuffix(dur, "h0m") {
+		dur = dur[:len(dur)-2]
+	}
+	return dur
+}
+
 func output(message string) {
 	fmt.Printf("%s\n", message)
 }
@@ -592,7 +626,7 @@ func printDuration(v *vaulted.Vault) {
 	} else {
 		duration = v.Duration
 	}
-	fmt.Printf("%s\n", duration.String())
+	fmt.Printf("%s\n", formatDuration(duration))
 }
 
 func (e *Edit) readMenu(message string) (string, error) {
@@ -619,6 +653,17 @@ func (e *Edit) readValue(message string) (string, error) {
 		}
 	}
 	return e.readInput(color.GreenString(message), e.rlValue)
+}
+
+func (e *Edit) readPrompt(message string) (string, error) {
+	if e.rlValue == nil {
+		var err error
+		e.rlValue, err = readline.New("")
+		if err != nil {
+			return "", err
+		}
+	}
+	return e.readInput(color.YellowString(message), e.rlValue)
 }
 
 func (e *Edit) readInput(message string, rl *readline.Instance) (string, error) {
