@@ -26,8 +26,7 @@ AWS KEY
 * m - MFA  
    Manages MFA (multi-factor authentication) ARN or serial number. If enabled,
    user will be prompted to enter MFA code when accessing vault. MFA will
-   remain active for the vault duration.
-
+   remain active for the vault duration.  
    If you are using STS credentials, which occurs by default (see the 't'
    option below for details), you must have MFA enabled to invoke any IAM calls.
 * r - Role  
