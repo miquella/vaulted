@@ -238,7 +238,19 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 				substituteTemporaryCredentials, err = e.readValue("Substitute with temporary credentials? (i.e. AWS STS) (y/n): ")
 				if err == nil {
 					if substituteTemporaryCredentials == "y" {
-						v.AWSKey.ForgoTempCredGeneration = false
+						if v.Duration > 36*time.Hour {
+							var conf string
+							color.Yellow("\nProceeding will adjust your vault duration to 36h (the maximum when using STS creds).")
+							conf, err = e.readPrompt("Do you wish to proceed? (y/n): ")
+							if conf == "y" {
+								v.Duration = 36 * time.Hour
+								v.AWSKey.ForgoTempCredGeneration = false
+							} else {
+								output("Temporary credentials not enabled.")
+							}
+						} else {
+							v.AWSKey.ForgoTempCredGeneration = false
+						}
 					}
 					if substituteTemporaryCredentials == "n" {
 						v.AWSKey.ForgoTempCredGeneration = true
@@ -520,11 +532,14 @@ func (e *Edit) variables(v *vaulted.Vault) error {
 func (e *Edit) setDuration(v *vaulted.Vault) {
 	var dur string
 	var err error
-	maxDuration := 36 * time.Hour
+	maxDuration := 999 * time.Hour
+	if v.AWSKey != nil && v.AWSKey.ForgoTempCredGeneration == false {
+		maxDuration = 36 * time.Hour
+	}
 	if v.AWSKey != nil && v.AWSKey.Role != "" {
 		maxDuration = time.Hour
 	}
-	readMessage := fmt.Sprintf("Duration (e.g. 15m or %s): ", formatDuration(maxDuration))
+	readMessage := fmt.Sprintf("Duration (15m–%s): ", formatDuration(maxDuration))
 	dur, err = e.readValue(readMessage)
 	if err == nil {
 		duration, durErr := time.ParseDuration(dur)
