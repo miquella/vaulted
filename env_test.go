@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -8,17 +9,15 @@ import (
 )
 
 var (
-	envFishOutput = `set -x ONE "111111";
-set -x THREE "333";
-set -x TWO "222";
-`
-	envFishOutputWithHint = `# To load these variables into your shell, execute:
+	envFishOutput = `# To load these variables into your shell, execute:
 #   eval (vaulted env one)
 set -x ONE "111111";
 set -x THREE "333";
 set -x TWO "222";
 `
-	envFishOutputWithPermCreds = `set -e AWS_SECURITY_TOKEN;
+	envFishOutputWithPermCreds = `# To load these variables into your shell, execute:
+#   eval (vaulted env one)
+set -e AWS_SECURITY_TOKEN;
 set -e AWS_SESSION_TOKEN;
 set -x AWS_ACCESS_KEY_ID "aws-key-id";
 set -x AWS_SECRET_ACCESS_KEY "aws-secret-key";
@@ -27,17 +26,15 @@ set -x THREE "333";
 set -x TWO "222";
 `
 
-	envShOutput = `export ONE="111111"
-export THREE="333"
-export TWO="222"
-`
-	envShOutputWithHint = `# To load these variables into your shell, execute:
+	envShOutput = `# To load these variables into your shell, execute:
 #   eval $(vaulted env one)
 export ONE="111111"
 export THREE="333"
 export TWO="222"
 `
-	envShOutputWithPermCreds = `unset AWS_SECURITY_TOKEN
+	envShOutputWithPermCreds = `# To load these variables into your shell, execute:
+#   eval $(vaulted env one)
+unset AWS_SECURITY_TOKEN
 unset AWS_SESSION_TOKEN
 export AWS_ACCESS_KEY_ID="aws-key-id"
 export AWS_SECRET_ACCESS_KEY="aws-secret-key"
@@ -45,9 +42,17 @@ export ONE="111111"
 export THREE="333"
 export TWO="222"
 `
+
+	envJSONOutput = `{
+  "ONE": "111111",
+  "THREE": "333",
+  "TWO": "222"
+}
+`
+	envCustom = "[AWS_SECURITY_TOKEN AWS_SESSION_TOKEN]"
 )
 
-func TestEng(t *testing.T) {
+func TestEnv(t *testing.T) {
 	steward := NewTestSteward()
 	steward.Vaults["one"] = &vaulted.Vault{
 		Vars: map[string]string{
@@ -59,68 +64,53 @@ func TestEng(t *testing.T) {
 
 	output := CaptureStdout(func() {
 		e := Env{
-			VaultName: "one",
-			Shell:     "fish",
+			VaultName:     "one",
+			DetectedShell: "fish",
+			Format:        "shell",
+			Command:       "vaulted env one",
 		}
 		err := e.Run(steward)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 	})
 	if string(output) != envFishOutput {
-		t.Fatalf("Incorrect output: %s", output)
-	}
-
-	output = CaptureStdout(func() {
-		args := os.Args
-		os.Args = []string{"vaulted", "env", "one"}
-		defer func() { os.Args = args }()
-
-		e := Env{
-			VaultName: "one",
-			Shell:     "fish",
-			UsageHint: true,
-		}
-		err := e.Run(steward)
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-	if string(output) != envFishOutputWithHint {
-		t.Fatalf("Incorrect output: %s", output)
+		t.Error(failureMessage(envFishOutput, output))
 	}
 
 	output = CaptureStdout(func() {
 		e := Env{
-			VaultName: "one",
-			Shell:     "sh",
+			VaultName:     "one",
+			DetectedShell: "sh",
+			Format:        "shell",
+			Command:       "vaulted env one",
 		}
 		err := e.Run(steward)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 	})
 	if string(output) != envShOutput {
-		t.Fatalf("Incorrect output: %s", output)
+		t.Error(failureMessage(envShOutput, output))
 	}
 
 	output = CaptureStdout(func() {
 		args := os.Args
-		os.Args = []string{"vaulted", "env", "one"}
+		os.Args = []string{"vaulted", "env", "one", "--format", "json"}
 		defer func() { os.Args = args }()
 
 		e := Env{
-			VaultName: "one",
-			Shell:     "sh",
-			UsageHint: true,
+			VaultName:     "one",
+			DetectedShell: "sh",
+			Format:        "json",
 		}
 		err := e.Run(steward)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 	})
-	if string(output) != envShOutputWithHint {
-		t.Fatalf("Incorrect output: %s", output)
+	if string(output) != envJSONOutput {
+		t.Error(failureMessage(envJSONOutput, output))
 	}
 
 	// cached environment
@@ -138,29 +128,58 @@ func TestEng(t *testing.T) {
 
 	output = CaptureStdout(func() {
 		e := Env{
-			VaultName: "one",
-			Shell:     "fish",
+			VaultName:     "one",
+			DetectedShell: "fish",
+			Format:        "fish",
+			Command:       "vaulted env one",
 		}
 		err := e.Run(steward)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 	})
 	if string(output) != envFishOutputWithPermCreds {
-		t.Fatalf("Incorrect output: %s", output)
+		t.Error(failureMessage(envFishOutputWithPermCreds, output))
 	}
 
 	output = CaptureStdout(func() {
 		e := Env{
-			VaultName: "one",
-			Shell:     "sh",
+			VaultName:     "one",
+			DetectedShell: "sh",
+			Format:        "shell",
+			Command:       "vaulted env one",
 		}
 		err := e.Run(steward)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 	})
+
 	if string(output) != envShOutputWithPermCreds {
-		t.Fatalf("Incorrect output: %s", output)
+		t.Error(failureMessage(envShOutputWithPermCreds, output))
 	}
+
+	output = CaptureStdout(func() {
+		args := os.Args
+		os.Args = []string{"vaulted", "env", "one"}
+		defer func() { os.Args = args }()
+
+		e := Env{
+			VaultName: "one",
+			Format:    "{{ .Unset }}",
+		}
+		err := e.Run(steward)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+
+	if string(output) != envCustom {
+		t.Error(failureMessage(envCustom, output))
+	}
+
+}
+
+func failureMessage(expected string, got []byte) string {
+	return fmt.Sprintf("Incorrect output!\nExpected:\n\"%s\"\ngot:\n\"%s\"", expected, got)
 }

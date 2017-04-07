@@ -8,6 +8,7 @@ import (
 
 type parseCase struct {
 	Args        []string
+	OsArgs      []string
 	Environment map[string]string
 
 	Command Command
@@ -153,15 +154,28 @@ var (
 
 		// Env
 		{
-			Args: []string{"env", "one"},
+			Args:   []string{"env", "one"},
+			OsArgs: []string{"vaulted", "env", "one"},
 			Command: &Env{
-				VaultName: "one",
-				Shell:     "fish",
+				VaultName:     "one",
+				DetectedShell: "fish",
+				Format:        "shell",
+				Command:       "vaulted env one",
 			},
 		},
 		{
 			Args:    []string{"env", "--help"},
 			Command: &Help{Subcommand: "env"},
+		},
+		{
+			Args:   []string{"env", "foo", "--format", "json"},
+			OsArgs: []string{"vaulted", "env", "foo", "--format", "json"},
+			Command: &Env{
+				VaultName:     "foo",
+				DetectedShell: "fish",
+				Format:        "json",
+				Command:       "vaulted env foo --format json",
+			},
 		},
 
 		// Help
@@ -386,7 +400,6 @@ var (
 		{
 			Args: []string{"env", "one", "two"},
 		},
-
 		// List
 		{
 			Args: []string{"ls", "one"},
@@ -450,6 +463,12 @@ func TestParseArgs(t *testing.T) {
 		for key, value := range good.Environment {
 			savedEnv[key] = os.Getenv(key)
 			os.Setenv(key, value)
+		}
+
+		if good.OsArgs != nil {
+			origArgs := os.Args
+			os.Args = good.OsArgs
+			defer func() { os.Args = origArgs }()
 		}
 
 		var cmd Command

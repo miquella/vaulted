@@ -1,16 +1,57 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"os"
 	"sort"
 	"strings"
+	"text/template"
+
+	"github.com/miquella/vaulted/lib"
 )
 
 type Env struct {
-	VaultName string
-	Shell     string
-	UsageHint bool
+	VaultName     string
+	DetectedShell string
+	Format        string
+	Command       string
+}
+
+type templateVals struct {
+	vaulted.Variables
+	Command string
+}
+
+var (
+	envFormatters = map[string]string{
+		"fish": `# To load these variables into your shell, execute:
+#   eval ({{ .Command }})
+{{ range $var := .Unset}}set -e {{ $var }};
+{{ end -}}
+{{ range $var, $value := .Set }}set -x {{ $var }} "{{ replace $value "\"" "\\\"" }}";
+{{ end }}`,
+		"sh": `# To load these variables into your shell, execute:
+#   eval $({{ .Command }})
+{{ range $var := .Unset}}unset {{ $var }}
+{{ end -}}
+{{ range $var, $value := .Set }}export {{ $var }}="{{ replace $value "\"" "\\\"" }}"
+{{ end }}`,
+		"json": "{{ json .Set }}\n",
+	}
+)
+
+var templateFuncMap = template.FuncMap{
+	"replace": func(val string, toReplace string, replacement string) string {
+		return strings.Replace(val, toReplace, replacement, -1)
+	},
+	"json": func(val interface{}) (string, error) {
+		json, err := json.MarshalIndent(val, "", "  ")
+		if err != nil {
+			return "", err
+		} else {
+			return string(json), nil
+		}
+	},
 }
 
 func (e *Env) Run(steward Steward) error {
@@ -19,47 +60,32 @@ func (e *Env) Run(steward Steward) error {
 		return err
 	}
 
-	usageHint := ""
-	unsetVar := ""
-	setVar := ""
-	quoteReplacement := "\""
-	switch e.Shell {
-	case "fish":
-		usageHint = "# To load these variables into your shell, execute:\n#   eval (%s)\n"
-		unsetVar = "set -e %s;\n"
-		setVar = "set -x %s \"%s\";\n"
-		quoteReplacement = "\\\""
-	default:
-		usageHint = "# To load these variables into your shell, execute:\n#   eval $(%s)\n"
-		unsetVar = "unset %s\n"
-		setVar = "export %s=\"%s\"\n"
-		quoteReplacement = "\\\""
+	var templateStr string
+	format := e.Format
+
+	if format == "shell" {
+		format = e.DetectedShell
 	}
 
-	vars := env.Variables()
-
-	// sort the vars to unset
-	sort.Strings(vars.Unset)
-
-	// sort the vars to set
-	var keys []string
-	for key := range vars.Set {
-		keys = append(keys, key)
+	if foundTemplate, ok := envFormatters[format]; ok {
+		templateStr = foundTemplate
+	} else {
+		templateStr = format
 	}
-	sort.Strings(keys)
+	tmpl, err := template.New("envTmpl").Funcs(templateFuncMap).Parse(templateStr)
 
-	// display the vars using the format string for the shell
-	if e.UsageHint {
-		fmt.Printf(usageHint, strings.Join(os.Args, " "))
+	vals := templateVals{}
+	variables := env.Variables()
+
+	vals.Set = variables.Set
+
+	sort.Strings(variables.Unset)
+	vals.Unset = variables.Unset
+
+	vals.Command = e.Command
+
+	if err != nil {
+		return ErrorWithExitCode{err, 64}
 	}
-
-	for _, key := range vars.Unset {
-		fmt.Printf(unsetVar, key)
-	}
-
-	for _, key := range keys {
-		fmt.Printf(setVar, key, strings.Replace(vars.Set[key], "\"", quoteReplacement, -1))
-	}
-
-	return nil
+	return tmpl.Execute(os.Stdout, vals)
 }
