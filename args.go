@@ -236,6 +236,7 @@ func parseEditArgs(args []string) (Command, error) {
 
 func parseEnvArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("env", pflag.ContinueOnError)
+	flag.String("format", "shell", "Specify what built in format to output variables in (shell, sh, fish, json) or a text template. Default: shell")
 	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
@@ -255,18 +256,12 @@ func parseEnvArgs(args []string) (Command, error) {
 		shell = "sh"
 	}
 
-	usageHint := true
-	fi, err := os.Stdout.Stat()
-	if err == nil {
-		if fi.Mode()&os.ModeCharDevice == 0 {
-			usageHint = false
-		}
-	}
-
 	e := &Env{}
 	e.VaultName = flag.Arg(0)
-	e.Shell = shell
-	e.UsageHint = usageHint
+	e.DetectedShell = shell
+	e.Command = strings.Join(os.Args, " ")
+
+	e.Format, _ = flag.GetString("format")
 	return e, nil
 }
 

@@ -4,7 +4,7 @@
 vaulted env \- outputs shell commands that load secrets for a vault into the shell
 .SH SYNOPSIS
 .PP
-\fB\fCvaulted env\fR \fIname\fP
+\fB\fCvaulted env\fR \fIname\fP [\fIOPTIONS\fP]
 .SH DESCRIPTION
 .PP
 Creates an environment using variables and the AWS key stored in the vault. The
@@ -17,6 +17,38 @@ is unknown or unspecified, \fB\fCsh\fR compatible commands are emitted.
 \fINote:\fP SSH keys are ignored when generating environments this way. This is due
 to the inability to track the lifetime of the environment, which means the SSH
 agent would exist indefinitely.
+.SH OPTIONS
+.TP
+\fB\fC\-\-format\fR <shell,fish,sh,json,\fIcustom\fP>
+Specify what format to use, defaults to \fB\fCshell\fR which will autodetect which
+shell format to emit.
+.IP
+\fB\fCfish\fR, and \fB\fCsh\fR will emit output suitable for evaluation into the specified
+shell. \fB\fCjson\fR will emit the map of values to be set in a format useful in
+other programming environments, this will not include the array of variables
+to be removed.
+.IP
+If the format string supplied does not match one of the pre\-defined formats
+it will be interpreted as a text template using golang's built\-in
+\fB\fCtext/template\fR package. The user template will be supplied a struct with the
+fields outlined below. Also available are a \fB\fCreplace\fR function for gsub like
+behavior and a \fB\fCjson\fR function which accepts a value and emits a pretty
+printed JSON string.
+.IP
+To receive just the names of the variables to remove formatted as JSON the
+custom template would be: \fB\fC{{ json .Unset }}\fR
+.TS
+allbox;
+cb cb cb
+l l l
+l l l
+l l l
+.
+Field Name	Type	Notes
+Set	map[string]string	A map of environment variables to be set along with their values
+Unset	[]string	A slice of variables to be removed from the environment before setting new values
+Command	string	The full command line used to invoke vaulted including options
+.TE
 .SH EXIT CODES
 .TS
 allbox;
