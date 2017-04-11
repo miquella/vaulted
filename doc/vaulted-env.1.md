@@ -24,3 +24,12 @@ is unknown or unspecified, `sh` compatible commands are emitted.
 _Note:_ SSH keys are ignored when generating environments this way. This is due
 to the inability to track the lifetime of the environment, which means the SSH
 agent would exist indefinitely.
+
+EXIT CODES
+----------
+|Exit code|Meaning|
+|:-:|---|
+| 0 | Complete success. |
+| 64 | Invalid CLI usage (see message for more details).|
+| 65 | There was an unrecoverable problem with the vault file. |
+| 79 | The supplied password is incorrect.|

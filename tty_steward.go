@@ -9,6 +9,16 @@ import (
 	"github.com/miquella/vaulted/lib/legacy"
 )
 
+var (
+	ErrFileNotExist = ErrorWithExitCode{os.ErrNotExist, 64}
+
+	vaultedErrMap = map[error]ErrorWithExitCode{
+		vaulted.ErrInvalidPassword:         ErrorWithExitCode{vaulted.ErrInvalidPassword, 79},
+		vaulted.ErrInvalidKeyConfig:        ErrorWithExitCode{vaulted.ErrInvalidKeyConfig, 65},
+		vaulted.ErrInvalidEncryptionConfig: ErrorWithExitCode{vaulted.ErrInvalidEncryptionConfig, 65},
+	}
+)
+
 type TTYSteward struct{}
 
 func (*TTYSteward) VaultExists(name string) bool {
@@ -50,7 +60,7 @@ func (*TTYSteward) SealVault(name string, password *string, vault *vaulted.Vault
 
 func (*TTYSteward) OpenVault(name string, password *string) (string, *vaulted.Vault, error) {
 	if !vaulted.VaultExists(name) {
-		return "", nil, os.ErrNotExist
+		return "", nil, ErrFileNotExist
 	}
 
 	if password == nil && os.Getenv("VAULTED_PASSWORD") != "" {
@@ -79,7 +89,11 @@ func (*TTYSteward) OpenVault(name string, password *string) (string, *vaulted.Va
 	}
 
 	if err != nil {
-		return "", nil, err
+		if _, ok := vaultedErrMap[err]; ok {
+			return "", nil, vaultedErrMap[err]
+		} else {
+			return "", nil, err
+		}
 	}
 
 	return *password, vault, nil
@@ -91,7 +105,7 @@ func (*TTYSteward) RemoveVault(name string) error {
 
 func (*TTYSteward) GetEnvironment(name string, password *string) (string, *vaulted.Environment, error) {
 	if !vaulted.VaultExists(name) {
-		return "", nil, os.ErrNotExist
+		return "", nil, ErrFileNotExist
 	}
 
 	if password == nil && os.Getenv("VAULTED_PASSWORD") != "" {
@@ -120,7 +134,11 @@ func (*TTYSteward) GetEnvironment(name string, password *string) (string, *vault
 	}
 
 	if err != nil {
-		return "", nil, err
+		if _, ok := vaultedErrMap[err]; ok {
+			return "", nil, vaultedErrMap[err]
+		} else {
+			return "", nil, err
+		}
 	}
 
 	return *password, env, nil
