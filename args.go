@@ -11,12 +11,12 @@ import (
 )
 
 var (
-	ErrSubcommandRequired          = errors.New("A subcommand must be specified. See 'vaulted --help' for details.")
-	ErrUnknownShell                = errors.New("Unknown shell")
-	ErrTooManyArguments            = errors.New("too many arguments provided")
-	ErrNotEnoughArguments          = errors.New("not enough arguments provided")
-	ErrVaultNameRequired           = errors.New("A vault name must be specified")
-	ErrMixingCommandAndInteractive = errors.New("Cannot mix an interactive shell with command arguments")
+	ErrSubcommandRequired          = ErrorWithExitCode{errors.New("A subcommand must be specified. See 'vaulted --help' for details."), 64}
+	ErrUnknownShell                = ErrorWithExitCode{errors.New("Unknown shell"), 64}
+	ErrTooManyArguments            = ErrorWithExitCode{errors.New("too many arguments provided"), 64}
+	ErrNotEnoughArguments          = ErrorWithExitCode{errors.New("not enough arguments provided"), 64}
+	ErrVaultNameRequired           = ErrorWithExitCode{errors.New("A vault name must be specified"), 64}
+	ErrMixingCommandAndInteractive = ErrorWithExitCode{errors.New("Cannot mix an interactive shell with command arguments"), 64}
 )
 
 func ParseArgs(args []string) (Command, error) {
