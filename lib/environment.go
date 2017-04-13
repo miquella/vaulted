@@ -132,40 +132,61 @@ func (e *Environment) startProxyKeyring() (string, error) {
 	return sock, err
 }
 
-func (e *Environment) buildEnviron(extraVars map[string]string) []string {
-	// load the current environ
-	env := make(map[string]string)
-	for _, envVar := range os.Environ() {
-		parts := strings.SplitN(envVar, "=", 2)
-		env[parts[0]] = parts[1]
+func (e *Environment) Variables() *Variables {
+	vars := Variables{
+		Set: make(map[string]string),
 	}
 
-	// merge the vars
 	for key, value := range e.Vars {
-		env[key] = value
-	}
-	for key, value := range extraVars {
-		env[key] = value
+		vars.Set[key] = value
 	}
 
 	if e.AWSCreds != nil {
-		delete(env, "AWS_ACCESS_KEY_ID")
-		delete(env, "AWS_SECRET_ACCESS_KEY")
-		delete(env, "AWS_SESSION_TOKEN")
-		delete(env, "AWS_SECURITY_TOKEN")
+		vars.Set["AWS_ACCESS_KEY_ID"] = e.AWSCreds.ID
+		vars.Set["AWS_SECRET_ACCESS_KEY"] = e.AWSCreds.Secret
 
-		env["AWS_ACCESS_KEY_ID"] = e.AWSCreds.ID
-		env["AWS_SECRET_ACCESS_KEY"] = e.AWSCreds.Secret
 		if e.AWSCreds.Token != "" {
-			env["AWS_SESSION_TOKEN"] = e.AWSCreds.Token
-			env["AWS_SECURITY_TOKEN"] = e.AWSCreds.Token
+			vars.Set["AWS_SESSION_TOKEN"] = e.AWSCreds.Token
+			vars.Set["AWS_SECURITY_TOKEN"] = e.AWSCreds.Token
+		} else {
+			vars.Unset = append(
+				vars.Unset,
+				"AWS_SESSION_TOKEN",
+				"AWS_SECURITY_TOKEN",
+			)
 		}
 	}
 
-	// recombine into environ
-	environ := make([]string, 0, len(env))
-	for key, value := range env {
+	return &vars
+}
+
+func (e *Environment) buildEnviron(extraVars map[string]string) []string {
+	vars := make(map[string]string)
+	for _, v := range os.Environ() {
+		parts := strings.SplitN(v, "=", 2)
+		vars[parts[0]] = parts[1]
+	}
+
+	v := e.Variables()
+	for _, key := range v.Unset {
+		delete(vars, key)
+	}
+	for key, value := range v.Set {
+		vars[key] = value
+	}
+
+	for key, value := range extraVars {
+		vars[key] = value
+	}
+
+	environ := make([]string, 0, len(vars))
+	for key, value := range vars {
 		environ = append(environ, fmt.Sprintf("%s=%s", key, value))
 	}
 	return environ
+}
+
+type Variables struct {
+	Set   map[string]string
+	Unset []string
 }

@@ -59,14 +59,16 @@ func WriteStdin(b []byte, f func()) {
 
 func NewTestSteward() *TestSteward {
 	return &TestSteward{
-		Passwords: make(map[string]string),
-		Vaults:    make(map[string]*vaulted.Vault),
+		Passwords:    make(map[string]string),
+		Vaults:       make(map[string]*vaulted.Vault),
+		Environments: make(map[string]*vaulted.Environment),
 	}
 }
 
 type TestSteward struct {
-	Passwords map[string]string
-	Vaults    map[string]*vaulted.Vault
+	Passwords    map[string]string
+	Vaults       map[string]*vaulted.Vault
+	Environments map[string]*vaulted.Environment
 
 	LegacyPassword     string
 	LegacyEnvironments map[string]legacy.Environment
@@ -139,22 +141,38 @@ func (ts TestSteward) GetEnvironment(name string, password *string) (string, *va
 		}
 	}
 
-	vault := ts.Vaults[name]
-
-	env := &vaulted.Environment{
+	e := &vaulted.Environment{
 		Vars:    make(map[string]string),
 		SSHKeys: make(map[string]string),
 	}
+	if _, exists := ts.Environments[name]; exists {
+		env := ts.Environments[name]
 
-	for key, value := range vault.Vars {
-		env.Vars[key] = value
+		e.Expiration = env.Expiration
+
+		creds := *env.AWSCreds
+		e.AWSCreds = &creds
+
+		for key, value := range env.Vars {
+			e.Vars[key] = value
+		}
+
+		for key, value := range env.SSHKeys {
+			e.SSHKeys[key] = value
+		}
+	} else {
+		vault := ts.Vaults[name]
+
+		for key, value := range vault.Vars {
+			e.Vars[key] = value
+		}
+
+		for key, value := range vault.SSHKeys {
+			e.SSHKeys[key] = value
+		}
 	}
 
-	for key, value := range vault.SSHKeys {
-		env.SSHKeys[key] = value
-	}
-
-	return ts.Passwords[name], env, nil
+	return ts.Passwords[name], e, nil
 }
 
 func (ts TestSteward) OpenLegacyVault() (password string, environments map[string]legacy.Environment, err error) {

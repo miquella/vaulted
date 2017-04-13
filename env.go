@@ -20,22 +20,30 @@ func (e *Env) Run(steward Steward) error {
 	}
 
 	usageHint := ""
+	unsetVar := ""
 	setVar := ""
 	quoteReplacement := "\""
 	switch e.Shell {
 	case "fish":
 		usageHint = "# To load these variables into your shell, execute:\n#   eval (%s)\n"
+		unsetVar = "set -e %s;\n"
 		setVar = "set -x %s \"%s\";\n"
 		quoteReplacement = "\\\""
 	default:
 		usageHint = "# To load these variables into your shell, execute:\n#   eval $(%s)\n"
+		unsetVar = "unset %s\n"
 		setVar = "export %s=\"%s\"\n"
 		quoteReplacement = "\\\""
 	}
 
-	// sort the vars
+	vars := env.Variables()
+
+	// sort the vars to unset
+	sort.Strings(vars.Unset)
+
+	// sort the vars to set
 	var keys []string
-	for key := range env.Vars {
+	for key := range vars.Set {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
@@ -45,8 +53,12 @@ func (e *Env) Run(steward Steward) error {
 		fmt.Printf(usageHint, strings.Join(os.Args, " "))
 	}
 
+	for _, key := range vars.Unset {
+		fmt.Printf(unsetVar, key)
+	}
+
 	for _, key := range keys {
-		fmt.Printf(setVar, key, strings.Replace(env.Vars[key], "\"", quoteReplacement, -1))
+		fmt.Printf(setVar, key, strings.Replace(vars.Set[key], "\"", quoteReplacement, -1))
 	}
 
 	return nil
