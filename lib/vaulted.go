@@ -176,7 +176,7 @@ func GetEnvironment(name, password string) (*Environment, error) {
 
 	env, err := openEnvironment(name, password)
 	if err == nil {
-		expired := time.Now().Add(5 * time.Minute).After(time.Unix(env.Expiration, 0))
+		expired := time.Now().Add(5 * time.Minute).After(env.Expiration)
 		if !expired {
 			return env, nil
 		}

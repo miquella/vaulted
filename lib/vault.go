@@ -25,10 +25,10 @@ var (
 )
 
 type Vault struct {
-	Vars     map[string]string `json:"vars"`
-	AWSKey   *AWSKey           `json:"aws_key,omitempty"`
-	SSHKeys  map[string]string `json:"ssh_keys,omitempty"`
 	Duration time.Duration     `json:"duration,omitempty"`
+	AWSKey   *AWSKey           `json:"aws_key,omitempty"`
+	Vars     map[string]string `json:"vars,omitempty"`
+	SSHKeys  map[string]string `json:"ssh_keys,omitempty"`
 }
 
 type AWSCredentials struct {
@@ -54,7 +54,7 @@ func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, er
 
 	e := &Environment{
 		Vars:       make(map[string]string),
-		Expiration: time.Now().Add(duration).Unix(),
+		Expiration: time.Now().Add(duration),
 	}
 
 	// copy the vault vars to the environment
