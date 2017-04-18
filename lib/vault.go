@@ -61,13 +61,6 @@ func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, er
 		if err != nil {
 			return nil, err
 		}
-
-		if v.AWSKey.Role != "" {
-			e.AWSCreds, err = e.AWSCreds.AssumeRole(v.AWSKey.Role, duration)
-			if err != nil {
-				return nil, err
-			}
-		}
 	}
 
 	return e, nil

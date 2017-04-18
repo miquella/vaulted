@@ -28,8 +28,10 @@ Vaulted uses the permanent credentials stored in the vault to generate a set of 
 The temporary credentials generated are valid for a specific duration, set in the `vaulted edit` menu. This duration
 may be set between 15m and 36h.
 
-_**Note:** when Vaulted is configured to assume a role, the maximum duration for a vault is `1h`. Configuring higher
-values will cause AWS to return an error when spawning the vault._
+*Note: even if the duration of a vault is set higher than 1 hour, assuming a
+role caps the duration to 1 hour at a time. The session token will still be
+valid for the duration set in the vault, but the assume role will be performed
+each time Vaulted is invoked.*
 
 This impacts the following environment variables:
 
