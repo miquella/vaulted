@@ -31,19 +31,6 @@ type Vault struct {
 	SSHKeys  map[string]string `json:"ssh_keys,omitempty"`
 }
 
-type AWSCredentials struct {
-	ID     string `json:"id"`
-	Secret string `json:"secret"`
-	Token  string `json:"token,omitempty"`
-}
-
-type AWSKey struct {
-	AWSCredentials
-	MFA                     string `json:"mfa,omitempty"`
-	Role                    string `json:"role,omitempty"`
-	ForgoTempCredGeneration bool   `json:"forgoTempCredGeneration"`
-}
-
 func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, error) {
 	var duration time.Duration
 	if v.Duration == 0 {
@@ -75,59 +62,145 @@ func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, er
 
 	// get aws creds
 	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
-		if v.AWSKey.ForgoTempCredGeneration {
-			e.AWSCreds = &AWSCredentials{
-				ID:     v.AWSKey.ID,
-				Secret: v.AWSKey.Secret,
-			}
-		} else {
-			var err error
-			if v.AWSKey.Role != "" {
-				e.AWSCreds, err = v.AWSKey.assumeRole(duration)
-			} else {
-				e.AWSCreds, err = v.AWSKey.generateSTS(duration)
-			}
+		creds, err := v.AWSKey.GetAWSCredentials(duration)
+		if err != nil {
+			return nil, err
+		}
+
+		if v.AWSKey.Role != "" {
+			creds, err = creds.AssumeRole(v.AWSKey.Role, duration)
 			if err != nil {
 				return nil, err
 			}
 		}
+
+		e.AWSCreds = creds
 	}
 
 	return e, nil
 }
 
-func (k *AWSKey) stsClient() *sts.STS {
-	sess := session.New(&aws.Config{
-		Credentials: credentials.NewStaticCredentials(
-			k.ID,
-			k.Secret,
-			"", // Temporary session token
-		),
-	})
-	return sts.New(sess)
+type AWSKey struct {
+	AWSCredentials
+	MFA                     string `json:"mfa,omitempty"`
+	Role                    string `json:"role,omitempty"`
+	ForgoTempCredGeneration bool   `json:"forgoTempCredGeneration"`
 }
 
-func (k *AWSKey) assumeRole(duration time.Duration) (*AWSCredentials, error) {
-	// first generate a session token
-	creds, err := k.generateSTS(duration)
+func (k *AWSKey) GetAWSCredentials(duration time.Duration) (*AWSCredentials, error) {
+	if k.ForgoTempCredGeneration {
+		creds := k.AWSCredentials
+		return &creds, nil
+	}
+
+	if k.MFA == "" {
+		return k.AWSCredentials.GetSessionToken(duration)
+	}
+
+	tokenCode, err := getTokenCode()
 	if err != nil {
 		return nil, err
 	}
 
-	// now use the generated session token to assume the role
-	sess := session.New(&aws.Config{
-		Credentials: credentials.NewStaticCredentials(
-			creds.ID,
-			creds.Secret,
-			creds.Token,
-		),
-	})
-
-	client := sts.New(sess)
-	return k.assumeRoleWithClient(client, duration)
+	return k.AWSCredentials.GetSessionTokenWithMFA(k.MFA, tokenCode, duration)
 }
 
-func (k *AWSKey) assumeRoleWithClient(client *sts.STS, duration time.Duration) (*AWSCredentials, error) {
+type AWSCredentials struct {
+	ID     string `json:"id"`
+	Secret string `json:"secret"`
+	Token  string `json:"token,omitempty"`
+}
+
+func AWSCredentialsFromSTSCredentials(creds *sts.Credentials) *AWSCredentials {
+	return &AWSCredentials{
+		ID:     *creds.AccessKeyId,
+		Secret: *creds.SecretAccessKey,
+		Token:  *creds.SessionToken,
+	}
+}
+
+func (c *AWSCredentials) GetSessionToken(duration time.Duration) (*AWSCredentials, error) {
+	client, err := c.client()
+	if err != nil {
+		return nil, err
+	}
+
+	getSessionToken, err := client.GetSessionToken(&sts.GetSessionTokenInput{
+		DurationSeconds: aws.Int64(int64(duration.Seconds())),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return AWSCredentialsFromSTSCredentials(getSessionToken.Credentials), nil
+}
+
+func (c *AWSCredentials) GetSessionTokenWithMFA(serialNumber, token string, duration time.Duration) (*AWSCredentials, error) {
+	client, err := c.client()
+	if err != nil {
+		return nil, err
+	}
+
+	getSessionToken, err := client.GetSessionToken(&sts.GetSessionTokenInput{
+		DurationSeconds: aws.Int64(int64(duration.Seconds())),
+		SerialNumber:    aws.String(serialNumber),
+		TokenCode:       aws.String(token),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return AWSCredentialsFromSTSCredentials(getSessionToken.Credentials), nil
+}
+
+func (c *AWSCredentials) AssumeRole(arn string, duration time.Duration) (*AWSCredentials, error) {
+	client, err := c.client()
+	if err != nil {
+		return nil, err
+	}
+
+	assumeRole, err := client.AssumeRole(&sts.AssumeRoleInput{
+		RoleArn:         aws.String(arn),
+		RoleSessionName: aws.String(roleSessionName(client)),
+		DurationSeconds: aws.Int64(int64(duration.Seconds())),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return AWSCredentialsFromSTSCredentials(assumeRole.Credentials), nil
+}
+
+func (c *AWSCredentials) client() (*sts.STS, error) {
+	// if c is nil, the default credential provider chain is used
+	// (yes, I know this seems a little weird)
+	config := &aws.Config{}
+	if c != nil && c.ID != "" {
+		config.Credentials = credentials.NewStaticCredentials(
+			c.ID,
+			c.Secret,
+			c.Token,
+		)
+	}
+
+	s, err := session.NewSession(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return sts.New(s), nil
+}
+
+func getTokenCode() (string, error) {
+	tokenCode, err := ask.Ask("Enter your MFA code: ")
+	if err != nil {
+		return "", err
+	}
+	tokenCode = strings.TrimSpace(tokenCode)
+	return tokenCode, nil
+}
+
+func roleSessionName(client *sts.STS) string {
 	roleSessionName := DefaultSessionName
 
 	callerIdentity, err := client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
@@ -138,66 +211,5 @@ func (k *AWSKey) assumeRoleWithClient(client *sts.STS, duration time.Duration) (
 		}
 	}
 
-	assumeRoleInput := &sts.AssumeRoleInput{
-		DurationSeconds: aws.Int64(int64(duration.Seconds())),
-		RoleArn:         &k.Role,
-		RoleSessionName: &roleSessionName,
-	}
-
-	assumeRoleOutput, err := client.AssumeRole(assumeRoleInput)
-	if err != nil {
-		return nil, err
-	}
-
-	credentials := &AWSCredentials{
-		ID:     *assumeRoleOutput.Credentials.AccessKeyId,
-		Secret: *assumeRoleOutput.Credentials.SecretAccessKey,
-		Token:  *assumeRoleOutput.Credentials.SessionToken,
-	}
-	return credentials, nil
-}
-
-func (k *AWSKey) buildSessionTokenInput(duration time.Duration) (*sts.GetSessionTokenInput, error) {
-	input := &sts.GetSessionTokenInput{
-		DurationSeconds: aws.Int64(int64(duration.Seconds())),
-	}
-
-	if k.MFA != "" {
-		tokenCode, err := getTokenCode()
-		if err != nil {
-			return nil, err
-		}
-		input.SerialNumber = &k.MFA
-		input.TokenCode = &tokenCode
-	}
-
-	return input, nil
-}
-
-func (k *AWSKey) generateSTS(duration time.Duration) (*AWSCredentials, error) {
-	sessionTokenInput, err := k.buildSessionTokenInput(duration)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := k.stsClient().GetSessionToken(sessionTokenInput)
-	if err != nil {
-		return nil, err
-	}
-
-	credentials := &AWSCredentials{
-		ID:     *resp.Credentials.AccessKeyId,
-		Secret: *resp.Credentials.SecretAccessKey,
-		Token:  *resp.Credentials.SessionToken,
-	}
-	return credentials, nil
-}
-
-func getTokenCode() (string, error) {
-	tokenCode, err := ask.Ask("Enter your MFA code: ")
-	if err != nil {
-		return "", err
-	}
-	tokenCode = strings.TrimSpace(tokenCode)
-	return tokenCode, nil
+	return roleSessionName
 }
