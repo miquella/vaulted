@@ -11,12 +11,13 @@ import (
 )
 
 var (
-	ErrSubcommandRequired          = ErrorWithExitCode{errors.New("A subcommand must be specified. See 'vaulted --help' for details."), 64}
-	ErrUnknownShell                = ErrorWithExitCode{errors.New("Unknown shell"), 64}
-	ErrTooManyArguments            = ErrorWithExitCode{errors.New("too many arguments provided"), 64}
-	ErrNotEnoughArguments          = ErrorWithExitCode{errors.New("not enough arguments provided"), 64}
-	ErrVaultNameRequired           = ErrorWithExitCode{errors.New("A vault name must be specified"), 64}
-	ErrMixingCommandAndInteractive = ErrorWithExitCode{errors.New("Cannot mix an interactive shell with command arguments"), 64}
+	ErrSubcommandRequired          = ErrorWithExitCode{errors.New("A subcommand must be specified. See 'vaulted --help' for details."), EX_USAGE_ERROR}
+	ErrTooManyArguments            = ErrorWithExitCode{errors.New("too many arguments provided"), EX_USAGE_ERROR}
+	ErrNotEnoughArguments          = ErrorWithExitCode{errors.New("not enough arguments provided"), EX_USAGE_ERROR}
+	ErrVaultNameRequired           = ErrorWithExitCode{errors.New("A vault name must be specified"), EX_USAGE_ERROR}
+	ErrMixingCommandAndInteractive = ErrorWithExitCode{errors.New("Cannot mix an interactive shell with command arguments"), EX_USAGE_ERROR}
+
+	ErrUnknownShell = errors.New("Unknown shell")
 )
 
 func ParseArgs(args []string) (Command, error) {
@@ -28,6 +29,14 @@ func ParseArgs(args []string) (Command, error) {
 			return parseHelpArgs(args)
 		}
 	}
+
+	// If arguments fail to parse for any reason, it's a usage error
+	if err != nil {
+		if _, ok := err.(ErrorWithExitCode); !ok {
+			err = ErrorWithExitCode{err, EX_USAGE_ERROR}
+		}
+	}
+
 	return command, err
 }
 

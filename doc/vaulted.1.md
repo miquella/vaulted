@@ -54,3 +54,12 @@ COMMANDS
 
 `upgrade`
   Upgrades legacy vaults to the current vault format. See vaulted-upgrade(1).
+
+EXIT CODES
+----------
+|Exit code|Meaning|
+|:-:|---|
+| 0 | Success. |
+| 64 | Invalid CLI usage (see message for more details). |
+| 65 | There was an unrecoverable problem with the vault file. |
+| 79 | Invalid password supplied. |

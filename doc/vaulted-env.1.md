@@ -52,12 +52,3 @@ OPTIONS
 | Set | map[string]string | A map of environment variables to be set along with their values |
 | Unset | []string | A slice of variables to be removed from the environment before setting new values |
 | Command | string | The full command line used to invoke vaulted including options |
-
-EXIT CODES
-----------
-|Exit code|Meaning|
-|:-:|---|
-| 0 | Complete success. |
-| 64 | Invalid CLI usage (see message for more details).|
-| 65 | There was an unrecoverable problem with the vault file. |
-| 79 | The supplied password is incorrect.|
