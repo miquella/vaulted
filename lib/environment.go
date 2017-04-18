@@ -14,9 +14,9 @@ import (
 )
 
 type Environment struct {
-	Expiration int64             `json:"expiration"`
-	Vars       map[string]string `json:"vars"`
+	Expiration time.Time         `json:"expiration"`
 	AWSCreds   *AWSCredentials   `json:"aws_creds,omitempty"`
+	Vars       map[string]string `json:"vars,omitempty"`
 	SSHKeys    map[string]string `json:"ssh_keys,omitempty"`
 }
 
@@ -105,7 +105,7 @@ func (e *Environment) startProxyKeyring() (string, error) {
 
 	// load ssh keys
 	for comment, key := range e.SSHKeys {
-		timeRemaining := time.Unix(e.Expiration, 0).Sub(time.Now())
+		timeRemaining := e.Expiration.Sub(time.Now())
 		addedKey := agent.AddedKey{
 			Comment:      comment,
 			LifetimeSecs: uint32(timeRemaining.Seconds()),
