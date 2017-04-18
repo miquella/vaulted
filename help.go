@@ -1,7 +1,8 @@
 package main
 
 //go:generate sh -c "for md in doc/vaulted*.md; do md2man-roff ${DOLLAR}md > doc/man/${DOLLAR}(basename ${DOLLAR}md .md); done"
-//go:generate go-bindata --prefix doc/man/ -o man.go doc/man/
+//go:generate go-bindata -nometadata -prefix doc/man/ -o man.go doc/man/
+//go:generate gofmt -w man.go
 
 import (
 	"errors"
