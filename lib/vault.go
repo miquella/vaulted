@@ -62,19 +62,11 @@ func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, er
 
 	// get aws creds
 	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
-		creds, err := v.AWSKey.GetAWSCredentials(duration)
+		var err error
+		e.AWSCreds, err = v.AWSKey.GetAWSCredentials(duration)
 		if err != nil {
 			return nil, err
 		}
-
-		if v.AWSKey.Role != "" {
-			creds, err = creds.AssumeRole(v.AWSKey.Role, duration)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		e.AWSCreds = creds
 	}
 
 	return e, nil

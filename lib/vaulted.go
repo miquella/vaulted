@@ -174,6 +174,28 @@ func GetEnvironment(name, password string) (*Environment, error) {
 		return nil, err
 	}
 
+	env, err := getEnvironment(v, name, password)
+	if err != nil {
+		return nil, err
+	}
+
+	if v.AWSKey != nil && v.AWSKey.Role != "" {
+		duration := 1 * time.Hour
+		if v.Duration < duration {
+			duration = v.Duration
+		}
+
+		env.Expiration = time.Now().Add(duration)
+		env.AWSCreds, err = env.AWSCreds.AssumeRole(v.AWSKey.Role, duration)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return env, nil
+}
+
+func getEnvironment(v *Vault, name, password string) (*Environment, error) {
 	env, err := openEnvironment(name, password)
 	if err == nil {
 		expired := time.Now().Add(5 * time.Minute).After(env.Expiration)

@@ -536,9 +536,6 @@ func (e *Edit) setDuration(v *vaulted.Vault) {
 	if v.AWSKey != nil && v.AWSKey.ForgoTempCredGeneration == false {
 		maxDuration = 36 * time.Hour
 	}
-	if v.AWSKey != nil && v.AWSKey.Role != "" {
-		maxDuration = time.Hour
-	}
 	readMessage := fmt.Sprintf("Duration (15m–%s): ", formatDuration(maxDuration))
 	dur, err = e.readValue(readMessage)
 	if err == nil {
