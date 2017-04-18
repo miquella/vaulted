@@ -10,12 +10,12 @@ import (
 )
 
 var (
-	ErrFileNotExist = ErrorWithExitCode{os.ErrNotExist, 64}
+	ErrFileNotExist = ErrorWithExitCode{os.ErrNotExist, EX_USAGE_ERROR}
 
 	vaultedErrMap = map[error]ErrorWithExitCode{
-		vaulted.ErrInvalidPassword:         ErrorWithExitCode{vaulted.ErrInvalidPassword, 79},
-		vaulted.ErrInvalidKeyConfig:        ErrorWithExitCode{vaulted.ErrInvalidKeyConfig, 65},
-		vaulted.ErrInvalidEncryptionConfig: ErrorWithExitCode{vaulted.ErrInvalidEncryptionConfig, 65},
+		vaulted.ErrInvalidPassword:         ErrorWithExitCode{vaulted.ErrInvalidPassword, EX_TEMPORARY_ERROR},
+		vaulted.ErrInvalidKeyConfig:        ErrorWithExitCode{vaulted.ErrInvalidKeyConfig, EX_DATA_ERROR},
+		vaulted.ErrInvalidEncryptionConfig: ErrorWithExitCode{vaulted.ErrInvalidEncryptionConfig, EX_DATA_ERROR},
 	}
 )
 

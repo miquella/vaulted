@@ -56,3 +56,18 @@ Starts an interactive shell with the secrets for the vault loaded into the shell
 \fB\fCupgrade\fR
 Upgrades legacy vaults to the current vault format. See 
 .BR vaulted-upgrade (1).
+.SH EXIT CODES
+.TS
+allbox;
+cb cb
+c l
+c l
+c l
+c l
+.
+Exit code	Meaning
+0	Success.
+64	Invalid CLI usage (see message for more details).
+65	There was an unrecoverable problem with the vault file.
+79	Invalid password supplied.
+.TE

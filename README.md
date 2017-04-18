@@ -84,11 +84,11 @@ didn't intend!_
 
 Using Vaulted from other software
 ---------------------------------
-An `env` command has been included with the intention of supplying machine readable
-output for integration with shells and shell utilities. Every effort has been made 
-to supply meaningful return codes on failures along with a description of what has
-gone wrong. See `vaulted-env(1)` for details on the return values to expect and 
-their meanings.
+An `env` subcommand has been included with the intention of supplying machine
+readable output for integration with shells and shell utilities. Every effort
+has been made to supply meaningful return codes on failures along with a
+description of what has gone wrong. See `vaulted(1)` for details on the return
+values to expect and their meanings.
 
 
 Going Further
