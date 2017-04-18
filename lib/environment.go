@@ -20,6 +20,35 @@ type Environment struct {
 	SSHKeys    map[string]string `json:"ssh_keys,omitempty"`
 }
 
+func (e *Environment) Assume(arn string) (*Environment, error) {
+	expiration := e.Expiration
+	maxExpiration := time.Now().Add(time.Hour)
+	if expiration.After(maxExpiration) {
+		expiration = maxExpiration
+	}
+
+	duration := expiration.Sub(time.Now())
+	creds, err := e.AWSCreds.AssumeRole(arn, duration)
+	if err != nil {
+		return nil, err
+	}
+
+	env := &Environment{
+		Expiration: expiration,
+		AWSCreds:   creds,
+		Vars:       make(map[string]string),
+		SSHKeys:    make(map[string]string),
+	}
+	for key, value := range e.Vars {
+		env.Vars[key] = value
+	}
+	for key, value := range e.SSHKeys {
+		env.SSHKeys[key] = value
+	}
+
+	return env, nil
+}
+
 func (e *Environment) Spawn(cmd []string, extraVars map[string]string) (*int, error) {
 	if len(cmd) == 0 {
 		return nil, ErrInvalidCommand
