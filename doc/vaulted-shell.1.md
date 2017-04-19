@@ -40,4 +40,4 @@ This impacts the following environment variables:
    This is the temporary secret access key or the secret access key stored in the vault,
    depending on whether substitution is enabled.
  * `AWS_SESSION_TOKEN` (additionally, `AWS_SECURITY_TOKEN` is set to support legacy SDKs)  
-   This is set to "" if temporary credential substitution is disabled.
+   These variables are unset if temporary credential substitution is disabled.
