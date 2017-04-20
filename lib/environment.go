@@ -170,6 +170,8 @@ func (e *Environment) Variables() *Variables {
 		vars.Set[key] = value
 	}
 
+	vars.Set["VAULTED_ENV_EXPIRATION"] = e.Expiration.UTC().Format(time.RFC3339)
+
 	if e.AWSCreds != nil {
 		vars.Set["AWS_ACCESS_KEY_ID"] = e.AWSCreds.ID
 		vars.Set["AWS_SECRET_ACCESS_KEY"] = e.AWSCreds.Secret
