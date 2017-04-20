@@ -6,6 +6,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"time"
 
 	"github.com/miquella/vaulted/lib"
 	"github.com/miquella/vaulted/lib/legacy"
@@ -142,8 +143,9 @@ func (ts TestSteward) GetEnvironment(name string, password *string) (string, *va
 	}
 
 	e := &vaulted.Environment{
-		Vars:    make(map[string]string),
-		SSHKeys: make(map[string]string),
+		Expiration: time.Unix(1136239445, 0),
+		Vars:       make(map[string]string),
+		SSHKeys:    make(map[string]string),
 	}
 	if _, exists := ts.Environments[name]; exists {
 		env := ts.Environments[name]

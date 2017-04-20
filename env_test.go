@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/miquella/vaulted/lib"
 )
@@ -14,6 +15,7 @@ var (
 set -x ONE "111111";
 set -x THREE "333";
 set -x TWO "222";
+set -x VAULTED_ENV_EXPIRATION "2006-01-02T22:04:05Z";
 `
 	envFishOutputWithPermCreds = `# To load these variables into your shell, execute:
 #   eval (vaulted env one)
@@ -24,6 +26,7 @@ set -x AWS_SECRET_ACCESS_KEY "aws-secret-key";
 set -x ONE "111111";
 set -x THREE "333";
 set -x TWO "222";
+set -x VAULTED_ENV_EXPIRATION "2006-01-02T22:04:05Z";
 `
 
 	envShOutput = `# To load these variables into your shell, execute:
@@ -31,6 +34,7 @@ set -x TWO "222";
 export ONE="111111"
 export THREE="333"
 export TWO="222"
+export VAULTED_ENV_EXPIRATION="2006-01-02T22:04:05Z"
 `
 	envShOutputWithPermCreds = `# To load these variables into your shell, execute:
 #   eval $(vaulted env one)
@@ -41,12 +45,14 @@ export AWS_SECRET_ACCESS_KEY="aws-secret-key"
 export ONE="111111"
 export THREE="333"
 export TWO="222"
+export VAULTED_ENV_EXPIRATION="2006-01-02T22:04:05Z"
 `
 
 	envJSONOutput = `{
   "ONE": "111111",
   "THREE": "333",
-  "TWO": "222"
+  "TWO": "222",
+  "VAULTED_ENV_EXPIRATION": "2006-01-02T22:04:05Z"
 }
 `
 	envCustom = "[AWS_SECURITY_TOKEN AWS_SESSION_TOKEN]"
@@ -115,6 +121,7 @@ func TestEnv(t *testing.T) {
 
 	// cached environment
 	steward.Environments["one"] = &vaulted.Environment{
+		Expiration: time.Unix(1136239445, 0),
 		AWSCreds: &vaulted.AWSCredentials{
 			ID:     "aws-key-id",
 			Secret: "aws-secret-key",
