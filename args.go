@@ -246,18 +246,24 @@ func parseEditArgs(args []string) (Command, error) {
 func parseEnvArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("env", pflag.ContinueOnError)
 	flag.String("format", "shell", "Specify what built in format to output variables in (shell, sh, fish, json) or a text template. Default: shell")
+	flag.String("assume", "", "Role to assume")
 	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
 	}
 
-	if flag.NArg() < 1 {
-		return nil, ErrNotEnoughArguments
-	}
+	vaultName := ""
+	assume, _ := flag.GetString("assume")
 
 	if flag.NArg() > 1 {
 		return nil, ErrTooManyArguments
+	}
+
+	if flag.NArg() == 1 {
+		vaultName = flag.Arg(0)
+	} else if flag.NArg() < 1 && assume == "" {
+		return nil, ErrNotEnoughArguments
 	}
 
 	shell, err := detectShell()
@@ -266,7 +272,8 @@ func parseEnvArgs(args []string) (Command, error) {
 	}
 
 	e := &Env{}
-	e.VaultName = flag.Arg(0)
+	e.VaultName = vaultName
+	e.Role = assume
 	e.DetectedShell = shell
 	e.Command = strings.Join(os.Args, " ")
 
@@ -337,27 +344,34 @@ func parseRemoveArgs(args []string) (Command, error) {
 
 func parseShellArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("shell", pflag.ContinueOnError)
+	flag.String("assume", "", "Role to assume")
 	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
 	}
 
-	currentVaultedEnv := os.Getenv("VAULTED_ENV")
-	if currentVaultedEnv != "" {
-		return nil, fmt.Errorf("Refusing to spawn a new shell when already in environment '%s'.", currentVaultedEnv)
-	}
-
-	if flag.NArg() < 1 {
-		return nil, ErrNotEnoughArguments
-	}
+	vaultName := ""
+	assume, _ := flag.GetString("assume")
 
 	if flag.NArg() > 1 {
 		return nil, ErrTooManyArguments
 	}
 
+	if flag.NArg() == 1 {
+		vaultName = flag.Arg(0)
+
+		currentVaultedEnv := os.Getenv("VAULTED_ENV")
+		if currentVaultedEnv != "" {
+			return nil, fmt.Errorf("Refusing to spawn a new shell when already in environment '%s'.", currentVaultedEnv)
+		}
+	} else if flag.NArg() < 1 && assume == "" {
+		return nil, ErrNotEnoughArguments
+	}
+
 	s := &Spawn{}
-	s.VaultName = flag.Arg(0)
+	s.VaultName = vaultName
+	s.Role = assume
 	s.Command = interactiveShellCommand()
 	s.DisplayStatus = true
 	return s, nil

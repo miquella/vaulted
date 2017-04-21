@@ -9,13 +9,27 @@ vaulted shell - starts an interactive shell with the secrets for the vault loade
 SYNOPSIS
 --------
 
-`vaulted shell` *name*
+`vaulted shell` *name* [*OPTIONS*]  
+`vaulted shell --assume` *arn* [*OPTIONS*]
 
 DESCRIPTION
 -----------
 
 Starts an interactive shell (uses the `SHELL` environment variable, if set;
 otherwise defaults to `/bin/sh`).
+
+OPTIONS
+-------
+
+`--assume` *arn*
+  Specifies the full ARN of the role to assume. The role is assumed after
+  spawning the session for the vault. While the spawned session for the vault
+  is valid for the duration specified in the vault, the credentials resulting
+  from the assume role are valid for a maximum of one hour.
+
+  Role assumption may be performed without specifying a vault to spawn from.
+  When invoked this way, credentials are sourced from default locations (e.g.
+  environment, configuration files, instance profile, etc.).
 
 AWS KEY
 -------

@@ -9,7 +9,8 @@ vaulted env - outputs shell commands that load secrets for a vault into the shel
 SYNOPSIS
 --------
 
-`vaulted env` *name* [*OPTIONS*]
+`vaulted env` *name* [*OPTIONS*]  
+`vaulted env --assume` *arn* [*OPTIONS*]
 
 DESCRIPTION
 -----------
@@ -27,6 +28,16 @@ agent would exist indefinitely.
 
 OPTIONS
 -------
+
+`--assume` *arn*
+  Specifies the full ARN of the role to assume. The role is assumed after
+  spawning the session for the vault. While the spawned session for the vault
+  is valid for the duration specified in the vault, the credentials resulting
+  from the assume role are valid for a maximum of one hour.
+
+  Role assumption may be performed without specifying a vault to spawn from.
+  When invoked this way, credentials are sourced from default locations (e.g.
+  environment, configuration files, instance profile, etc.).
 
 `--format` &lt;shell,fish,sh,json,*custom*&gt;
   Specify what format to use, defaults to `shell` which will autodetect which

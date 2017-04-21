@@ -4,11 +4,24 @@
 vaulted shell \- starts an interactive shell with the secrets for the vault loaded into the shell
 .SH SYNOPSIS
 .PP
-\fB\fCvaulted shell\fR \fIname\fP
+\fB\fCvaulted shell\fR \fIname\fP [\fIOPTIONS\fP]
+.br
+\fB\fCvaulted shell \-\-assume\fR \fIarn\fP [\fIOPTIONS\fP]
 .SH DESCRIPTION
 .PP
 Starts an interactive shell (uses the \fB\fCSHELL\fR environment variable, if set;
 otherwise defaults to \fB\fC/bin/sh\fR).
+.SH OPTIONS
+.TP
+\fB\fC\-\-assume\fR \fIarn\fP
+Specifies the full ARN of the role to assume. The role is assumed after
+spawning the session for the vault. While the spawned session for the vault
+is valid for the duration specified in the vault, the credentials resulting
+from the assume role are valid for a maximum of one hour.
+.IP
+Role assumption may be performed without specifying a vault to spawn from.
+When invoked this way, credentials are sourced from default locations (e.g.
+environment, configuration files, instance profile, etc.).
 .SH AWS KEY
 .PP
 Note: By default, Vaulted substitutes a temporary set of credentials when spawning an environment.
@@ -19,8 +32,10 @@ Vaulted uses the permanent credentials stored in the vault to generate a set of 
 The temporary credentials generated are valid for a specific duration, set in the \fB\fCvaulted edit\fR menu. This duration
 may be set between 15m and 36h.
 .PP
-\fI\fBNote:\fP when Vaulted is configured to assume a role, the maximum duration for a vault is \fB\fC1h\fR\&. Configuring higher
-values will cause AWS to return an error when spawning the vault.\fP
+\fINote: even if the duration of a vault is set higher than 1 hour, assuming a
+role caps the duration to 1 hour at a time. The session token will still be
+valid for the duration set in the vault, but the assume role will be performed
+each time Vaulted is invoked.\fP
 .PP
 This impacts the following environment variables:
 .RS
@@ -37,5 +52,5 @@ depending on whether substitution is enabled.
 .IP \(bu 2
 \fB\fCAWS_SESSION_TOKEN\fR (additionally, \fB\fCAWS_SECURITY_TOKEN\fR is set to support legacy SDKs)
 .br
-This is set to "" if temporary credential substitution is disabled.
+These variables are unset if temporary credential substitution is disabled.
 .RE
