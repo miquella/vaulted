@@ -5,6 +5,8 @@ vaulted env \- outputs shell commands that load secrets for a vault into the she
 .SH SYNOPSIS
 .PP
 \fB\fCvaulted env\fR \fIname\fP [\fIOPTIONS\fP]
+.br
+\fB\fCvaulted env \-\-assume\fR \fIarn\fP [\fIOPTIONS\fP]
 .SH DESCRIPTION
 .PP
 Creates an environment using variables and the AWS key stored in the vault. The
@@ -18,6 +20,16 @@ is unknown or unspecified, \fB\fCsh\fR compatible commands are emitted.
 to the inability to track the lifetime of the environment, which means the SSH
 agent would exist indefinitely.
 .SH OPTIONS
+.TP
+\fB\fC\-\-assume\fR \fIarn\fP
+Specifies the full ARN of the role to assume. The role is assumed after
+spawning the session for the vault. While the spawned session for the vault
+is valid for the duration specified in the vault, the credentials resulting
+from the assume role are valid for a maximum of one hour.
+.IP
+Role assumption may be performed without specifying a vault to spawn from.
+When invoked this way, credentials are sourced from default locations (e.g.
+environment, configuration files, instance profile, etc.).
 .TP
 \fB\fC\-\-format\fR <shell,fish,sh,json,\fIcustom\fP>
 Specify what format to use, defaults to \fB\fCshell\fR which will autodetect which

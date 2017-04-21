@@ -6,12 +6,15 @@ import (
 	"sort"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/miquella/vaulted/lib"
 )
 
 type Env struct {
-	VaultName     string
+	VaultName string
+	Role      string
+
 	DetectedShell string
 	Format        string
 	Command       string
@@ -55,7 +58,7 @@ var templateFuncMap = template.FuncMap{
 }
 
 func (e *Env) Run(steward Steward) error {
-	_, env, err := steward.GetEnvironment(e.VaultName, nil)
+	env, err := e.getEnvironment(steward)
 	if err != nil {
 		return err
 	}
@@ -88,4 +91,27 @@ func (e *Env) Run(steward Steward) error {
 		return ErrorWithExitCode{err, 64}
 	}
 	return tmpl.Execute(os.Stdout, vals)
+}
+
+func (e *Env) getEnvironment(steward Steward) (*vaulted.Environment, error) {
+	var err error
+
+	// default environment
+	env := &vaulted.Environment{
+		Expiration: time.Now().Add(time.Hour),
+	}
+
+	if e.VaultName != "" {
+		// get specific environment
+		_, env, err = steward.GetEnvironment(e.VaultName, nil)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if e.Role != "" {
+		return env.Assume(e.Role)
+	}
+
+	return env, nil
 }

@@ -164,8 +164,25 @@ var (
 			},
 		},
 		{
-			Args:    []string{"env", "--help"},
-			Command: &Help{Subcommand: "env"},
+			Args:   []string{"env", "--assume", "arn:something:or:other", "one"},
+			OsArgs: []string{"vaulted", "env", "--assume", "arn:something:or:other", "one"},
+			Command: &Env{
+				VaultName:     "one",
+				Role:          "arn:something:or:other",
+				DetectedShell: "fish",
+				Format:        "shell",
+				Command:       "vaulted env --assume arn:something:or:other one",
+			},
+		},
+		{
+			Args:   []string{"env", "--assume", "arn:something:or:other"},
+			OsArgs: []string{"vaulted", "env", "--assume", "arn:something:or:other"},
+			Command: &Env{
+				Role:          "arn:something:or:other",
+				DetectedShell: "fish",
+				Format:        "shell",
+				Command:       "vaulted env --assume arn:something:or:other",
+			},
 		},
 		{
 			Args:   []string{"env", "foo", "--format", "json"},
@@ -176,6 +193,10 @@ var (
 				Format:        "json",
 				Command:       "vaulted env foo --format json",
 			},
+		},
+		{
+			Args:    []string{"env", "--help"},
+			Command: &Help{Subcommand: "env"},
 		},
 
 		// Help
@@ -307,6 +328,23 @@ var (
 			Args: []string{"shell", "one"},
 			Command: &Spawn{
 				VaultName:     "one",
+				Command:       []string{"/bin/fish", "--login"},
+				DisplayStatus: true,
+			},
+		},
+		{
+			Args: []string{"shell", "--assume", "arn:something:or:other"},
+			Command: &Spawn{
+				Role:          "arn:something:or:other",
+				Command:       []string{"/bin/fish", "--login"},
+				DisplayStatus: true,
+			},
+		},
+		{
+			Args: []string{"shell", "--assume", "arn:something:or:other", "one"},
+			Command: &Spawn{
+				VaultName:     "one",
+				Role:          "arn:something:or:other",
 				Command:       []string{"/bin/fish", "--login"},
 				DisplayStatus: true,
 			},
