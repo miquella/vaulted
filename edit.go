@@ -240,28 +240,20 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 			}
 		case "t", "temp", "temporary":
 			if v.AWSKey != nil {
-				var substituteTemporaryCredentials string
-				substituteTemporaryCredentials, err = e.readValue("Substitute with temporary credentials? (i.e. AWS STS) (y/n): ")
-				if err == nil {
-					if substituteTemporaryCredentials == "y" {
-						if v.Duration > 36*time.Hour {
-							var conf string
-							color.Yellow("\nProceeding will adjust your vault duration to 36h (the maximum when using STS creds).")
-							conf, err = e.readPrompt("Do you wish to proceed? (y/n): ")
-							if conf == "y" {
-								v.Duration = 36 * time.Hour
-								v.AWSKey.ForgoTempCredGeneration = false
-							} else {
-								output("Temporary credentials not enabled.")
-							}
-						} else {
-							v.AWSKey.ForgoTempCredGeneration = false
-						}
-					}
-					if substituteTemporaryCredentials == "n" {
-						v.AWSKey.ForgoTempCredGeneration = true
+				forgoTempCredGeneration := !v.AWSKey.ForgoTempCredGeneration
+				if !forgoTempCredGeneration && v.Duration > 36*time.Hour {
+					var conf string
+					warningColor.Println("Proceeding will adjust your vault duration to 36h (the maximum when using temporary creds).")
+					conf, err = e.readPrompt("Do you wish to proceed? (y/n): ")
+					if conf == "y" {
+						v.Duration = 36 * time.Hour
+					} else {
+						output("Temporary credentials not enabled.")
+						continue
 					}
 				}
+
+				v.AWSKey.ForgoTempCredGeneration = forgoTempCredGeneration
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
 			}
@@ -687,7 +679,7 @@ func (e *Edit) readPrompt(message string) (string, error) {
 			return "", err
 		}
 	}
-	return e.readInput(color.YellowString(message), e.rlValue)
+	return e.readInput(warningColor.Sprint(message), e.rlValue)
 }
 
 func (e *Edit) readInput(message string, rl *readline.Instance) (string, error) {
