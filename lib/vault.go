@@ -25,7 +25,7 @@ type Vault struct {
 	SSHKeys  map[string]string `json:"ssh_keys,omitempty"`
 }
 
-func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, error) {
+func (v *Vault) CreateEnvironment(name string) (*Environment, error) {
 	var duration time.Duration
 	if v.Duration == 0 {
 		duration = STSDurationDefault
@@ -34,15 +34,13 @@ func (v *Vault) CreateEnvironment(extraVars map[string]string) (*Environment, er
 	}
 
 	e := &Environment{
+		Name:       name,
 		Vars:       make(map[string]string),
 		Expiration: time.Now().Add(duration),
 	}
 
 	// copy the vault vars to the environment
 	for key, value := range v.Vars {
-		e.Vars[key] = value
-	}
-	for key, value := range extraVars {
 		e.Vars[key] = value
 	}
 

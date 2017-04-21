@@ -201,7 +201,7 @@ func getEnvironment(v *Vault, name, password string) (*Environment, error) {
 	// the environment isn't valid (possibly expired), so remove it
 	removeEnvironment(name)
 
-	env, err = v.CreateEnvironment(map[string]string{"VAULTED_ENV": name})
+	env, err = v.CreateEnvironment(name)
 	if err != nil {
 		return nil, err
 	}

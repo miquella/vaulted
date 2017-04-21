@@ -14,6 +14,7 @@ import (
 )
 
 type Environment struct {
+	Name       string            `json:"name"`
 	Expiration time.Time         `json:"expiration"`
 	AWSCreds   *AWSCredentials   `json:"aws_creds,omitempty"`
 	Vars       map[string]string `json:"vars,omitempty"`
@@ -34,6 +35,7 @@ func (e *Environment) Assume(arn string) (*Environment, error) {
 	}
 
 	env := &Environment{
+		Name:       e.Name,
 		Expiration: expiration,
 		AWSCreds:   creds,
 		Vars:       make(map[string]string),
@@ -49,7 +51,7 @@ func (e *Environment) Assume(arn string) (*Environment, error) {
 	return env, nil
 }
 
-func (e *Environment) Spawn(cmd []string, extraVars map[string]string) (*int, error) {
+func (e *Environment) Spawn(cmd []string) (*int, error) {
 	if len(cmd) == 0 {
 		return nil, ErrInvalidCommand
 	}
@@ -60,18 +62,13 @@ func (e *Environment) Spawn(cmd []string, extraVars map[string]string) (*int, er
 		return nil, fmt.Errorf("Cannot find executable %s: %v", cmd[0], err)
 	}
 
-	// copy the extra vars so we can mutate it
-	vars := make(map[string]string)
-	for key, value := range extraVars {
-		vars[key] = value
-	}
-
 	// start the agent
 	sock, err := e.startProxyKeyring()
 	if err != nil {
 		return nil, err
 	}
 
+	vars := make(map[string]string)
 	vars["SSH_AUTH_SOCK"] = sock
 
 	// trap signals
@@ -170,6 +167,7 @@ func (e *Environment) Variables() *Variables {
 		vars.Set[key] = value
 	}
 
+	vars.Set["VAULTED_ENV"] = e.Name
 	vars.Set["VAULTED_ENV_EXPIRATION"] = e.Expiration.UTC().Format(time.RFC3339)
 
 	if e.AWSCreds != nil {
