@@ -221,19 +221,7 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 				var awsRole string
 				awsRole, err = e.readValue("Role ARN: ")
 				if err == nil {
-					if v.Duration > time.Hour {
-						var conf string
-						color.Yellow("\nProceeding will adjust your vault duration to 1h (the maximum when assuming a role).")
-						conf, err = e.readPrompt("Do you wish to proceed? (y/n): ")
-						if conf == "y" {
-							v.Duration = time.Hour
-							v.AWSKey.Role = awsRole
-						} else {
-							output("No role was added.")
-						}
-					} else {
-						v.AWSKey.Role = awsRole
-					}
+					v.AWSKey.Role = awsRole
 				}
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
