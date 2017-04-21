@@ -26,7 +26,8 @@ var (
 	cyan  = color.New(color.FgCyan)
 	blue  = color.New(color.FgBlue)
 
-	menuColor = color.New(color.FgHiBlue)
+	menuColor    = color.New(color.FgHiBlue)
+	warningColor = color.New(color.FgHiYellow)
 
 	ErrAbort       = errors.New("Aborted by user. Vault unchanged.")
 	ErrSaveAndExit = errors.New("Exiting at user request.")
@@ -183,8 +184,10 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 
 		switch input {
 		case "k", "add", "key", "keys":
-			output("Note: By default, Vaulted substitutes a temporary set of credentials when spawning an environment.\n" +
-				"      The AWS key input here may not match the key loaded into your environment.")
+			warningColor.Println("Note: For increased security, Vaulted defaults to substituting your credentials with temporary credentials.")
+			warningColor.Println("      The key specified here may not match the key loaded into your environment.")
+			output("")
+
 			awsAccesskey, keyErr := e.readValue("Key ID: ")
 			if keyErr != nil {
 				return keyErr
