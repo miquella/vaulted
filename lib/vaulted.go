@@ -192,7 +192,7 @@ func GetEnvironment(name, password string) (*Environment, error) {
 func getEnvironment(v *Vault, name, password string) (*Environment, error) {
 	env, err := openEnvironment(name, password)
 	if err == nil {
-		expired := time.Now().Add(5 * time.Minute).After(env.Expiration)
+		expired := time.Now().Add(15 * time.Minute).After(env.Expiration)
 		if !expired {
 			return env, nil
 		}
