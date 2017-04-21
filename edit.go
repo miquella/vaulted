@@ -26,6 +26,8 @@ var (
 	cyan  = color.New(color.FgCyan)
 	blue  = color.New(color.FgBlue)
 
+	menuColor = color.New(color.FgHiBlue)
+
 	ErrAbort       = errors.New("Aborted by user. Vault unchanged.")
 	ErrSaveAndExit = errors.New("Exiting at user request.")
 )
@@ -69,20 +71,21 @@ func (e *Edit) Run(steward Steward) error {
 }
 
 func mainMenu() {
-	color.Set(color.FgYellow)
-	output("")
+	menuColor.Set()
+	defer color.Unset()
+
 	output("a - AWS Key")
 	output("s - SSH Keys")
 	output("v - Variables")
 	output("d - Environment Duration")
 	output("? - Help")
 	output("q - Quit")
-	color.Unset()
 }
 
 func awsMenu() {
-	color.Set(color.FgYellow)
-	output("")
+	menuColor.Set()
+	defer color.Unset()
+
 	output("k - Key")
 	output("m - MFA")
 	output("r - Role")
@@ -92,18 +95,17 @@ func awsMenu() {
 	output("? - Help")
 	output("b - Back")
 	output("q - Quit")
-	color.Unset()
 }
 
 func sshKeysHelp() {
-	color.Set(color.FgYellow)
-	output("")
+	menuColor.Set()
+	defer color.Unset()
+
 	output("a - Add")
 	output("D - Delete")
 	output("? - Help")
 	output("b - Back")
 	output("q - Quit")
-	color.Unset()
 }
 
 func variableMenu() {
@@ -651,7 +653,7 @@ func (e *Edit) readMenu(message string) (string, error) {
 	}
 
 	output("")
-	input, err := e.readInput(color.BlueString(message), e.rlMenu)
+	input, err := e.readInput(menuColor.Sprint(message), e.rlMenu)
 	output("")
 	return input, err
 }
