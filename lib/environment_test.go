@@ -9,6 +9,7 @@ import (
 
 func TestEnvironmentVariables(t *testing.T) {
 	e := Environment{
+		Name:       "vault",
 		Expiration: time.Now(),
 		Vars: map[string]string{
 			"TEST":         "TESTING",
@@ -16,8 +17,9 @@ func TestEnvironmentVariables(t *testing.T) {
 		},
 	}
 	var expectedSet map[string]string = map[string]string{
-		"ANOTHER_TEST": "TEST TEST",
-		"TEST":         "TESTING",
+		"ANOTHER_TEST":           "TEST TEST",
+		"TEST":                   "TESTING",
+		"VAULTED_ENV":            e.Name,
 		"VAULTED_ENV_EXPIRATION": e.Expiration.UTC().Format(time.RFC3339),
 	}
 	var expectedUnset []string
@@ -35,6 +37,7 @@ func TestEnvironmentVariables(t *testing.T) {
 
 func TestEnvironmentVariablesWithPermCreds(t *testing.T) {
 	e := Environment{
+		Name:       "vault",
 		Expiration: time.Now(),
 		AWSCreds: &AWSCredentials{
 			ID:     "an-id",
@@ -46,10 +49,11 @@ func TestEnvironmentVariablesWithPermCreds(t *testing.T) {
 		},
 	}
 	var expectedSet map[string]string = map[string]string{
-		"ANOTHER_TEST":          "TEST TEST",
-		"AWS_ACCESS_KEY_ID":     e.AWSCreds.ID,
-		"AWS_SECRET_ACCESS_KEY": e.AWSCreds.Secret,
-		"TEST":                  "TESTING",
+		"ANOTHER_TEST":           "TEST TEST",
+		"AWS_ACCESS_KEY_ID":      e.AWSCreds.ID,
+		"AWS_SECRET_ACCESS_KEY":  e.AWSCreds.Secret,
+		"TEST":                   "TESTING",
+		"VAULTED_ENV":            e.Name,
 		"VAULTED_ENV_EXPIRATION": e.Expiration.UTC().Format(time.RFC3339),
 	}
 	var expectedUnset []string = []string{
@@ -71,6 +75,7 @@ func TestEnvironmentVariablesWithPermCreds(t *testing.T) {
 
 func TestEnvironmentVariablesWithTempCreds(t *testing.T) {
 	e := Environment{
+		Name:       "vault",
 		Expiration: time.Now(),
 		AWSCreds: &AWSCredentials{
 			ID:     "an-id",
@@ -83,12 +88,13 @@ func TestEnvironmentVariablesWithTempCreds(t *testing.T) {
 		},
 	}
 	var expectedSet map[string]string = map[string]string{
-		"ANOTHER_TEST":          "TEST TEST",
-		"AWS_ACCESS_KEY_ID":     e.AWSCreds.ID,
-		"AWS_SECRET_ACCESS_KEY": e.AWSCreds.Secret,
-		"AWS_SECURITY_TOKEN":    e.AWSCreds.Token,
-		"AWS_SESSION_TOKEN":     e.AWSCreds.Token,
-		"TEST":                  "TESTING",
+		"ANOTHER_TEST":           "TEST TEST",
+		"AWS_ACCESS_KEY_ID":      e.AWSCreds.ID,
+		"AWS_SECRET_ACCESS_KEY":  e.AWSCreds.Secret,
+		"AWS_SECURITY_TOKEN":     e.AWSCreds.Token,
+		"AWS_SESSION_TOKEN":      e.AWSCreds.Token,
+		"TEST":                   "TESTING",
+		"VAULTED_ENV":            e.Name,
 		"VAULTED_ENV_EXPIRATION": e.Expiration.UTC().Format(time.RFC3339),
 	}
 	var expectedUnset []string

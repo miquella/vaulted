@@ -15,6 +15,7 @@ var (
 set -x ONE "111111";
 set -x THREE "333";
 set -x TWO "222";
+set -x VAULTED_ENV "one";
 set -x VAULTED_ENV_EXPIRATION "2006-01-02T22:04:05Z";
 `
 	envFishOutputWithPermCreds = `# To load these variables into your shell, execute:
@@ -26,6 +27,7 @@ set -x AWS_SECRET_ACCESS_KEY "aws-secret-key";
 set -x ONE "111111";
 set -x THREE "333";
 set -x TWO "222";
+set -x VAULTED_ENV "one";
 set -x VAULTED_ENV_EXPIRATION "2006-01-02T22:04:05Z";
 `
 
@@ -34,6 +36,7 @@ set -x VAULTED_ENV_EXPIRATION "2006-01-02T22:04:05Z";
 export ONE="111111"
 export THREE="333"
 export TWO="222"
+export VAULTED_ENV="one"
 export VAULTED_ENV_EXPIRATION="2006-01-02T22:04:05Z"
 `
 	envShOutputWithPermCreds = `# To load these variables into your shell, execute:
@@ -45,6 +48,7 @@ export AWS_SECRET_ACCESS_KEY="aws-secret-key"
 export ONE="111111"
 export THREE="333"
 export TWO="222"
+export VAULTED_ENV="one"
 export VAULTED_ENV_EXPIRATION="2006-01-02T22:04:05Z"
 `
 
@@ -52,6 +56,7 @@ export VAULTED_ENV_EXPIRATION="2006-01-02T22:04:05Z"
   "ONE": "111111",
   "THREE": "333",
   "TWO": "222",
+  "VAULTED_ENV": "one",
   "VAULTED_ENV_EXPIRATION": "2006-01-02T22:04:05Z"
 }
 `
@@ -121,6 +126,7 @@ func TestEnv(t *testing.T) {
 
 	// cached environment
 	steward.Environments["one"] = &vaulted.Environment{
+		Name:       "one",
 		Expiration: time.Unix(1136239445, 0),
 		AWSCreds: &vaulted.AWSCredentials{
 			ID:     "aws-key-id",

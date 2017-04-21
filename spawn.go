@@ -28,7 +28,7 @@ func (s *Spawn) Run(steward Steward) error {
 		ask.Print(fmt.Sprintf("%s — expires: %s (%s remaining)\n", s.VaultName, env.Expiration.Format("2 Jan 2006 15:04 MST"), timeRemaining))
 	}
 
-	code, err := env.Spawn(s.Command, nil)
+	code, err := env.Spawn(s.Command)
 	if err != nil {
 		return ErrorWithExitCode{err, 2}
 	} else if *code != 0 {

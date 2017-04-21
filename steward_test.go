@@ -150,6 +150,7 @@ func (ts TestSteward) GetEnvironment(name string, password *string) (string, *va
 	if _, exists := ts.Environments[name]; exists {
 		env := ts.Environments[name]
 
+		e.Name = env.Name
 		e.Expiration = env.Expiration
 
 		creds := *env.AWSCreds
@@ -164,6 +165,8 @@ func (ts TestSteward) GetEnvironment(name string, password *string) (string, *va
 		}
 	} else {
 		vault := ts.Vaults[name]
+
+		e.Name = name
 
 		for key, value := range vault.Vars {
 			e.Vars[key] = value
