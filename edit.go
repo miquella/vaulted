@@ -26,6 +26,7 @@ var (
 	cyan  = color.New(color.FgCyan)
 	blue  = color.New(color.FgBlue)
 
+	faintColor   = color.New(color.Faint)
 	menuColor    = color.New(color.FgHiBlue)
 	warningColor = color.New(color.FgHiYellow)
 
@@ -598,12 +599,18 @@ func printAWS(v *vaulted.Vault, show bool) {
 		fmt.Printf("%s\n", v.AWSKey.ID)
 		green.Printf("  Secret: ")
 		if !show {
-			fmt.Printf("%s\n", "<hidden>")
+			fmt.Printf("%s\n", faintColor.Sprint("<hidden>"))
 		} else {
 			fmt.Printf("%s\n", v.AWSKey.Secret)
 		}
-		if v.AWSKey.MFA != "" {
-			green.Printf("  MFA: ")
+		green.Printf("  MFA: ")
+		if v.AWSKey.MFA == "" {
+			var warning string
+			if !v.AWSKey.ForgoTempCredGeneration {
+				warning = warningColor.Sprint(" (warning: some APIs will not function without MFA (e.g. IAM))")
+			}
+			fmt.Printf("%s %s\n", faintColor.Sprint("<not configured>"), warning)
+		} else {
 			fmt.Printf("%s\n", v.AWSKey.MFA)
 		}
 		if v.AWSKey.Role != "" {
