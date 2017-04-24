@@ -22,10 +22,8 @@ OPTIONS
 -------
 
 `--assume` *arn*
-  Specifies the full ARN of the role to assume. The role is assumed after
-  spawning the session for the vault. While the spawned session for the vault
-  is valid for the duration specified in the vault, the credentials resulting
-  from the assume role are valid for a maximum of one hour.
+  Specifies the full ARN of the role to assume. See **ASSUMING A ROLE** below
+  for details on how Vaulted assumes roles.
 
   Role assumption may be performed without specifying a vault to spawn from.
   When invoked this way, credentials are sourced from default locations (e.g.
@@ -34,26 +32,66 @@ OPTIONS
 AWS KEY
 -------
 
-Note: By default, Vaulted substitutes a temporary set of credentials when spawning an environment.
-The AWS key input here may not match the key loaded into your environment. This feature can be toggled in the
-`vaulted edit` menu.
+Vaulted uses permanent credentials stored in the vault to generate temporary
+credentials using AWS STS. The resulting credentials are configured to last for
+the duration of the vault session (configured via `vaulted edit`).
 
-Vaulted uses the permanent credentials stored in the vault to generate a set of temporary credentials using AWS STS.
-The temporary credentials generated are valid for a specific duration, set in the `vaulted edit` menu. This duration
-may be set between 15m and 36h.
+Temporary credentials must be used in order to assume a role.
 
-*Note: even if the duration of a vault is set higher than 1 hour, assuming a
-role caps the duration to 1 hour at a time. The session token will still be
-valid for the duration set in the vault, but the assume role will be performed
-each time Vaulted is invoked.*
+*Note:* because Vaulted defaults to substituting permanent credentials with
+temporary credentials, the credentials you provide to Vaulted may not match
+those in a spawned environment.
 
-This impacts the following environment variables:
+Vaulted uses AWS standard environment variables for credentials:
 
  * `AWS_ACCESS_KEY_ID`  
-   This is the temporary access key id or the access key id stored in the vault,
-   depending on whether substitution is enabled.
+   An identifier for the access key. Unique to each set of permanent or
+   temporary credentials.
  * `AWS_SECRET_ACCESS_KEY`  
-   This is the temporary secret access key or the secret access key stored in the vault,
-   depending on whether substitution is enabled.
- * `AWS_SESSION_TOKEN` (additionally, `AWS_SECURITY_TOKEN` is set to support legacy SDKs)  
-   These variables are unset if temporary credential substitution is disabled.
+   The secret used to sign requests. Unique to each set of permanent or
+   temporary credentials.
+ * `AWS_SESSION_TOKEN` / `AWS_SECURITY_TOKEN`  
+   Provided when using temporary credentials. `AWS_SECURITY_TOKEN` is provided
+   to support legacy SDKs.
+
+ASSUMING A ROLE
+---------------
+
+A role to assume can be specified either in a vault's configuration (via
+`vaulted edit`) or specified via the `--assume` option.
+
+Vaulted first generates and caches a session for the vault (assuming a vault
+*name* was specified) and uses the resulting session to perform the assume role
+call. This allows the session to be cached for a longer duration than the assume
+roll call will allow (maximum of 1 hour). This also means that the assume role
+call is performed each time a new environment is spawned from the session.
+
+When assuming a role, the maximum duration of the resulting credentials is 1
+hour, regardless of the duration specified in the vault's configuration.
+
+In addition to the variables specified above, Vaulted provides additional
+environment variables with information about the role:
+
+ * `VAULTED_ENV_ROLE_ARN`  
+   The full ARN of the role assumed.
+ * `VAULTED_ENV_ROLE_ACCOUNT_ID`  
+   The account ID specified by the role ARN.
+ * `VAULTED_ENV_ROLE_NAME`  
+   The name of the role specified by the role ARN.
+ * `VAULTED_ENV_ROLE_PATH`  
+   The path of the role specified by the role ARN.
+
+For example:
+
+```
+vaulted shell --assume arn:aws:iam::111222333444:role/SuperRole
+```
+
+would result in the following variables being set:
+
+```
+VAULTED_ENV_ROLE_ARN=arn:aws:iam::111222333444:role/SuperRole
+VAULTED_ENV_ROLE_ACCOUNT_ID=111222333444
+VAULTED_ENV_ROLE_NAME=SuperRole
+VAULTED_ENV_ROLE_PATH=/
+```

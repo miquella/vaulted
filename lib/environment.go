@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path"
 	"strings"
 	"syscall"
 	"time"
@@ -15,6 +16,7 @@ import (
 
 type Environment struct {
 	Name       string            `json:"name"`
+	Role       string            `json:"role,omitempty"`
 	Expiration time.Time         `json:"expiration"`
 	AWSCreds   *AWSCredentials   `json:"aws_creds,omitempty"`
 	Vars       map[string]string `json:"vars,omitempty"`
@@ -36,6 +38,7 @@ func (e *Environment) Assume(arn string) (*Environment, error) {
 
 	env := &Environment{
 		Name:       e.Name,
+		Role:       arn,
 		Expiration: expiration,
 		AWSCreds:   creds,
 		Vars:       make(map[string]string),
@@ -169,6 +172,18 @@ func (e *Environment) Variables() *Variables {
 
 	vars.Set["VAULTED_ENV"] = e.Name
 	vars.Set["VAULTED_ENV_EXPIRATION"] = e.Expiration.UTC().Format(time.RFC3339)
+
+	if e.Role != "" {
+		vars.Set["VAULTED_ENV_ROLE_ARN"] = e.Role
+
+		parts := strings.SplitN(e.Role, ":", 6)
+		if len(parts) == 6 {
+			parts[5] = strings.TrimPrefix(parts[5], "role")
+			vars.Set["VAULTED_ENV_ROLE_ACCOUNT_ID"] = parts[4]
+			vars.Set["VAULTED_ENV_ROLE_NAME"] = path.Base(parts[5])
+			vars.Set["VAULTED_ENV_ROLE_PATH"] = path.Dir(parts[5])
+		}
+	}
 
 	if e.AWSCreds != nil {
 		vars.Set["AWS_ACCESS_KEY_ID"] = e.AWSCreds.ID
