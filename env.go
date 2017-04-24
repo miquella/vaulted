@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/miquella/vaulted/lib"
 )
@@ -97,9 +96,7 @@ func (e *Env) getEnvironment(steward Steward) (*vaulted.Environment, error) {
 	var err error
 
 	// default environment
-	env := &vaulted.Environment{
-		Expiration: time.Now().Add(time.Hour),
-	}
+	env := DefaultEnvironment()
 
 	if e.VaultName != "" {
 		// get specific environment
