@@ -96,6 +96,7 @@ var (
 		{
 			Args: []string{"add", "one"},
 			Command: &Edit{
+				New:       true,
 				VaultName: "one",
 			},
 		},
