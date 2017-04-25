@@ -25,7 +25,7 @@ type templateVals struct {
 }
 
 var (
-	envFormatters = map[string]string{
+	sessionFormatters = map[string]string{
 		"fish": `# To load these variables into your shell, execute:
 #   eval ({{ .Command }})
 {{ range $var := .Unset}}set -e {{ $var }};
@@ -57,7 +57,7 @@ var templateFuncMap = template.FuncMap{
 }
 
 func (e *Env) Run(steward Steward) error {
-	env, err := e.getEnvironment(steward)
+	session, err := e.getSession(steward)
 	if err != nil {
 		return err
 	}
@@ -69,15 +69,15 @@ func (e *Env) Run(steward Steward) error {
 		format = e.DetectedShell
 	}
 
-	if foundTemplate, ok := envFormatters[format]; ok {
+	if foundTemplate, ok := sessionFormatters[format]; ok {
 		templateStr = foundTemplate
 	} else {
 		templateStr = format
 	}
-	tmpl, err := template.New("envTmpl").Funcs(templateFuncMap).Parse(templateStr)
+	tmpl, err := template.New("sessionTmpl").Funcs(templateFuncMap).Parse(templateStr)
 
 	vals := templateVals{}
-	variables := env.Variables()
+	variables := session.Variables()
 
 	vals.Set = variables.Set
 
@@ -92,23 +92,23 @@ func (e *Env) Run(steward Steward) error {
 	return tmpl.Execute(os.Stdout, vals)
 }
 
-func (e *Env) getEnvironment(steward Steward) (*vaulted.Environment, error) {
+func (e *Env) getSession(steward Steward) (*vaulted.Session, error) {
 	var err error
 
-	// default environment
-	env := DefaultEnvironment()
+	// default session
+	session := DefaultSession()
 
 	if e.VaultName != "" {
-		// get specific environment
-		_, env, err = steward.GetEnvironment(e.VaultName, nil)
+		// get specific session
+		_, session, err = steward.GetSession(e.VaultName, nil)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if e.Role != "" {
-		return env.Assume(e.Role)
+		return session.Assume(e.Role)
 	}
 
-	return env, nil
+	return session, nil
 }

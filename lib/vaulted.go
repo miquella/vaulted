@@ -163,81 +163,81 @@ func RemoveVault(name string) error {
 		return fmt.Errorf("Because %s is outside the vaulted managed directory (%s), it must be removed manually", untouchable[0], xdg.DATA_HOME.Join("vaulted"))
 	}
 
-	removeEnvironment(name)
+	removeSession(name)
 
 	return os.Remove(existing)
 }
 
-func GetEnvironment(name, password string) (*Environment, error) {
+func GetSession(name, password string) (*Session, error) {
 	v, err := OpenVault(name, password)
 	if err != nil {
 		return nil, err
 	}
 
-	env, err := getEnvironment(v, name, password)
+	session, err := getSession(v, name, password)
 	if err != nil {
 		return nil, err
 	}
 
 	if v.AWSKey != nil && v.AWSKey.Role != "" {
-		env, err = env.Assume(v.AWSKey.Role)
+		session, err = session.Assume(v.AWSKey.Role)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return env, nil
+	return session, nil
 }
 
-func getEnvironment(v *Vault, name, password string) (*Environment, error) {
-	env, err := openEnvironment(name, password)
+func getSession(v *Vault, name, password string) (*Session, error) {
+	session, err := openSession(name, password)
 	if err == nil {
-		expired := time.Now().Add(15 * time.Minute).After(env.Expiration)
+		expired := time.Now().Add(15 * time.Minute).After(session.Expiration)
 		if !expired {
-			return env, nil
+			return session, nil
 		}
 	}
 
-	// the environment isn't valid (possibly expired), so remove it
-	removeEnvironment(name)
+	// the session isn't valid (possibly expired), so remove it
+	removeSession(name)
 
-	env, err = v.CreateEnvironment(name)
+	session, err = v.CreateSession(name)
 	if err != nil {
 		return nil, err
 	}
 
-	// we have a valid environment, so if saving fails, ignore the failure
-	sealEnvironment(name, password, env)
-	return env, nil
+	// we have a valid session, so if saving fails, ignore the failure
+	sealSession(name, password, session)
+	return session, nil
 }
 
-func sealEnvironment(name, password string, env *Environment) error {
+func sealSession(name, password string, session *Session) error {
 	// read the vault file (to get key details)
 	vf, err := readVaultFile(name)
 	if err != nil {
 		return err
 	}
 
-	// marshal the environment content
-	content, err := json.Marshal(env)
+	// marshal the session content
+	content, err := json.Marshal(session)
 	if err != nil {
 		return err
 	}
 
-	// encrypt the environment
-	ef := &EnvironmentFile{
+	// encrypt the session
+	sf := &SessionFile{
 		Method:  "secretbox",
 		Details: make(Details),
 	}
 
-	switch ef.Method {
+	switch sf.Method {
 	case "secretbox":
 		nonce := [24]byte{}
 		_, err = rand.Read(nonce[:])
 		if err != nil {
 			return err
 		}
-		ef.Details.SetBytes("nonce", nonce[:])
+		sf.Details.SetBytes("nonce", nonce[:])
 
 		key := [32]byte{}
 		derivedKey, err := vf.Key.key(password, len(key))
@@ -246,35 +246,35 @@ func sealEnvironment(name, password string, env *Environment) error {
 		}
 		copy(key[:], derivedKey[:])
 
-		ef.Ciphertext = secretbox.Seal(nil, content, &nonce, &key)
+		sf.Ciphertext = secretbox.Seal(nil, content, &nonce, &key)
 
 	default:
 		return err
 	}
 
-	return writeEnvironmentFile(name, ef)
+	return writeSessionFile(name, sf)
 }
 
-func openEnvironment(name, password string) (*Environment, error) {
+func openSession(name, password string) (*Session, error) {
 	vf, err := readVaultFile(name)
 	if err != nil {
 		return nil, err
 	}
 
-	ef, err := readEnvironmentFile(name)
+	sf, err := readSessionFile(name)
 	if err != nil {
 		return nil, err
 	}
 
-	e := Environment{}
+	s := Session{}
 
-	switch ef.Method {
+	switch sf.Method {
 	case "secretbox":
 		if vf.Key == nil {
 			return nil, ErrInvalidKeyConfig
 		}
 
-		nonce := ef.Details.Bytes("nonce")
+		nonce := sf.Details.Bytes("nonce")
 		if len(nonce) == 0 {
 			return nil, ErrInvalidEncryptionConfig
 		}
@@ -288,19 +288,19 @@ func openEnvironment(name, password string) (*Environment, error) {
 		}
 		copy(boxKey[:], derivedKey[:])
 
-		plaintext, ok := secretbox.Open(nil, ef.Ciphertext, &boxNonce, &boxKey)
+		plaintext, ok := secretbox.Open(nil, sf.Ciphertext, &boxNonce, &boxKey)
 		if !ok {
 			return nil, ErrInvalidPassword
 		}
 
-		err = json.Unmarshal(plaintext, &e)
+		err = json.Unmarshal(plaintext, &s)
 		if err != nil {
 			return nil, err
 		}
 
 	default:
-		return nil, fmt.Errorf("Invalid encryption method: %s", ef.Method)
+		return nil, fmt.Errorf("Invalid encryption method: %s", sf.Method)
 	}
 
-	return &e, nil
+	return &s, nil
 }

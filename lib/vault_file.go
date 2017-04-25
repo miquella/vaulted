@@ -64,7 +64,7 @@ func writeVaultFile(name string, vaultFile *VaultFile) error {
 		return err
 	}
 
-	removeEnvironment(name)
+	removeSession(name)
 
 	return nil
 }

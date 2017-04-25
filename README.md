@@ -7,14 +7,14 @@ With so many secrets floating around in our modern lives, it's a wonder we're
 able to keep track of any of them!
 
 `vaulted` allows you to create vaults of related secrets and then spawn
-environments with these secrets. Vaults can contain secure environment
+sessions with these secrets. Vaults can contain secure environment
 variables, AWS credentials, or SSH keys (RSA, DSA, & ECDSA).
 
 `vaulted` also attempts to insulate spawned environments from other
 environments on the system. Temporary AWS credentials are created for each
-spawned environment as well as a new SSH agent. The SSH agent still allows
-access keys in the parent environment's SSH agent, but any keys added inside
-the environment are only available in the spawned environment.
+session as well as a new SSH agent. The SSH agent still allows access keys in
+the parent environment's SSH agent, but any keys added inside the spawned
+environment are only available in the that environment.
 
 Installation
 ------------

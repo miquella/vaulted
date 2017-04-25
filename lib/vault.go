@@ -25,7 +25,7 @@ type Vault struct {
 	SSHKeys  map[string]string `json:"ssh_keys,omitempty"`
 }
 
-func (v *Vault) CreateEnvironment(name string) (*Environment, error) {
+func (v *Vault) CreateSession(name string) (*Session, error) {
 	var duration time.Duration
 	if v.Duration == 0 {
 		duration = STSDurationDefault
@@ -33,35 +33,35 @@ func (v *Vault) CreateEnvironment(name string) (*Environment, error) {
 		duration = v.Duration
 	}
 
-	e := &Environment{
+	s := &Session{
 		Name:       name,
 		Vars:       make(map[string]string),
 		Expiration: time.Now().Add(duration).Truncate(time.Second),
 	}
 
-	// copy the vault vars to the environment
+	// copy the vault vars to the session
 	for key, value := range v.Vars {
-		e.Vars[key] = value
+		s.Vars[key] = value
 	}
 
-	// copy the vault ssh keys to the environment
+	// copy the vault ssh keys to the session
 	if len(v.SSHKeys) > 0 {
-		e.SSHKeys = make(map[string]string)
+		s.SSHKeys = make(map[string]string)
 		for key, value := range v.SSHKeys {
-			e.SSHKeys[key] = value
+			s.SSHKeys[key] = value
 		}
 	}
 
 	// get aws creds
 	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
 		var err error
-		e.AWSCreds, err = v.AWSKey.GetAWSCredentials(duration)
+		s.AWSCreds, err = v.AWSKey.GetAWSCredentials(duration)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return e, nil
+	return s, nil
 }
 
 type AWSKey struct {

@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-func TestEnvironmentVariables(t *testing.T) {
-	e := Environment{
+func TestSessionVariables(t *testing.T) {
+	e := Session{
 		Name:       "vault",
 		Expiration: time.Now(),
 		Vars: map[string]string{
@@ -35,8 +35,8 @@ func TestEnvironmentVariables(t *testing.T) {
 	}
 }
 
-func TestEnvironmentVariablesWithPermCreds(t *testing.T) {
-	e := Environment{
+func TestSessionVariablesWithPermCreds(t *testing.T) {
+	e := Session{
 		Name:       "vault",
 		Expiration: time.Now(),
 		AWSCreds: &AWSCredentials{
@@ -73,8 +73,8 @@ func TestEnvironmentVariablesWithPermCreds(t *testing.T) {
 	}
 }
 
-func TestEnvironmentVariablesWithTempCreds(t *testing.T) {
-	e := Environment{
+func TestSessionVariablesWithTempCreds(t *testing.T) {
+	e := Session{
 		Name:       "vault",
 		Expiration: time.Now(),
 		AWSCreds: &AWSCredentials{

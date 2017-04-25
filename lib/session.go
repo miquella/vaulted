@@ -14,7 +14,7 @@ import (
 	"golang.org/x/crypto/ssh/agent"
 )
 
-type Environment struct {
+type Session struct {
 	Name       string            `json:"name"`
 	Role       string            `json:"role,omitempty"`
 	Expiration time.Time         `json:"expiration"`
@@ -23,7 +23,7 @@ type Environment struct {
 	SSHKeys    map[string]string `json:"ssh_keys,omitempty"`
 }
 
-func (e *Environment) Assume(arn string) (*Environment, error) {
+func (e *Session) Assume(arn string) (*Session, error) {
 	expiration := e.Expiration
 	maxExpiration := time.Now().Add(time.Hour).Truncate(time.Second)
 	if expiration.After(maxExpiration) {
@@ -36,7 +36,7 @@ func (e *Environment) Assume(arn string) (*Environment, error) {
 		return nil, err
 	}
 
-	env := &Environment{
+	session := &Session{
 		Name:       e.Name,
 		Role:       arn,
 		Expiration: expiration,
@@ -45,16 +45,16 @@ func (e *Environment) Assume(arn string) (*Environment, error) {
 		SSHKeys:    make(map[string]string),
 	}
 	for key, value := range e.Vars {
-		env.Vars[key] = value
+		session.Vars[key] = value
 	}
 	for key, value := range e.SSHKeys {
-		env.SSHKeys[key] = value
+		session.SSHKeys[key] = value
 	}
 
-	return env, nil
+	return session, nil
 }
 
-func (e *Environment) Spawn(cmd []string) (*int, error) {
+func (e *Session) Spawn(cmd []string) (*int, error) {
 	if len(cmd) == 0 {
 		return nil, ErrInvalidCommand
 	}
@@ -126,7 +126,7 @@ func (e *Environment) Spawn(cmd []string) (*int, error) {
 	return &exitStatus, nil
 }
 
-func (e *Environment) startProxyKeyring() (string, error) {
+func (e *Session) startProxyKeyring() (string, error) {
 	keyring, err := NewProxyKeyring(os.Getenv("SSH_AUTH_SOCK"))
 	if err != nil {
 		return "", err
@@ -161,7 +161,7 @@ func (e *Environment) startProxyKeyring() (string, error) {
 	return sock, err
 }
 
-func (e *Environment) Variables() *Variables {
+func (e *Session) Variables() *Variables {
 	vars := Variables{
 		Set: make(map[string]string),
 	}
@@ -204,7 +204,7 @@ func (e *Environment) Variables() *Variables {
 	return &vars
 }
 
-func (e *Environment) buildEnviron(extraVars map[string]string) []string {
+func (e *Session) buildEnviron(extraVars map[string]string) []string {
 	vars := make(map[string]string)
 	for _, v := range os.Environ() {
 		parts := strings.SplitN(v, "=", 2)

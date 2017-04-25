@@ -40,7 +40,7 @@ Temporary credentials must be used in order to assume a role.
 
 *Note:* because Vaulted defaults to substituting permanent credentials with
 temporary credentials, the credentials you provide to Vaulted may not match
-those in a spawned environment.
+those in a spawned session.
 
 Vaulted uses AWS standard environment variables for credentials:
 

@@ -124,8 +124,8 @@ func TestEnv(t *testing.T) {
 		t.Error(failureMessage(envJSONOutput, output))
 	}
 
-	// cached environment
-	steward.Environments["one"] = &vaulted.Environment{
+	// cached session
+	steward.Sessions["one"] = &vaulted.Session{
 		Name:       "one",
 		Expiration: time.Unix(1136239445, 0),
 		AWSCreds: &vaulted.AWSCredentials{
