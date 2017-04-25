@@ -53,6 +53,18 @@ func (e *Edit) Run(steward Steward) error {
 		}
 
 		vault = &vaulted.Vault{}
+
+		creds, err := e.importCredsFromEnv()
+		if err != nil {
+			return err
+		}
+
+		if creds != nil {
+			vault.AWSKey = &vaulted.AWSKey{
+				AWSCredentials: *creds,
+			}
+		}
+
 	} else {
 		password, vault, err = steward.OpenVault(e.VaultName, nil)
 		if err != nil {
@@ -125,6 +137,45 @@ func variableMenu() {
 	output("b - Back")
 	output("q - Quit")
 	color.Unset()
+}
+
+func (e *Edit) importCredsFromEnv() (*vaulted.AWSCredentials, error) {
+	// bail if no creds are available
+	if os.Getenv("AWS_ACCESS_KEY_ID") == "" || os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+		return nil, nil
+	}
+
+	// bail if creds are temporary (token present)
+	if os.Getenv("AWS_SESSION_TOKEN") != "" || os.Getenv("AWS_SECURITY_TOKEN") != "" {
+		warningColor.Println("There appear to be temporary AWS credentials in your current environment.")
+		warningColor.Println("Vaulted cannot import temporary AWS credentials.")
+		return nil, nil
+	}
+
+	for {
+		warningColor.Println("There appear to be AWS credentials in your current environment.")
+		input, err := e.readPrompt("Would you like to import these credentials? (Y/n): ")
+		if err != nil {
+			return nil, err
+		}
+
+		switch strings.ToLower(input) {
+		case "", "y", "yes":
+			return &vaulted.AWSCredentials{
+				ID:     os.Getenv("AWS_ACCESS_KEY_ID"),
+				Secret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+			}, nil
+
+		case "n", "no":
+			return nil, nil
+
+		default:
+			output("")
+			color.Red("Response not recognized. Please enter 'y' or 'n'.")
+			output("")
+			continue
+		}
+	}
 }
 
 func (e *Edit) edit(name string, v *vaulted.Vault) error {
