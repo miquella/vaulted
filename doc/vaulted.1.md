@@ -4,7 +4,7 @@ vaulted 1
 NAME
 ----
 
-vaulted - spawn environments from securely stored secrets
+vaulted - spawn sessions from securely stored secrets
 
 SYNOPSIS
 --------

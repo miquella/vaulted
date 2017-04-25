@@ -60,16 +60,16 @@ func WriteStdin(b []byte, f func()) {
 
 func NewTestSteward() *TestSteward {
 	return &TestSteward{
-		Passwords:    make(map[string]string),
-		Vaults:       make(map[string]*vaulted.Vault),
-		Environments: make(map[string]*vaulted.Environment),
+		Passwords: make(map[string]string),
+		Vaults:    make(map[string]*vaulted.Vault),
+		Sessions:  make(map[string]*vaulted.Session),
 	}
 }
 
 type TestSteward struct {
-	Passwords    map[string]string
-	Vaults       map[string]*vaulted.Vault
-	Environments map[string]*vaulted.Environment
+	Passwords map[string]string
+	Vaults    map[string]*vaulted.Vault
+	Sessions  map[string]*vaulted.Session
 
 	LegacyPassword     string
 	LegacyEnvironments map[string]legacy.Environment
@@ -131,7 +131,7 @@ func (ts TestSteward) RemoveVault(name string) error {
 	return nil
 }
 
-func (ts TestSteward) GetEnvironment(name string, password *string) (string, *vaulted.Environment, error) {
+func (ts TestSteward) GetSession(name string, password *string) (string, *vaulted.Session, error) {
 	if !ts.VaultExists(name) {
 		return "", nil, os.ErrNotExist
 	}
@@ -142,42 +142,42 @@ func (ts TestSteward) GetEnvironment(name string, password *string) (string, *va
 		}
 	}
 
-	e := &vaulted.Environment{
+	s := &vaulted.Session{
 		Expiration: time.Unix(1136239445, 0),
 		Vars:       make(map[string]string),
 		SSHKeys:    make(map[string]string),
 	}
-	if _, exists := ts.Environments[name]; exists {
-		env := ts.Environments[name]
+	if _, exists := ts.Sessions[name]; exists {
+		cachedSession := ts.Sessions[name]
 
-		e.Name = env.Name
-		e.Expiration = env.Expiration
+		s.Name = cachedSession.Name
+		s.Expiration = cachedSession.Expiration
 
-		creds := *env.AWSCreds
-		e.AWSCreds = &creds
+		creds := *cachedSession.AWSCreds
+		s.AWSCreds = &creds
 
-		for key, value := range env.Vars {
-			e.Vars[key] = value
+		for key, value := range cachedSession.Vars {
+			s.Vars[key] = value
 		}
 
-		for key, value := range env.SSHKeys {
-			e.SSHKeys[key] = value
+		for key, value := range cachedSession.SSHKeys {
+			s.SSHKeys[key] = value
 		}
 	} else {
 		vault := ts.Vaults[name]
 
-		e.Name = name
+		s.Name = name
 
 		for key, value := range vault.Vars {
-			e.Vars[key] = value
+			s.Vars[key] = value
 		}
 
 		for key, value := range vault.SSHKeys {
-			e.SSHKeys[key] = value
+			s.SSHKeys[key] = value
 		}
 	}
 
-	return ts.Passwords[name], e, nil
+	return ts.Passwords[name], s, nil
 }
 
 func (ts TestSteward) OpenLegacyVault() (password string, environments map[string]legacy.Environment, err error) {

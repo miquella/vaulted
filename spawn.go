@@ -17,18 +17,18 @@ type Spawn struct {
 }
 
 func (s *Spawn) Run(steward Steward) error {
-	env, err := s.getEnvironment(steward)
+	session, err := s.getSession(steward)
 	if err != nil {
 		return err
 	}
 
-	timeRemaining := env.Expiration.Sub(time.Now())
+	timeRemaining := session.Expiration.Sub(time.Now())
 	timeRemaining = time.Second * time.Duration(timeRemaining.Seconds())
 	if s.DisplayStatus {
-		ask.Print(fmt.Sprintf("%s — expires: %s (%s remaining)\n", env.Name, env.Expiration.Format("2 Jan 2006 15:04 MST"), timeRemaining))
+		ask.Print(fmt.Sprintf("%s — expires: %s (%s remaining)\n", session.Name, session.Expiration.Format("2 Jan 2006 15:04 MST"), timeRemaining))
 	}
 
-	code, err := env.Spawn(s.Command)
+	code, err := session.Spawn(s.Command)
 	if err != nil {
 		return ErrorWithExitCode{err, 2}
 	} else if *code != 0 {
@@ -38,23 +38,23 @@ func (s *Spawn) Run(steward Steward) error {
 	return nil
 }
 
-func (s *Spawn) getEnvironment(steward Steward) (*vaulted.Environment, error) {
+func (s *Spawn) getSession(steward Steward) (*vaulted.Session, error) {
 	var err error
 
-	// default environment
-	env := DefaultEnvironment()
+	// default session
+	session := DefaultSession()
 
 	if s.VaultName != "" {
-		// get specific environment
-		_, env, err = steward.GetEnvironment(s.VaultName, nil)
+		// get specific session
+		_, session, err = steward.GetSession(s.VaultName, nil)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if s.Role != "" {
-		return env.Assume(s.Role)
+		return session.Assume(s.Role)
 	}
 
-	return env, nil
+	return session, nil
 }

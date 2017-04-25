@@ -8,13 +8,13 @@ import (
 	"github.com/miquella/xdg"
 )
 
-type EnvironmentFile struct {
+type SessionFile struct {
 	Method     string  `json:"method"`
 	Details    Details `json:"details,omitempty"`
 	Ciphertext []byte  `json:"ciphertext"`
 }
 
-func readEnvironmentFile(name string) (*EnvironmentFile, error) {
+func readSessionFile(name string) (*SessionFile, error) {
 	existing := xdg.CACHE_HOME.Find(filepath.Join("vaulted", name))
 	if existing == "" {
 		return nil, os.ErrNotExist
@@ -27,7 +27,7 @@ func readEnvironmentFile(name string) (*EnvironmentFile, error) {
 	defer f.Close()
 
 	d := json.NewDecoder(f)
-	ef := EnvironmentFile{}
+	ef := SessionFile{}
 	err = d.Decode(&ef)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func readEnvironmentFile(name string) (*EnvironmentFile, error) {
 	return &ef, nil
 }
 
-func writeEnvironmentFile(name string, environmentFile *EnvironmentFile) error {
+func writeSessionFile(name string, sessionFile *SessionFile) error {
 	pathname := xdg.CACHE_HOME.Join("vaulted")
 	err := os.MkdirAll(pathname, 0700)
 	if err != nil {
@@ -51,7 +51,7 @@ func writeEnvironmentFile(name string, environmentFile *EnvironmentFile) error {
 	defer f.Close()
 
 	e := json.NewEncoder(f)
-	err = e.Encode(environmentFile)
+	err = e.Encode(sessionFile)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func writeEnvironmentFile(name string, environmentFile *EnvironmentFile) error {
 	return nil
 }
 
-func removeEnvironment(name string) error {
+func removeSession(name string) error {
 	existing := xdg.CACHE_HOME.Find(filepath.Join("vaulted", name))
 	if existing == "" {
 		return os.ErrNotExist

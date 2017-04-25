@@ -143,7 +143,7 @@ func setupVaults(t *testing.T) {
 
 	err = ioutil.WriteFile(filepath.Join(string(xdg.CACHE_HOME), "vaulted", "aaa"), []byte{}, 0600)
 	if err != nil {
-		t.Fatalf("failed to write 'aaa' environment file: %v", err)
+		t.Fatalf("failed to write 'aaa' session file: %v", err)
 	}
 }
 

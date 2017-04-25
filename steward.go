@@ -11,7 +11,7 @@ type Steward interface {
 	SealVault(name string, password *string, vault *vaulted.Vault) error
 	OpenVault(name string, password *string) (string, *vaulted.Vault, error)
 	RemoveVault(name string) error
-	GetEnvironment(name string, password *string) (string, *vaulted.Environment, error)
+	GetSession(name string, password *string) (string, *vaulted.Session, error)
 
 	OpenLegacyVault() (password string, environments map[string]legacy.Environment, err error)
 }

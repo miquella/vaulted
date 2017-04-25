@@ -186,7 +186,7 @@ func (e *Edit) aws(v *vaulted.Vault) error {
 		switch input {
 		case "k", "add", "key", "keys":
 			warningColor.Println("Note: For increased security, Vaulted defaults to substituting your credentials with temporary credentials.")
-			warningColor.Println("      The key specified here may not match the key loaded into your environment.")
+			warningColor.Println("      The key specified here may not match the key in your spawned session.")
 			output("")
 
 			awsAccesskey, keyErr := e.readValue("Key ID: ")

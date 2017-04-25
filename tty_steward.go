@@ -103,7 +103,7 @@ func (*TTYSteward) RemoveVault(name string) error {
 	return vaulted.RemoveVault(name)
 }
 
-func (*TTYSteward) GetEnvironment(name string, password *string) (string, *vaulted.Environment, error) {
+func (*TTYSteward) GetSession(name string, password *string) (string, *vaulted.Session, error) {
 	if !vaulted.VaultExists(name) {
 		return "", nil, ErrFileNotExist
 	}
@@ -113,10 +113,10 @@ func (*TTYSteward) GetEnvironment(name string, password *string) (string, *vault
 		password = &envPassword
 	}
 
-	var env *vaulted.Environment
+	var session *vaulted.Session
 	var err error
 	if password != nil {
-		env, err = vaulted.GetEnvironment(name, *password)
+		session, err = vaulted.GetSession(name, *password)
 	} else {
 		for i := 0; i < 3; i++ {
 			var requestedPassword string
@@ -125,7 +125,7 @@ func (*TTYSteward) GetEnvironment(name string, password *string) (string, *vault
 				break
 			}
 
-			env, err = vaulted.GetEnvironment(name, requestedPassword)
+			session, err = vaulted.GetSession(name, requestedPassword)
 			if err != vaulted.ErrInvalidPassword {
 				password = &requestedPassword
 				break
@@ -141,7 +141,7 @@ func (*TTYSteward) GetEnvironment(name string, password *string) (string, *vault
 		}
 	}
 
-	return *password, env, nil
+	return *password, session, nil
 }
 
 func (*TTYSteward) OpenLegacyVault() (password string, environments map[string]legacy.Environment, err error) {

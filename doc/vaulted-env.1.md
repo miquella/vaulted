@@ -15,16 +15,16 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-Creates an environment using variables and the AWS key stored in the vault. The
+Creates a session using variables and the AWS key stored in the vault. The
 resulting environment variables are used to generate shell commands that will
 load the secrets into a shell.
 
 The shell is autodetected from the `SHELL` environment variable, if the shell
 is unknown or unspecified, `sh` compatible commands are emitted.
 
-*Note:* SSH keys are ignored when generating environments this way. This is due
-to the inability to track the lifetime of the environment, which means the SSH
-agent would exist indefinitely.
+*Note:* SSH keys are ignored when generating sessions this way. This is due to
+the inability to track the lifetime of the session, which means the SSH agent
+would exist indefinitely.
 
 OPTIONS
 -------
@@ -73,7 +73,7 @@ Temporary credentials must be used in order to assume a role.
 
 *Note:* because Vaulted defaults to substituting permanent credentials with
 temporary credentials, the credentials you provide to Vaulted may not match
-those in a spawned environment.
+those in a spawned session.
 
 Vaulted uses AWS standard environment variables for credentials:
 
