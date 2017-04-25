@@ -20,8 +20,16 @@ type Env struct {
 }
 
 type templateVals struct {
-	vaulted.Variables
 	Command string
+
+	AWSCreds struct {
+		ID     string
+		Secret string
+		Token  string `json:",omitempty"`
+	}
+
+	Set   map[string]string
+	Unset []string
 }
 
 var (
@@ -79,15 +87,20 @@ func (e *Env) Run(steward Steward) error {
 	}
 	tmpl, err := template.New("sessionTmpl").Funcs(templateFuncMap).Parse(templateStr)
 
-	vals := templateVals{}
 	variables := session.Variables()
-
-	vals.Set = variables.Set
-
 	sort.Strings(variables.Unset)
-	vals.Unset = variables.Unset
 
-	vals.Command = e.Command
+	vals := templateVals{
+		Command: e.Command,
+		Set:     variables.Set,
+		Unset:   variables.Unset,
+	}
+
+	if session.AWSCreds != nil {
+		vals.AWSCreds.ID = session.AWSCreds.ID
+		vals.AWSCreds.Secret = session.AWSCreds.Secret
+		vals.AWSCreds.Token = session.AWSCreds.Token
+	}
 
 	if err != nil {
 		return ErrorWithExitCode{err, 64}

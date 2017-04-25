@@ -53,14 +53,18 @@ OPTIONS
   behavior and a `json` function which accepts a value and emits a pretty
   printed JSON string.
 
-  To receive just the names of the variables to remove formatted as JSON the
-  custom template would be: `{{ json .Unset }}`
+  As an example, to output just the AWS credentials in a JSON format, use the
+  custom template: `--format '{{ json .AWSCreds }}'`
 
 |Field Name|Type|Notes|
 |---|---|---|
+| Command | string | The full command line used to invoke vaulted including options |
+| AWSCreds | struct | The AWS access key for the sesion |
+| AWSCreds.ID | string | ID for the AWS access key |
+| AWSCreds.Secret | string | Secret for the AWS access key |
+| AWSCreds.Token | string | Session token for the AWS access key (used with temporary credentials) |
 | Set | map[string]string | A map of environment variables to be set along with their values |
 | Unset | []string | A slice of variables to be removed from the environment before setting new values |
-| Command | string | The full command line used to invoke vaulted including options |
 
 AWS KEY
 -------
