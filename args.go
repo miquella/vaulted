@@ -175,6 +175,7 @@ func parseAddArgs(args []string) (Command, error) {
 	}
 
 	e := &Edit{}
+	e.New = true
 	e.VaultName = flag.Arg(0)
 	return e, nil
 }

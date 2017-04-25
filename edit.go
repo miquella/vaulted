@@ -30,11 +30,13 @@ var (
 	menuColor    = color.New(color.FgHiBlue)
 	warningColor = color.New(color.FgHiYellow)
 
+	ErrExists      = errors.New("Vault exists. Use `vaulted edit` to edit existing vaults.")
 	ErrAbort       = errors.New("Aborted by user. Vault unchanged.")
 	ErrSaveAndExit = errors.New("Exiting at user request.")
 )
 
 type Edit struct {
+	New       bool
 	VaultName string
 	rlMenu    *readline.Instance
 	rlValue   *readline.Instance
@@ -45,13 +47,17 @@ func (e *Edit) Run(steward Steward) error {
 	var vault *vaulted.Vault
 	var err error
 
-	if vaulted.VaultExists(e.VaultName) {
+	if e.New {
+		if vaulted.VaultExists(e.VaultName) {
+			return ErrExists
+		}
+
+		vault = &vaulted.Vault{}
+	} else {
 		password, vault, err = steward.OpenVault(e.VaultName, nil)
 		if err != nil {
 			return err
 		}
-	} else {
-		vault = &vaulted.Vault{}
 	}
 
 	err = e.edit(e.VaultName, vault)
