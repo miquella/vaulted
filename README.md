@@ -99,9 +99,9 @@ removing, more advanced methods such as JSON-formatted dumping and loading are
 also available. An environment can even be loaded into a running shell! See
 `vaulted --help` for available commands.
 
-### Spawned Environment
+Spawned Environment
+-------------------
 
-In addition to secrets, spawned environments also include the name of the vault
-that was used to spawn the environment in the `VAULTED_ENV` environment
-variable. This is particularly useful if you would like to indicate the spawned
-environment in your shell prompt.
+In addition to including secrets stored in the vault, spawned environments also
+include environment variables that describe how the session and environment
+were spawned. See `vaulted-env(1)` and `vaulted-shell(1)` for details.
