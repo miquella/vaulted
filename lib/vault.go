@@ -36,7 +36,7 @@ func (v *Vault) CreateEnvironment(name string) (*Environment, error) {
 	e := &Environment{
 		Name:       name,
 		Vars:       make(map[string]string),
-		Expiration: time.Now().Add(duration),
+		Expiration: time.Now().Add(duration).Truncate(time.Second),
 	}
 
 	// copy the vault vars to the environment

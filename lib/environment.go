@@ -23,7 +23,7 @@ type Environment struct {
 
 func (e *Environment) Assume(arn string) (*Environment, error) {
 	expiration := e.Expiration
-	maxExpiration := time.Now().Add(time.Hour)
+	maxExpiration := time.Now().Add(time.Hour).Truncate(time.Second)
 	if expiration.After(maxExpiration) {
 		expiration = maxExpiration
 	}

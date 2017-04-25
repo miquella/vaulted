@@ -10,6 +10,6 @@ import (
 func DefaultEnvironment() *vaulted.Environment {
 	return &vaulted.Environment{
 		Name:       os.Getenv("VAULTED_ENV"),
-		Expiration: time.Now().Add(time.Hour),
+		Expiration: time.Now().Add(time.Hour).Truncate(time.Second),
 	}
 }
