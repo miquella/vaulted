@@ -191,15 +191,11 @@ func GetSession(name, password string) (*Session, error) {
 
 func getSession(v *Vault, name, password string) (*Session, error) {
 	session, err := openSession(name, password)
-	if err == nil {
-		expired := time.Now().Add(15 * time.Minute).After(session.Expiration)
-		if !expired {
-			return session, nil
-		}
+	if err != nil {
+		removeSession(name)
+	} else if session.Expiration.After(time.Now().Add(15 * time.Minute)) {
+		return session, nil
 	}
-
-	// the session isn't valid (possibly expired), so remove it
-	removeSession(name)
 
 	session, err = v.CreateSession(name)
 	if err != nil {
