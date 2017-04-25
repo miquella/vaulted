@@ -67,6 +67,9 @@ func (e *Env) Run(steward Steward) error {
 
 	if format == "shell" {
 		format = e.DetectedShell
+		if _, ok := sessionFormatters[format]; !ok {
+			format = "sh"
+		}
 	}
 
 	if foundTemplate, ok := sessionFormatters[format]; ok {
