@@ -65,6 +65,8 @@ OPTIONS
 AWS KEY
 -------
 
+[comment]: # (WHEN MODIFYING THESE DOCS, ALSO UPDATE: vaulted-shell.1.md)
+
 Vaulted uses permanent credentials stored in the vault to generate temporary
 credentials using AWS STS. The resulting credentials are configured to last for
 the duration of the vault session (configured via `vaulted edit`).
@@ -89,6 +91,8 @@ Vaulted uses AWS standard environment variables for credentials:
 
 ASSUMING A ROLE
 ---------------
+
+[comment]: # (WHEN MODIFYING THESE DOCS, ALSO UPDATE: vaulted-shell.1.md)
 
 A role to assume can be specified either in a vault's configuration (via
 `vaulted edit`) or specified via the `--assume` option.
