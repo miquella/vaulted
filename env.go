@@ -38,7 +38,7 @@ var (
 #   eval ({{ .Command }})
 {{ range $var := .Unset}}set -e {{ $var }};
 {{ end -}}
-{{ range $var, $value := .Set }}set -x {{ $var }} "{{ replace $value "\"" "\\\"" }}";
+{{ range $var, $value := .Set }}set -gx {{ $var }} "{{ replace $value "\"" "\\\"" }}";
 {{ end }}`,
 		"sh": `# To load these variables into your shell, execute:
 #   eval $({{ .Command }})
