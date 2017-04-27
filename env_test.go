@@ -12,23 +12,23 @@ import (
 var (
 	envFishOutput = `# To load these variables into your shell, execute:
 #   eval (vaulted env one)
-set -x ONE "111111";
-set -x THREE "333";
-set -x TWO "222";
-set -x VAULTED_ENV "one";
-set -x VAULTED_ENV_EXPIRATION "2006-01-02T22:04:05Z";
+set -gx ONE "111111";
+set -gx THREE "333";
+set -gx TWO "222";
+set -gx VAULTED_ENV "one";
+set -gx VAULTED_ENV_EXPIRATION "2006-01-02T22:04:05Z";
 `
 	envFishOutputWithPermCreds = `# To load these variables into your shell, execute:
 #   eval (vaulted env one)
 set -e AWS_SECURITY_TOKEN;
 set -e AWS_SESSION_TOKEN;
-set -x AWS_ACCESS_KEY_ID "aws-key-id";
-set -x AWS_SECRET_ACCESS_KEY "aws-secret-key";
-set -x ONE "111111";
-set -x THREE "333";
-set -x TWO "222";
-set -x VAULTED_ENV "one";
-set -x VAULTED_ENV_EXPIRATION "2006-01-02T22:04:05Z";
+set -gx AWS_ACCESS_KEY_ID "aws-key-id";
+set -gx AWS_SECRET_ACCESS_KEY "aws-secret-key";
+set -gx ONE "111111";
+set -gx THREE "333";
+set -gx TWO "222";
+set -gx VAULTED_ENV "one";
+set -gx VAULTED_ENV_EXPIRATION "2006-01-02T22:04:05Z";
 `
 
 	envShOutput = `# To load these variables into your shell, execute:
