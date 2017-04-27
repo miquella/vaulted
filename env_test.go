@@ -32,7 +32,7 @@ set -gx VAULTED_ENV_EXPIRATION "2006-01-02T22:04:05Z";
 `
 
 	envShOutput = `# To load these variables into your shell, execute:
-#   eval $(vaulted env one)
+#   eval "$(vaulted env one)"
 export ONE="111111"
 export THREE="333"
 export TWO="222"
@@ -40,7 +40,7 @@ export VAULTED_ENV="one"
 export VAULTED_ENV_EXPIRATION="2006-01-02T22:04:05Z"
 `
 	envShOutputWithPermCreds = `# To load these variables into your shell, execute:
-#   eval $(vaulted env one)
+#   eval "$(vaulted env one)"
 unset AWS_SECURITY_TOKEN
 unset AWS_SESSION_TOKEN
 export AWS_ACCESS_KEY_ID="aws-key-id"
