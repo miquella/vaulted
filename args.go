@@ -278,6 +278,14 @@ func parseEnvArgs(args []string) (Command, error) {
 	e.DetectedShell = shell
 	e.Command = strings.Join(os.Args, " ")
 
+	e.Interactive = true
+	fi, err := os.Stdout.Stat()
+	if err == nil {
+		if fi.Mode()&os.ModeCharDevice == 0 {
+			e.Interactive = false
+		}
+	}
+
 	e.Format, _ = flag.GetString("format")
 	return e, nil
 }

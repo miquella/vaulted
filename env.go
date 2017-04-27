@@ -17,10 +17,12 @@ type Env struct {
 	DetectedShell string
 	Format        string
 	Command       string
+	Interactive   bool
 }
 
 type templateVals struct {
-	Command string
+	Command     string
+	Interactive bool
 
 	AWSCreds struct {
 		ID     string
@@ -34,18 +36,26 @@ type templateVals struct {
 
 var (
 	sessionFormatters = map[string]string{
-		"fish": `# To load these variables into your shell, execute:
+		"fish": `
+{{- if .Interactive -}}
+# To load these variables into your shell, execute:
 #   {{ .Command }} | source
+{{ end -}}
 {{ range $var := .Unset}}set -e {{ $var }};
 {{ end -}}
 {{ range $var, $value := .Set }}set -gx {{ $var }} "{{ replace $value "\"" "\\\"" }}";
-{{ end }}`,
-		"sh": `# To load these variables into your shell, execute:
+{{ end -}}
+`,
+		"sh": `
+{{- if .Interactive -}}
+# To load these variables into your shell, execute:
 #   eval "$({{ .Command }})"
+{{ end -}}
 {{ range $var := .Unset}}unset {{ $var }}
 {{ end -}}
 {{ range $var, $value := .Set }}export {{ $var }}="{{ replace $value "\"" "\\\"" }}"
-{{ end }}`,
+{{ end -}}
+`,
 		"json": "{{ json .Set }}\n",
 	}
 )
@@ -91,9 +101,10 @@ func (e *Env) Run(steward Steward) error {
 	sort.Strings(variables.Unset)
 
 	vals := templateVals{
-		Command: e.Command,
-		Set:     variables.Set,
-		Unset:   variables.Unset,
+		Command:     e.Command,
+		Interactive: e.Interactive,
+		Set:         variables.Set,
+		Unset:       variables.Unset,
 	}
 
 	if session.AWSCreds != nil {

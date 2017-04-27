@@ -30,6 +30,22 @@ set -gx TWO "222";
 set -gx VAULTED_ENV "one";
 set -gx VAULTED_ENV_EXPIRATION "2006-01-02T22:04:05Z";
 `
+	envFishOutputNonInteractive = `set -gx ONE "111111";
+set -gx THREE "333";
+set -gx TWO "222";
+set -gx VAULTED_ENV "one";
+set -gx VAULTED_ENV_EXPIRATION "2006-01-02T22:04:05Z";
+`
+	envFishOutputWithPermCredsNonInteractive = `set -e AWS_SECURITY_TOKEN;
+set -e AWS_SESSION_TOKEN;
+set -gx AWS_ACCESS_KEY_ID "aws-key-id";
+set -gx AWS_SECRET_ACCESS_KEY "aws-secret-key";
+set -gx ONE "111111";
+set -gx THREE "333";
+set -gx TWO "222";
+set -gx VAULTED_ENV "one";
+set -gx VAULTED_ENV_EXPIRATION "2006-01-02T22:04:05Z";
+`
 
 	envShOutput = `# To load these variables into your shell, execute:
 #   eval "$(vaulted env one)"
@@ -42,6 +58,23 @@ export VAULTED_ENV_EXPIRATION="2006-01-02T22:04:05Z"
 	envShOutputWithPermCreds = `# To load these variables into your shell, execute:
 #   eval "$(vaulted env one)"
 unset AWS_SECURITY_TOKEN
+unset AWS_SESSION_TOKEN
+export AWS_ACCESS_KEY_ID="aws-key-id"
+export AWS_SECRET_ACCESS_KEY="aws-secret-key"
+export ONE="111111"
+export THREE="333"
+export TWO="222"
+export VAULTED_ENV="one"
+export VAULTED_ENV_EXPIRATION="2006-01-02T22:04:05Z"
+`
+
+	envShOutputNonInteractive = `export ONE="111111"
+export THREE="333"
+export TWO="222"
+export VAULTED_ENV="one"
+export VAULTED_ENV_EXPIRATION="2006-01-02T22:04:05Z"
+`
+	envShOutputWithPermCredsNonInteractive = `unset AWS_SECURITY_TOKEN
 unset AWS_SESSION_TOKEN
 export AWS_ACCESS_KEY_ID="aws-key-id"
 export AWS_SECRET_ACCESS_KEY="aws-secret-key"
@@ -79,6 +112,7 @@ func TestEnv(t *testing.T) {
 			DetectedShell: "fish",
 			Format:        "shell",
 			Command:       "vaulted env one",
+			Interactive:   true,
 		}
 		err := e.Run(steward)
 		if err != nil {
@@ -95,6 +129,7 @@ func TestEnv(t *testing.T) {
 			DetectedShell: "sh",
 			Format:        "shell",
 			Command:       "vaulted env one",
+			Interactive:   true,
 		}
 		err := e.Run(steward)
 		if err != nil {
@@ -103,6 +138,40 @@ func TestEnv(t *testing.T) {
 	})
 	if string(output) != envShOutput {
 		t.Error(failureMessage(envShOutput, output))
+	}
+
+	output = CaptureStdout(func() {
+		e := Env{
+			VaultName:     "one",
+			DetectedShell: "fish",
+			Format:        "shell",
+			Command:       "vaulted env one",
+			Interactive:   false,
+		}
+		err := e.Run(steward)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+	if string(output) != envFishOutputNonInteractive {
+		t.Error(failureMessage(envFishOutputNonInteractive, output))
+	}
+
+	output = CaptureStdout(func() {
+		e := Env{
+			VaultName:     "one",
+			DetectedShell: "sh",
+			Format:        "shell",
+			Command:       "vaulted env one",
+			Interactive:   false,
+		}
+		err := e.Run(steward)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+	if string(output) != envShOutputNonInteractive {
+		t.Error(failureMessage(envShOutputNonInteractive, output))
 	}
 
 	output = CaptureStdout(func() {
@@ -145,6 +214,7 @@ func TestEnv(t *testing.T) {
 			DetectedShell: "fish",
 			Format:        "fish",
 			Command:       "vaulted env one",
+			Interactive:   true,
 		}
 		err := e.Run(steward)
 		if err != nil {
@@ -161,6 +231,7 @@ func TestEnv(t *testing.T) {
 			DetectedShell: "sh",
 			Format:        "shell",
 			Command:       "vaulted env one",
+			Interactive:   true,
 		}
 		err := e.Run(steward)
 		if err != nil {
@@ -168,8 +239,39 @@ func TestEnv(t *testing.T) {
 		}
 	})
 
-	if string(output) != envShOutputWithPermCreds {
-		t.Error(failureMessage(envShOutputWithPermCreds, output))
+	output = CaptureStdout(func() {
+		e := Env{
+			VaultName:     "one",
+			DetectedShell: "fish",
+			Format:        "fish",
+			Command:       "vaulted env one",
+			Interactive:   false,
+		}
+		err := e.Run(steward)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+	if string(output) != envFishOutputWithPermCredsNonInteractive {
+		t.Error(failureMessage(envFishOutputWithPermCredsNonInteractive, output))
+	}
+
+	output = CaptureStdout(func() {
+		e := Env{
+			VaultName:     "one",
+			DetectedShell: "sh",
+			Format:        "shell",
+			Command:       "vaulted env one",
+			Interactive:   false,
+		}
+		err := e.Run(steward)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+
+	if string(output) != envShOutputWithPermCredsNonInteractive {
+		t.Error(failureMessage(envShOutputWithPermCredsNonInteractive, output))
 	}
 
 	output = CaptureStdout(func() {
