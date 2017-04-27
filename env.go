@@ -35,7 +35,7 @@ type templateVals struct {
 var (
 	sessionFormatters = map[string]string{
 		"fish": `# To load these variables into your shell, execute:
-#   eval ({{ .Command }})
+#   {{ .Command }} | source
 {{ range $var := .Unset}}set -e {{ $var }};
 {{ end -}}
 {{ range $var, $value := .Set }}set -gx {{ $var }} "{{ replace $value "\"" "\\\"" }}";
