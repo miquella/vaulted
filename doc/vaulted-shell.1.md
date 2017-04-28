@@ -99,3 +99,9 @@ VAULTED_ENV_ROLE_ACCOUNT_ID=111222333444
 VAULTED_ENV_ROLE_NAME=SuperRole
 VAULTED_ENV_ROLE_PATH=/
 ```
+
+GUI Password Prompts
+--------------------
+
+GUI-based password prompts can be used by setting the `VAULTED_ASKPASS`
+variable. See `vaulted(1)` for more details.
