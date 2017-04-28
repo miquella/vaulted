@@ -1,8 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/miquella/ask"
 	"github.com/miquella/vaulted/lib"
@@ -10,7 +13,8 @@ import (
 )
 
 var (
-	ErrFileNotExist = ErrorWithExitCode{os.ErrNotExist, EX_USAGE_ERROR}
+	ErrFileNotExist      = ErrorWithExitCode{os.ErrNotExist, EX_USAGE_ERROR}
+	ErrNoPasswordEntered = ErrorWithExitCode{errors.New("Could not get password"), EX_UNAVAILABLE}
 
 	vaultedErrMap = map[error]ErrorWithExitCode{
 		vaulted.ErrInvalidPassword:         ErrorWithExitCode{vaulted.ErrInvalidPassword, EX_TEMPORARY_ERROR},
@@ -36,11 +40,11 @@ func (*TTYSteward) SealVault(name string, password *string, vault *vaulted.Vault
 			password = &envPassword
 		} else {
 			for {
-				newPassword, err := ask.HiddenAsk("New Password: ")
+				newPassword, err := getPassword("New Password: ")
 				if err != nil {
 					return err
 				}
-				confirmPassword, err := ask.HiddenAsk("Confirm Password: ")
+				confirmPassword, err := getPassword("Confirm Password: ")
 				if err != nil {
 					return err
 				}
@@ -75,7 +79,7 @@ func (*TTYSteward) OpenVault(name string, password *string) (string, *vaulted.Va
 	} else {
 		for i := 0; i < 3; i++ {
 			var requestedPassword string
-			requestedPassword, err = ask.HiddenAsk("Password: ")
+			requestedPassword, err = getPassword("Password: ")
 			if err != nil {
 				break
 			}
@@ -120,7 +124,7 @@ func (*TTYSteward) GetSession(name string, password *string) (string, *vaulted.S
 	} else {
 		for i := 0; i < 3; i++ {
 			var requestedPassword string
-			requestedPassword, err = ask.HiddenAsk("Password: ")
+			requestedPassword, err = getPassword("Password: ")
 			if err != nil {
 				break
 			}
@@ -156,7 +160,7 @@ func (*TTYSteward) OpenLegacyVault() (password string, environments map[string]l
 		environments, err = legacyVault.DecryptEnvironments(password)
 	} else {
 		for i := 0; i < 3; i++ {
-			password, err = ask.HiddenAsk("Legacy Password: ")
+			password, err = getPassword("Legacy Password: ")
 			if err != nil {
 				break
 			}
@@ -168,4 +172,19 @@ func (*TTYSteward) OpenLegacyVault() (password string, environments map[string]l
 		}
 	}
 	return
+}
+
+func getPassword(prompt string) (string, error) {
+	if os.Getenv("VAULTED_ASKPASS") != "" {
+		cmd := exec.Command(os.Getenv("VAULTED_ASKPASS"), prompt)
+		output, err := cmd.Output()
+		if err != nil {
+			return "", ErrNoPasswordEntered
+		}
+
+		return strings.Trim(string(output), "\r\n"), nil
+
+	} else {
+		return ask.HiddenAsk(prompt)
+	}
 }
