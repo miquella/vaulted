@@ -105,3 +105,9 @@ Spawned Environment
 In addition to including secrets stored in the vault, spawned environments also
 include environment variables that describe how the session and environment
 were spawned. See `vaulted-env(1)` and `vaulted-shell(1)` for details.
+
+GUI Password Prompts
+--------------------
+
+GUI-based password prompts can be used by setting the `VAULTED_ASKPASS`
+variable. See [`vaulted(1)`](doc/vaulted.1.md) for more details.
