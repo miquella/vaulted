@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	VERSION = "2.2.unstable"
+	VERSION = "2.2.0"
 )
 
 type Version struct{}
