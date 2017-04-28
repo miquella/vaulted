@@ -2,6 +2,8 @@ package vaulted
 
 import (
 	"errors"
+	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -16,6 +18,7 @@ var STSDurationDefault = time.Hour
 
 var (
 	ErrInvalidCommand = errors.New("Invalid command")
+	ErrNoTokenEntered = errors.New("Could not get MFA code")
 )
 
 type Vault struct {
@@ -90,10 +93,18 @@ func (k *AWSKey) GetAWSCredentials(duration time.Duration) (*AWSCredentials, err
 }
 
 func getTokenCode() (string, error) {
-	tokenCode, err := ask.Ask("Enter your MFA code: ")
-	if err != nil {
-		return "", err
+	prompt := "Enter your MFA code: "
+	if os.Getenv("VAULTED_ASKPASS") != "" {
+		cmd := exec.Command(os.Getenv("VAULTED_ASKPASS"), prompt)
+		output, err := cmd.Output()
+		if err != nil {
+			return "", ErrNoTokenEntered
+		}
+
+		return strings.TrimSpace(string(output)), nil
+
+	} else {
+		tokenCode, err := ask.Ask(prompt)
+		return strings.TrimSpace(tokenCode), err
 	}
-	tokenCode = strings.TrimSpace(tokenCode)
-	return tokenCode, nil
 }

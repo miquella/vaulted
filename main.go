@@ -9,6 +9,7 @@ import (
 const (
 	EX_USAGE_ERROR     = 64
 	EX_DATA_ERROR      = 65
+	EX_UNAVAILABLE     = 69
 	EX_TEMPORARY_ERROR = 79
 )
 
