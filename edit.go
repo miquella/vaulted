@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/defaults"
 	"github.com/chzyer/readline"
 	"github.com/fatih/color"
 	"github.com/miquella/ask"
@@ -54,7 +55,7 @@ func (e *Edit) Run(steward Steward) error {
 
 		vault = &vaulted.Vault{}
 
-		creds, err := e.importCredsFromEnv()
+		creds, err := e.importExistingCreds()
 		if err != nil {
 			return err
 		}
@@ -139,16 +140,15 @@ func variableMenu() {
 	color.Unset()
 }
 
-func (e *Edit) importCredsFromEnv() (*vaulted.AWSCredentials, error) {
-	// bail if no creds are available
-	if os.Getenv("AWS_ACCESS_KEY_ID") == "" || os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+func (e *Edit) importExistingCreds() (*vaulted.AWSCredentials, error) {
+	creds, err := defaults.Get().Config.Credentials.Get()
+	if err != nil {
 		return nil, nil
 	}
 
-	// bail if creds are temporary (token present)
-	if os.Getenv("AWS_SESSION_TOKEN") != "" || os.Getenv("AWS_SECURITY_TOKEN") != "" {
-		warningColor.Println("There appear to be temporary AWS credentials in your current environment.")
-		warningColor.Println("Vaulted cannot import temporary AWS credentials.")
+	if creds.SessionToken != "" {
+		warningColor.Println("There appear to be AWS session credentials in your current environment.")
+		warningColor.Println("Vaulted cannot import AWS session credentials.")
 		return nil, nil
 	}
 
@@ -162,8 +162,8 @@ func (e *Edit) importCredsFromEnv() (*vaulted.AWSCredentials, error) {
 		switch strings.ToLower(input) {
 		case "", "y", "yes":
 			return &vaulted.AWSCredentials{
-				ID:     os.Getenv("AWS_ACCESS_KEY_ID"),
-				Secret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+				ID:     creds.AccessKeyID,
+				Secret: creds.SecretAccessKey,
 			}, nil
 
 		case "n", "no":
