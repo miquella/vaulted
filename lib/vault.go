@@ -37,9 +37,8 @@ func (v *Vault) CreateSession(name string) (*Session, error) {
 	}
 
 	s := &Session{
-		Name:       name,
-		Vars:       make(map[string]string),
-		Expiration: time.Now().Add(duration).Truncate(time.Second),
+		Name: name,
+		Vars: make(map[string]string),
 	}
 
 	// copy the vault vars to the session
@@ -63,6 +62,9 @@ func (v *Vault) CreateSession(name string) (*Session, error) {
 			return nil, err
 		}
 	}
+
+	// now that the session is generated, set the expiration
+	s.Expiration = time.Now().Add(duration).Truncate(time.Second)
 
 	return s, nil
 }
