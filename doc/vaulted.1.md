@@ -62,6 +62,7 @@ EXIT CODES
 | 0 | Success. |
 | 64 | Invalid CLI usage (see message for more details). |
 | 65 | There was an unrecoverable problem with the vault file. |
+| 69 | A required service is presently unavailable (e.g. askpass). |
 | 79 | Invalid password supplied. |
 
 GUI Password Prompts
