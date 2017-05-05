@@ -3,7 +3,6 @@ package vaulted
 import (
 	"fmt"
 	"path"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -103,9 +102,9 @@ func roleSessionName(stsClient *sts.STS) string {
 
 	callerIdentity, err := stsClient.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 	if err == nil {
-		parts := strings.SplitN(*callerIdentity.Arn, ":", 6)
-		if len(parts) == 6 {
-			roleSessionName = fmt.Sprintf("%s@%s", path.Base(parts[5]), parts[4])
+		arn, err := ParseARN(*callerIdentity.Arn)
+		if err == nil {
+			roleSessionName = fmt.Sprintf("%s@%s", path.Base(arn.Resource), arn.AccountId)
 		}
 	}
 
