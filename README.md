@@ -28,6 +28,16 @@ The easiest way to install `vaulted` on macOS is through
 brew install vaulted
 ```
 
+### Linux
+
+If you already have [Linux Brew](http://linuxbrew.sh/) installed
+
+```sh
+brew install vaulted
+```
+
+If you do not use Linux Brew, you will need to [build vaulted manually](#manual).
+
 ### Manual
 
 Installation on other platforms should be simple enough through `go get` as
