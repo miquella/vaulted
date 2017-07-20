@@ -98,6 +98,9 @@ func parseArgs(args []string) (Command, error) {
 	case "load":
 		return parseLoadArgs(commandArgs[1:])
 
+	case "proxy":
+		return parseProxyArgs(commandArgs[1:])
+
 	case "rm", "delete", "remove":
 		return parseRemoveArgs(commandArgs[1:])
 
@@ -337,6 +340,52 @@ func parseLoadArgs(args []string) (Command, error) {
 	l := &Load{}
 	l.VaultName = flag.Arg(0)
 	return l, nil
+}
+
+func parseProxyArgs(args []string) (Command, error) {
+	flag := pflag.NewFlagSet("proxy", pflag.ContinueOnError)
+	flag.String("bind", ":0", "Local address to bind to when listening for connections")
+	flag.String("region", "", "AWS region to sign requests for")
+	flag.String("service", "", "AWS service to sign requests for")
+	flag.String("url", "", "URL to proxy to")
+	flag.Usage = func() {}
+	err := flag.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	if flag.NArg() > 0 {
+		return nil, ErrTooManyArguments
+	}
+
+	bind, err := flag.GetString("bind")
+	if err != nil {
+		return nil, err
+	}
+	region, err := flag.GetString("region")
+	if err != nil {
+		return nil, err
+	}
+	service, err := flag.GetString("service")
+	if err != nil {
+		return nil, err
+	}
+	url, err := flag.GetString("url")
+	if err != nil {
+		return nil, err
+	}
+
+	if region == "" || service == "" || url == "" {
+		return nil, errors.New("--region, --service, and --url must be specified")
+	}
+
+	p := &Proxy{
+		Bind:        bind,
+		Region:      region,
+		Service:     service,
+		UpstreamURL: url,
+	}
+	return p, nil
 }
 
 func parseRemoveArgs(args []string) (Command, error) {
