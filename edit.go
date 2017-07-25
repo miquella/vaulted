@@ -540,6 +540,15 @@ func (e *Edit) variables(v *vaulted.Vault) error {
 			if v.Vars == nil {
 				v.Vars = make(map[string]string)
 			}
+			if _, exists := v.Vars[variableKey]; exists {
+				confirm, err := e.readValue(fmt.Sprintf("Variable '%s' already exists. Overwrite? (y/n): ", variableKey))
+				if err != nil {
+					return err
+				}
+				if confirm != "y" {
+					break
+				}
+			}
 			v.Vars[variableKey] = variableValue
 		case "D", "delete", "remove":
 			variable, valErr := e.readValue("Variable name: ")
