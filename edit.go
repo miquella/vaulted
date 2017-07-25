@@ -358,8 +358,7 @@ func (e *Edit) sshKeysMenu(v *vaulted.Vault) error {
 			var key string
 			key, err = e.readValue("Key: ")
 			if err == nil {
-				_, ok := v.SSHKeys[key]
-				if ok {
+				if _, exists := v.SSHKeys[key]; exists {
 					delete(v.SSHKeys, key)
 				} else {
 					color.Red("Key '%s' not found", key)
@@ -555,8 +554,7 @@ func (e *Edit) variables(v *vaulted.Vault) error {
 			if valErr != nil {
 				return valErr
 			}
-			_, ok := v.Vars[variable]
-			if ok {
+			if _, exists := v.Vars[variable]; exists {
 				delete(v.Vars, variable)
 			} else {
 				color.Red("Variable '%s' not found", variable)
