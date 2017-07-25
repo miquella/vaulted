@@ -102,9 +102,7 @@ func SealVault(name, password string, vault *Vault) error {
 		return fmt.Errorf("Invalid encryption method: %s", vf.Method)
 	}
 
-	writeVaultFile(name, vf)
-
-	return nil
+	return writeVaultFile(name, vf)
 }
 
 func OpenVault(name, password string) (*Vault, error) {
