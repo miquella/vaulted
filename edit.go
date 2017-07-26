@@ -53,6 +53,7 @@ func (e *Edit) Run(steward Steward) error {
 			return ErrExists
 		}
 
+		fmt.Printf("Creating new vault '%s'...\n", e.VaultName)
 		vault = &vaulted.Vault{}
 
 		creds, err := e.importExistingCreds()
