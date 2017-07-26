@@ -10,6 +10,16 @@ vaulted edit \- interactively edits the content of an existing vault
 Spawns an interactve mode for editing the content of an existing vault.
 .PP
 Upon quitting, the new content is saved to the vault.
+.SH GLOBAL
+.RS
+.IP \(bu 2
+S \- Show/Hide Secrets
+.br
+Toggles whether secret values are displayed when viewing vault details
+in the edit menu. This setting is global and affects the entire editing
+session and is reset to hidden each time the vault is reopened for
+editing.
+.RE
 .SH AWS KEY
 .RS
 .IP \(bu 2
@@ -38,12 +48,6 @@ t \- Substitute with temporary credentials
 Toggles whether your AWS credentials are substituted with a set of temporary
 credentials. For more details on this process, see the documentation for
 \fB\fCvaulted shell\fR\&.
-.IP \(bu 2
-S \- Show/Hide Key
-.br
-Toggles whether Secret Access Key ID is displayed when viewing vault
-details in the edit menu. This setting only affects the current editing
-session and is reset to hidden each time the vault is reopened for editing.
 .IP \(bu 2
 D \- Delete
 .br
