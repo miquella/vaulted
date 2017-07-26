@@ -166,7 +166,7 @@ func (*TTYSteward) OpenLegacyVault() (password string, environments map[string]l
 			}
 
 			environments, err = legacyVault.DecryptEnvironments(password)
-			if err != legacy.ErrInvalidPassword {
+			if err != vaulted.ErrInvalidPassword {
 				break
 			}
 		}

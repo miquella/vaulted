@@ -8,19 +8,14 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"os"
 	"os/user"
 	"path/filepath"
 
+	"github.com/miquella/vaulted/lib"
 	"golang.org/x/crypto/pbkdf2"
 )
 
-var (
-	ErrInvalidPassword         = errors.New("Invalid password")
-	ErrInvalidKeyConfig        = errors.New("Invalid key configuration")
-	ErrInvalidEncryptionConfig = errors.New("Invalid encryption configuration")
-)
 
 type Vault struct {
 	KeyDetails KeyDetails `json:"keyDetails"`
@@ -70,7 +65,7 @@ func ReadVault() (*Vault, error) {
 
 func (v *Vault) DecryptEnvironments(password string) (map[string]Environment, error) {
 	if v.MACDigest != "sha-256" && v.Cipher != "aes" && v.CipherMode != "ctr" {
-		return nil, ErrInvalidEncryptionConfig
+		return nil, vaulted.ErrInvalidEncryptionConfig
 	}
 
 	// derive the key
@@ -81,7 +76,7 @@ func (v *Vault) DecryptEnvironments(password string) (map[string]Environment, er
 
 	// validate the mac
 	if !hmac.Equal(v.mac(key), v.MAC) {
-		return nil, ErrInvalidPassword
+		return nil, vaulted.ErrInvalidPassword
 	}
 
 	// decrypt the environments
@@ -112,7 +107,7 @@ func (v *Vault) mac(key []byte) []byte {
 
 func (kd *KeyDetails) key(password string) ([]byte, error) {
 	if kd.Digest != "sha-512" {
-		return nil, ErrInvalidKeyConfig
+		return nil, vaulted.ErrInvalidKeyConfig
 	}
 
 	return pbkdf2.Key([]byte(password), kd.Salt, kd.Iterations, 32, sha512.New), nil
