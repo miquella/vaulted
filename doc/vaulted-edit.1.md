@@ -18,6 +18,15 @@ Spawns an interactve mode for editing the content of an existing vault.
 
 Upon quitting, the new content is saved to the vault.
 
+GLOBAL
+------
+
+* S - Show/Hide Secrets  
+   Toggles whether secret values are displayed when viewing vault details
+   in the edit menu. This setting is global and affects the entire editing
+   session and is reset to hidden each time the vault is reopened for
+   editing.
+
 AWS KEY
 -------
 
@@ -38,9 +47,5 @@ AWS KEY
    Toggles whether your AWS credentials are substituted with a set of temporary
    credentials. For more details on this process, see the documentation for
    `vaulted shell`.
-* S - Show/Hide Key  
-   Toggles whether Secret Access Key ID is displayed when viewing vault
-   details in the edit menu. This setting only affects the current editing
-   session and is reset to hidden each time the vault is reopened for editing.
 * D - Delete  
    Removes all AWS details stored in the vault.
