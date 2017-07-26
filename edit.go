@@ -133,6 +133,7 @@ func variableMenu() {
 	color.Set(color.FgYellow)
 	output("")
 	output("a - Add")
+	output("S - Show/Hide Variables")
 	output("D - Delete")
 	output("? - Help")
 	output("b - Back")
@@ -184,7 +185,7 @@ func (e *Edit) edit(name string, v *vaulted.Vault) error {
 	for {
 		cyan.Printf("\nVault: ")
 		fmt.Printf("%s", name)
-		printVariables(v)
+		printVariables(v, false)
 		printAWS(v, false)
 		printSSHKeys(v)
 		printDuration(v)
@@ -520,9 +521,17 @@ func loadPublicKeyComment(filename string) string {
 }
 
 func (e *Edit) variables(v *vaulted.Vault) error {
+	var varErr error
+	show := false
+
 	for {
-		printVariables(v)
-		input, varErr := e.readMenu("Edit environment variables: [a,D,?,b,q]: ")
+		var input string
+		printVariables(v, show)
+		if v.Vars == nil {
+			input, varErr = e.readMenu("Edit environment variables: [a,?,b,q]: ")
+		} else {
+			input, varErr = e.readMenu("Edit environment variables: [a,S,D,?,b,q]: ")
+		}
 		if varErr != nil {
 			return varErr
 		}
@@ -549,6 +558,12 @@ func (e *Edit) variables(v *vaulted.Vault) error {
 				}
 			}
 			v.Vars[variableKey] = variableValue
+		case "S", "show", "hide":
+			if v.Vars != nil {
+				show = !show
+			} else {
+				color.Red("Must associate a variable with the vault first")
+			}
 		case "D", "delete", "remove":
 			variable, valErr := e.readValue("Variable name: ")
 			if valErr != nil {
@@ -618,7 +633,7 @@ func output(message string) {
 	fmt.Printf("%s\n", message)
 }
 
-func printVariables(v *vaulted.Vault) {
+func printVariables(v *vaulted.Vault, show bool) {
 	color.Cyan("\nVariables:")
 	if len(v.Vars) > 0 {
 		var keys []string
@@ -629,7 +644,11 @@ func printVariables(v *vaulted.Vault) {
 
 		for _, key := range keys {
 			green.Printf("  %s: ", key)
-			fmt.Printf("%s\n", v.Vars[key])
+			if !show {
+				fmt.Printf("%s\n", faintColor.Sprint("<hidden>"))
+			} else {
+				fmt.Printf("%s\n", v.Vars[key])
+			}
 		}
 	} else {
 		output("  [Empty]")
