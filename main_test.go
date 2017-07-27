@@ -77,6 +77,10 @@ func (ts TestStore) GetPassword(operation vaulted.Operation, name string) (strin
 	return "prompted password", nil
 }
 
+func (ts TestStore) GetMFAToken(name string) (string, error) {
+	return "123456", nil
+}
+
 func (ts TestStore) Steward() vaulted.Steward {
 	return ts
 }

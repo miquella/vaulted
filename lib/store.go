@@ -256,7 +256,15 @@ func (s *store) getSession(v *Vault, name, password string) (*Session, error) {
 		return session, nil
 	}
 
-	session, err = v.CreateSession(name)
+	if v.AWSKey.RequiresMFA() {
+		var mfaToken string
+		mfaToken, err = s.steward.GetMFAToken(name)
+		if err == nil {
+			session, err = v.CreateSessionWithMFA(name, mfaToken)
+		}
+	} else {
+		session, err = v.CreateSession(name)
+	}
 	if err != nil {
 		return nil, err
 	}

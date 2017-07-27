@@ -2,12 +2,7 @@ package vaulted
 
 import (
 	"errors"
-	"os"
-	"os/exec"
-	"strings"
 	"time"
-
-	"github.com/miquella/ask"
 )
 
 const (
@@ -29,6 +24,18 @@ type Vault struct {
 }
 
 func (v *Vault) CreateSession(name string) (*Session, error) {
+	return v.createSession(name, func(duration time.Duration) (*AWSCredentials, error) {
+		return v.AWSKey.GetAWSCredentials(duration)
+	})
+}
+
+func (v *Vault) CreateSessionWithMFA(name, mfaToken string) (*Session, error) {
+	return v.createSession(name, func(duration time.Duration) (*AWSCredentials, error) {
+		return v.AWSKey.GetAWSCredentialsWithMFA(mfaToken, duration)
+	})
+}
+
+func (v *Vault) createSession(name string, credsFunc func(duration time.Duration) (*AWSCredentials, error)) (*Session, error) {
 	var duration time.Duration
 	if v.Duration == 0 {
 		duration = STSDurationDefault
@@ -54,10 +61,9 @@ func (v *Vault) CreateSession(name string) (*Session, error) {
 		}
 	}
 
-	// get aws creds
-	if v.AWSKey != nil && v.AWSKey.ID != "" && v.AWSKey.Secret != "" {
+	if v.AWSKey.Valid() {
 		var err error
-		s.AWSCreds, err = v.AWSKey.GetAWSCredentials(duration)
+		s.AWSCreds, err = credsFunc(duration)
 		if err != nil {
 			return nil, err
 		}
@@ -76,37 +82,28 @@ type AWSKey struct {
 	ForgoTempCredGeneration bool   `json:"forgoTempCredGeneration"`
 }
 
+func (k *AWSKey) Valid() bool {
+	return k != nil && k.AWSCredentials.Valid()
+}
+
+func (k *AWSKey) RequiresMFA() bool {
+	return k.Valid() && k.MFA != ""
+}
+
 func (k *AWSKey) GetAWSCredentials(duration time.Duration) (*AWSCredentials, error) {
 	if k.ForgoTempCredGeneration {
 		creds := k.AWSCredentials
 		return &creds, nil
 	}
 
-	if k.MFA == "" {
-		return k.AWSCredentials.GetSessionToken(duration)
-	}
-
-	tokenCode, err := getTokenCode()
-	if err != nil {
-		return nil, err
-	}
-
-	return k.AWSCredentials.GetSessionTokenWithMFA(k.MFA, tokenCode, duration)
+	return k.AWSCredentials.GetSessionToken(duration)
 }
 
-func getTokenCode() (string, error) {
-	prompt := "Enter your MFA code: "
-	if os.Getenv("VAULTED_ASKPASS") != "" {
-		cmd := exec.Command(os.Getenv("VAULTED_ASKPASS"), prompt)
-		output, err := cmd.Output()
-		if err != nil {
-			return "", ErrNoTokenEntered
-		}
-
-		return strings.TrimSpace(string(output)), nil
-
-	} else {
-		tokenCode, err := ask.Ask(prompt)
-		return strings.TrimSpace(tokenCode), err
+func (k *AWSKey) GetAWSCredentialsWithMFA(mfaToken string, duration time.Duration) (*AWSCredentials, error) {
+	if k.ForgoTempCredGeneration {
+		creds := k.AWSCredentials
+		return &creds, nil
 	}
+
+	return k.AWSCredentials.GetSessionTokenWithMFA(k.MFA, mfaToken, duration)
 }
