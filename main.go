@@ -27,7 +27,7 @@ var (
 	ErrNoPasswordEntered = ErrorWithExitCode{errors.New("Could not get password"), EX_UNAVAILABLE}
 
 	vaultedErrMap = map[error]ErrorWithExitCode{
-		vaulted.ErrInvalidPassword:         ErrorWithExitCode{vaulted.ErrInvalidPassword, EX_TEMPORARY_ERROR},
+		vaulted.ErrIncorrectPassword:       ErrorWithExitCode{vaulted.ErrIncorrectPassword, EX_TEMPORARY_ERROR},
 		vaulted.ErrInvalidKeyConfig:        ErrorWithExitCode{vaulted.ErrInvalidKeyConfig, EX_DATA_ERROR},
 		vaulted.ErrInvalidEncryptionConfig: ErrorWithExitCode{vaulted.ErrInvalidEncryptionConfig, EX_DATA_ERROR},
 	}

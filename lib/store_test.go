@@ -89,8 +89,8 @@ func TestSealVault(t *testing.T) {
 	}
 
 	_, _, err = invalidStore.OpenVault("testing")
-	if err != vaulted.ErrInvalidPassword {
-		t.Fatalf("expected: %v, got: %v", vaulted.ErrInvalidPassword, err)
+	if err != vaulted.ErrIncorrectPassword {
+		t.Fatalf("expected: %v, got: %v", vaulted.ErrIncorrectPassword, err)
 	}
 
 	v2, _, err := anotherStore.OpenVault("testing")
