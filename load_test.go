@@ -32,34 +32,34 @@ func TestLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	steward := NewTestSteward()
+	store := NewTestStore()
 	WriteStdin(b, func() {
 		l := Load{
 			VaultName: "one",
 		}
-		err = l.Run(steward)
+		err = l.Run(store)
 		if err != nil {
 			t.Fatal(err)
 		}
 	})
 
-	if !steward.VaultExists("one") {
+	if !store.VaultExists("one") {
 		t.Fatal("The 'one' vault does not exist")
 	}
 
-	if !reflect.DeepEqual(v.AWSKey, steward.Vaults["one"].AWSKey) {
-		t.Fatalf("Expected: %#v, got: %#v", v.AWSKey, steward.Vaults["one"].AWSKey)
+	if !reflect.DeepEqual(v.AWSKey, store.Vaults["one"].AWSKey) {
+		t.Fatalf("Expected: %#v, got: %#v", v.AWSKey, store.Vaults["one"].AWSKey)
 	}
 
-	if !reflect.DeepEqual(v.Vars, steward.Vaults["one"].Vars) {
-		t.Fatalf("Expected: %#v, got: %#v", v.Vars, steward.Vaults["one"].Vars)
+	if !reflect.DeepEqual(v.Vars, store.Vaults["one"].Vars) {
+		t.Fatalf("Expected: %#v, got: %#v", v.Vars, store.Vaults["one"].Vars)
 	}
 
-	if !reflect.DeepEqual(v.SSHKeys, steward.Vaults["one"].SSHKeys) {
-		t.Fatalf("Expected: %#v, got: %#v", v.SSHKeys, steward.Vaults["one"].SSHKeys)
+	if !reflect.DeepEqual(v.SSHKeys, store.Vaults["one"].SSHKeys) {
+		t.Fatalf("Expected: %#v, got: %#v", v.SSHKeys, store.Vaults["one"].SSHKeys)
 	}
 
-	if !reflect.DeepEqual(v.Duration, steward.Vaults["one"].Duration) {
-		t.Fatalf("Expected: %#v, got: %#v", v.Duration, steward.Vaults["one"].Duration)
+	if !reflect.DeepEqual(v.Duration, store.Vaults["one"].Duration) {
+		t.Fatalf("Expected: %#v, got: %#v", v.Duration, store.Vaults["one"].Duration)
 	}
 }

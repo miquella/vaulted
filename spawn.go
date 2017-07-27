@@ -16,8 +16,8 @@ type Spawn struct {
 	DisplayStatus bool
 }
 
-func (s *Spawn) Run(steward Steward) error {
-	session, err := s.getSession(steward)
+func (s *Spawn) Run(store vaulted.Store) error {
+	session, err := s.getSession(store)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func (s *Spawn) Run(steward Steward) error {
 	return nil
 }
 
-func (s *Spawn) getSession(steward Steward) (*vaulted.Session, error) {
+func (s *Spawn) getSession(store vaulted.Store) (*vaulted.Session, error) {
 	var err error
 
 	// default session
@@ -46,7 +46,7 @@ func (s *Spawn) getSession(steward Steward) (*vaulted.Session, error) {
 
 	if s.VaultName != "" {
 		// get specific session
-		_, session, err = steward.GetSession(s.VaultName, nil)
+		session, _, err = store.GetSession(s.VaultName)
 		if err != nil {
 			return nil, err
 		}

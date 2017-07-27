@@ -7,8 +7,8 @@ import (
 )
 
 func TestCopy(t *testing.T) {
-	steward := NewTestSteward()
-	steward.Vaults["old"] = &vaulted.Vault{
+	store := NewTestStore()
+	store.Vaults["old"] = &vaulted.Vault{
 		Vars: map[string]string{
 			"TEST": "SUCCESSFUL",
 		},
@@ -18,12 +18,12 @@ func TestCopy(t *testing.T) {
 		OldVaultName: "old",
 		NewVaultName: "new",
 	}
-	err := c.Run(steward)
+	err := c.Run(store)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	v, ok := steward.Vaults["new"]
+	v, ok := store.Vaults["new"]
 	if !ok {
 		t.Fatal("The vault was not copied")
 	}
@@ -32,7 +32,7 @@ func TestCopy(t *testing.T) {
 		t.Fatal("The vault contents were not copied")
 	}
 
-	if steward.Passwords["old"] == steward.Passwords["new"] {
+	if store.Passwords["old"] == store.Passwords["new"] {
 		t.Fatal("Passwords should be different, but aren't!")
 	}
 }

@@ -12,7 +12,7 @@ type Load struct {
 	VaultName string
 }
 
-func (l Load) Run(steward Steward) error {
+func (l Load) Run(store vaulted.Store) error {
 	jvault, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		return err
@@ -24,7 +24,7 @@ func (l Load) Run(steward Steward) error {
 		return err
 	}
 
-	err = steward.SealVault(l.VaultName, nil, vault)
+	err = store.SealVault(vault, l.VaultName)
 	if err != nil {
 		return err
 	}

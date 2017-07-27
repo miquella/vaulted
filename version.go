@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/miquella/vaulted/lib"
 )
 
 const (
@@ -10,8 +12,7 @@ const (
 
 type Version struct{}
 
-func (l *Version) Run(steward Steward) error {
-
+func (l *Version) Run(store vaulted.Store) error {
 	fmt.Printf("Vaulted v%s\n", VERSION)
 	return nil
 }

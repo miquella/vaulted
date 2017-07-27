@@ -16,6 +16,9 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
+const (
+	LegacyOperation vaulted.Operation = -1
+)
 
 type Vault struct {
 	KeyDetails KeyDetails `json:"keyDetails"`

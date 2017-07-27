@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/miquella/vaulted/lib"
 	"github.com/spf13/pflag"
 )
 
@@ -19,6 +20,10 @@ var (
 
 	ErrUnknownShell = errors.New("Unknown shell")
 )
+
+type Command interface {
+	Run(store vaulted.Store) error
+}
 
 func ParseArgs(args []string) (Command, error) {
 	command, err := parseArgs(args)

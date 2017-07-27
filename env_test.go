@@ -97,8 +97,8 @@ export VAULTED_ENV_EXPIRATION="2006-01-02T22:04:05Z"
 )
 
 func TestEnv(t *testing.T) {
-	steward := NewTestSteward()
-	steward.Vaults["one"] = &vaulted.Vault{
+	store := NewTestStore()
+	store.Vaults["one"] = &vaulted.Vault{
 		Vars: map[string]string{
 			"TWO":   "222",
 			"ONE":   "111111",
@@ -114,7 +114,7 @@ func TestEnv(t *testing.T) {
 			Command:       "vaulted env one",
 			Interactive:   true,
 		}
-		err := e.Run(steward)
+		err := e.Run(store)
 		if err != nil {
 			t.Error(err)
 		}
@@ -131,7 +131,7 @@ func TestEnv(t *testing.T) {
 			Command:       "vaulted env one",
 			Interactive:   true,
 		}
-		err := e.Run(steward)
+		err := e.Run(store)
 		if err != nil {
 			t.Error(err)
 		}
@@ -148,7 +148,7 @@ func TestEnv(t *testing.T) {
 			Command:       "vaulted env one",
 			Interactive:   false,
 		}
-		err := e.Run(steward)
+		err := e.Run(store)
 		if err != nil {
 			t.Error(err)
 		}
@@ -165,7 +165,7 @@ func TestEnv(t *testing.T) {
 			Command:       "vaulted env one",
 			Interactive:   false,
 		}
-		err := e.Run(steward)
+		err := e.Run(store)
 		if err != nil {
 			t.Error(err)
 		}
@@ -184,7 +184,7 @@ func TestEnv(t *testing.T) {
 			DetectedShell: "sh",
 			Format:        "json",
 		}
-		err := e.Run(steward)
+		err := e.Run(store)
 		if err != nil {
 			t.Error(err)
 		}
@@ -194,7 +194,7 @@ func TestEnv(t *testing.T) {
 	}
 
 	// cached session
-	steward.Sessions["one"] = &vaulted.Session{
+	store.Sessions["one"] = &vaulted.Session{
 		Name:       "one",
 		Expiration: time.Unix(1136239445, 0),
 		AWSCreds: &vaulted.AWSCredentials{
@@ -216,7 +216,7 @@ func TestEnv(t *testing.T) {
 			Command:       "vaulted env one",
 			Interactive:   true,
 		}
-		err := e.Run(steward)
+		err := e.Run(store)
 		if err != nil {
 			t.Error(err)
 		}
@@ -233,7 +233,7 @@ func TestEnv(t *testing.T) {
 			Command:       "vaulted env one",
 			Interactive:   true,
 		}
-		err := e.Run(steward)
+		err := e.Run(store)
 		if err != nil {
 			t.Error(err)
 		}
@@ -247,7 +247,7 @@ func TestEnv(t *testing.T) {
 			Command:       "vaulted env one",
 			Interactive:   false,
 		}
-		err := e.Run(steward)
+		err := e.Run(store)
 		if err != nil {
 			t.Error(err)
 		}
@@ -264,7 +264,7 @@ func TestEnv(t *testing.T) {
 			Command:       "vaulted env one",
 			Interactive:   false,
 		}
-		err := e.Run(steward)
+		err := e.Run(store)
 		if err != nil {
 			t.Error(err)
 		}
@@ -283,7 +283,7 @@ func TestEnv(t *testing.T) {
 			VaultName: "one",
 			Format:    "{{ .Unset }}",
 		}
-		err := e.Run(steward)
+		err := e.Run(store)
 		if err != nil {
 			t.Error(err)
 		}

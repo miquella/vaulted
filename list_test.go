@@ -8,13 +8,13 @@ import (
 )
 
 func TestList(t *testing.T) {
-	steward := NewTestSteward()
-	steward.Vaults["one"] = &vaulted.Vault{}
-	steward.Vaults["two"] = &vaulted.Vault{}
+	store := NewTestStore()
+	store.Vaults["one"] = &vaulted.Vault{}
+	store.Vaults["two"] = &vaulted.Vault{}
 
 	output := CaptureStdout(func() {
 		l := List{}
-		err := l.Run(steward)
+		err := l.Run(store)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -27,16 +27,16 @@ func TestList(t *testing.T) {
 }
 
 func TestListWithActive(t *testing.T) {
-	steward := NewTestSteward()
-	steward.Vaults["first"] = &vaulted.Vault{}
-	steward.Vaults["second"] = &vaulted.Vault{}
-	steward.Vaults["third"] = &vaulted.Vault{}
+	store := NewTestStore()
+	store.Vaults["first"] = &vaulted.Vault{}
+	store.Vaults["second"] = &vaulted.Vault{}
+	store.Vaults["third"] = &vaulted.Vault{}
 
 	output := CaptureStdout(func() {
 		l := List{
 			Active: "second",
 		}
-		err := l.Run(steward)
+		err := l.Run(store)
 		if err != nil {
 			t.Fatal(err)
 		}

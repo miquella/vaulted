@@ -44,13 +44,13 @@ type Edit struct {
 	showHidden bool
 }
 
-func (e *Edit) Run(steward Steward) error {
+func (e *Edit) Run(store vaulted.Store) error {
 	var password string
 	var vault *vaulted.Vault
 	var err error
 
 	if e.New {
-		if vaulted.VaultExists(e.VaultName) {
+		if store.VaultExists(e.VaultName) {
 			return ErrExists
 		}
 
@@ -69,7 +69,7 @@ func (e *Edit) Run(steward Steward) error {
 		}
 
 	} else {
-		password, vault, err = steward.OpenVault(e.VaultName, nil)
+		vault, password, err = store.OpenVault(e.VaultName)
 		if err != nil {
 			return err
 		}
@@ -80,11 +80,11 @@ func (e *Edit) Run(steward Steward) error {
 		return err
 	}
 
-	var newPassword *string
-	if password != "" {
-		newPassword = &password
+	if e.New {
+		err = store.SealVault(vault, e.VaultName)
+	} else {
+		err = store.SealVaultWithPassword(vault, e.VaultName, password)
 	}
-	err = steward.SealVault(e.VaultName, newPassword, vault)
 	if err != nil {
 		return err
 	}

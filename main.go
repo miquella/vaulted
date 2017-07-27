@@ -4,6 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+
+	"github.com/miquella/vaulted/lib"
+	"github.com/miquella/vaulted/lib/legacy"
 )
 
 const (
@@ -19,17 +22,37 @@ type ErrorWithExitCode struct {
 }
 
 var (
-	ErrNoError = errors.New("")
+	ErrNoError           = errors.New("")
+	ErrFileNotExist      = ErrorWithExitCode{os.ErrNotExist, EX_USAGE_ERROR}
+	ErrNoPasswordEntered = ErrorWithExitCode{errors.New("Could not get password"), EX_UNAVAILABLE}
+
+	vaultedErrMap = map[error]ErrorWithExitCode{
+		vaulted.ErrInvalidPassword:         ErrorWithExitCode{vaulted.ErrInvalidPassword, EX_TEMPORARY_ERROR},
+		vaulted.ErrInvalidKeyConfig:        ErrorWithExitCode{vaulted.ErrInvalidKeyConfig, EX_DATA_ERROR},
+		vaulted.ErrInvalidEncryptionConfig: ErrorWithExitCode{vaulted.ErrInvalidEncryptionConfig, EX_DATA_ERROR},
+	}
 )
 
 func main() {
 	command, err := ParseArgs(os.Args[1:])
 	if err == nil {
 		steward := &TTYSteward{}
-		err = command.Run(steward)
+		store := struct {
+			vaulted.Store
+			legacy.LegacyStore
+		}{
+			Store:       vaulted.New(steward),
+			LegacyStore: legacy.New(steward),
+		}
+
+		err = command.Run(store)
 	}
 
 	if err != nil {
+		if _, exists := vaultedErrMap[err]; exists {
+			err = vaultedErrMap[err]
+		}
+
 		exiterr, ok := err.(ErrorWithExitCode)
 		if !ok || exiterr.error != ErrNoError {
 			fmt.Fprintln(os.Stderr, err)

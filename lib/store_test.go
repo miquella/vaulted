@@ -23,11 +23,21 @@ var (
 	xdgBackup xdg.XDG
 )
 
+func testStore() vaulted.Store {
+	return testStoreWithPassword("password")
+}
+
+func testStoreWithPassword(password string) vaulted.Store {
+	return vaulted.New(vaulted.NewStaticSteward(password))
+}
+
 func TestListVaults(t *testing.T) {
 	setupVaults(t)
 	defer teardownVaults(t)
 
-	vaults, err := vaulted.ListVaults()
+	store := testStore()
+
+	vaults, err := store.ListVaults()
 	if err != nil {
 		t.Fatalf("failed to list vaults: %v", err)
 	}
@@ -43,7 +53,9 @@ func TestOpenVault(t *testing.T) {
 	setupVaults(t)
 	defer teardownVaults(t)
 
-	vault, err := vaulted.OpenVault("bbb", "password")
+	store := testStore()
+
+	vault, _, err := store.OpenVault("bbb")
 	if err != nil {
 		t.Fatalf("failed to open vault: %v", err)
 	}
@@ -57,7 +69,11 @@ func TestSealVault(t *testing.T) {
 	setupVaults(t)
 	defer teardownVaults(t)
 
-	_, err := vaulted.OpenVault("doesn't exist", "password")
+	store := testStore()
+	anotherStore := testStoreWithPassword("another password")
+	invalidStore := testStoreWithPassword("invalid password")
+
+	_, _, err := store.OpenVault("doesn't exist")
 	if err != os.ErrNotExist {
 		t.Fatalf("expected: %v, got %v", os.ErrNotExist, err)
 	}
@@ -67,17 +83,17 @@ func TestSealVault(t *testing.T) {
 			"TEST": "TESTING",
 		},
 	}
-	err = vaulted.SealVault("testing", "another password", &v1)
+	err = anotherStore.SealVault(&v1, "testing")
 	if err != nil {
 		t.Fatalf("failed to seal vault: %v", err)
 	}
 
-	_, err = vaulted.OpenVault("testing", "invalid password")
+	_, _, err = invalidStore.OpenVault("testing")
 	if err != vaulted.ErrInvalidPassword {
 		t.Fatalf("expected: %v, got: %v", vaulted.ErrInvalidPassword, err)
 	}
 
-	v2, err := vaulted.OpenVault("testing", "another password")
+	v2, _, err := anotherStore.OpenVault("testing")
 	if err != nil {
 		t.Fatalf("failed to open vault: %v", err)
 	}
@@ -90,7 +106,9 @@ func TestRemoveVault(t *testing.T) {
 	setupVaults(t)
 	defer teardownVaults(t)
 
-	err := vaulted.RemoveVault("aaa")
+	store := testStore()
+
+	err := store.RemoveVault("aaa")
 	if err != nil {
 		t.Fatalf("failed to remove vault: %v", err)
 	}
