@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -28,13 +29,14 @@ func (t *TTYSteward) GetPassword(operation vaulted.Operation, name string) (stri
 			return password, nil
 		}
 
+		ask.Print(fmt.Sprintf("Vault '%s'\n", name))
 		for {
-			password, err := t.getPassword("New password: ")
+			password, err := t.getPassword("   New password: ")
 			if err != nil {
 				return "", err
 			}
 
-			confirm, err := t.getPassword("Confirm Password: ")
+			confirm, err := t.getPassword("   Confirm Password: ")
 			if err != nil {
 				return "", err
 			}
@@ -43,7 +45,7 @@ func (t *TTYSteward) GetPassword(operation vaulted.Operation, name string) (stri
 				return password, nil
 			}
 
-			ask.Print("Passwords do not match.\n")
+			ask.Print("Passwords do not match.\n\n")
 		}
 
 	case legacy.LegacyOperation:
@@ -54,7 +56,7 @@ func (t *TTYSteward) GetPassword(operation vaulted.Operation, name string) (stri
 			return password, nil
 		}
 
-		return t.getPassword("Password: ")
+		return t.getPassword(fmt.Sprintf("'%s' password: ", name))
 	}
 }
 
