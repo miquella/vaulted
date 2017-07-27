@@ -36,7 +36,7 @@ var (
 func main() {
 	command, err := ParseArgs(os.Args[1:])
 	if err == nil {
-		steward := &TTYSteward{}
+		steward := NewSteward()
 		store := struct {
 			vaulted.Store
 			legacy.LegacyStore
