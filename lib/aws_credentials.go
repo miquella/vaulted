@@ -25,6 +25,14 @@ func AWSCredentialsFromSTSCredentials(creds *sts.Credentials) *AWSCredentials {
 	}
 }
 
+func (c *AWSCredentials) Valid() bool {
+	return c != nil && c.ID != "" && c.Secret != ""
+}
+
+func (c *AWSCredentials) ValidSession() bool {
+	return c.Valid() && c.Token != ""
+}
+
 func (c *AWSCredentials) GetSessionToken(duration time.Duration) (*AWSCredentials, error) {
 	stsClient, err := c.stsClient()
 	if err != nil {

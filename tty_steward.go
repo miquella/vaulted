@@ -56,8 +56,14 @@ func (t *TTYSteward) GetPassword(operation vaulted.Operation, name string) (stri
 			return password, nil
 		}
 
-		return t.getPassword(fmt.Sprintf("'%s' password: ", name))
+		ask.Print(fmt.Sprintf("Vault '%s'\n", name))
+		return t.getPassword("   Password: ")
 	}
+}
+
+func (t *TTYSteward) GetMFAToken(name string) (string, error) {
+	token, err := t.getPassword("   MFA token: ")
+	return strings.TrimSpace(token), err
 }
 
 func (t *TTYSteward) getPassword(prompt string) (string, error) {
