@@ -69,7 +69,7 @@ func parseArgs(args []string) (Command, error) {
 	}
 
 	switch commandArgs[0] {
-	case "add":
+	case "add", "create", "new":
 		return parseAddArgs(commandArgs[1:])
 
 	case "cp", "copy":
@@ -93,7 +93,7 @@ func parseArgs(args []string) (Command, error) {
 	case "load":
 		return parseLoadArgs(commandArgs[1:])
 
-	case "rm":
+	case "rm", "delete", "remove":
 		return parseRemoveArgs(commandArgs[1:])
 
 	case "shell":
