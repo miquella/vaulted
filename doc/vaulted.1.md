@@ -25,7 +25,7 @@ spawns an interactive shell.
 COMMANDS
 --------
 
-`add`
+`add` / `create` / `new`
   Interactively creates the content of a new vault. See vaulted-add(1).
 
 `cp` / `copy`
@@ -46,7 +46,7 @@ COMMANDS
 `ls` / `list`
   Lists all vaults. See vaulted-ls(1).
 
-`rm`
+`rm` / `delete` / `remove`
   Removes existing vaults. See vaulted-rm(1).
 
 `shell`

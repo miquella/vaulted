@@ -11,6 +11,9 @@ SYNOPSIS
 
 `vaulted add` *name*
 
+`vaulted create` *name*  
+`vaulted new` *name*
+
 DESCRIPTION
 -----------
 

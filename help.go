@@ -18,6 +18,8 @@ var (
 
 	HelpAliases = map[string]string{
 		"add":     "add",
+		"create":  "add",
+		"new":     "add",
 		"cp":      "cp",
 		"copy":    "cp",
 		"dump":    "dump",
@@ -27,6 +29,8 @@ var (
 		"list":    "ls",
 		"load":    "load",
 		"rm":      "rm",
+		"delete":  "rm",
+		"remove":  "rm",
 		"shell":   "shell",
 		"upgrade": "upgrade",
 	}

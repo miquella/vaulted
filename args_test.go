@@ -101,8 +101,30 @@ var (
 			},
 		},
 		{
+			Args: []string{"new", "one"},
+			Command: &Edit{
+				New:       true,
+				VaultName: "one",
+			},
+		},
+		{
+			Args: []string{"create", "one"},
+			Command: &Edit{
+				New:       true,
+				VaultName: "one",
+			},
+		},
+		{
 			Args:    []string{"add", "--help"},
 			Command: &Help{Subcommand: "add"},
+		},
+		{
+			Args:    []string{"new", "--help"},
+			Command: &Help{Subcommand: "new"},
+		},
+		{
+			Args:    []string{"create", "--help"},
+			Command: &Help{Subcommand: "create"},
 		},
 
 		// Copy
@@ -206,6 +228,14 @@ var (
 			Command: &Help{Subcommand: "add"},
 		},
 		{
+			Args:    []string{"help", "new"},
+			Command: &Help{Subcommand: "new"},
+		},
+		{
+			Args:    []string{"help", "create"},
+			Command: &Help{Subcommand: "create"},
+		},
+		{
 			Args:    []string{"help", "cp"},
 			Command: &Help{Subcommand: "cp"},
 		},
@@ -240,6 +270,14 @@ var (
 		{
 			Args:    []string{"help", "rm"},
 			Command: &Help{Subcommand: "rm"},
+		},
+		{
+			Args:    []string{"help", "remove"},
+			Command: &Help{Subcommand: "remove"},
+		},
+		{
+			Args:    []string{"help", "delete"},
+			Command: &Help{Subcommand: "delete"},
 		},
 		{
 			Args:    []string{"help", "shell"},
@@ -314,7 +352,31 @@ var (
 			},
 		},
 		{
+			Args: []string{"remove", "one"},
+			Command: &Remove{
+				VaultNames: []string{"one"},
+			},
+		},
+		{
+			Args: []string{"delete", "one"},
+			Command: &Remove{
+				VaultNames: []string{"one"},
+			},
+		},
+		{
 			Args: []string{"rm", "one", "two", "three", "four"},
+			Command: &Remove{
+				VaultNames: []string{"one", "two", "three", "four"},
+			},
+		},
+		{
+			Args: []string{"remove", "one", "two", "three", "four"},
+			Command: &Remove{
+				VaultNames: []string{"one", "two", "three", "four"},
+			},
+		},
+		{
+			Args: []string{"delete", "one", "two", "three", "four"},
 			Command: &Remove{
 				VaultNames: []string{"one", "two", "three", "four"},
 			},
@@ -322,6 +384,14 @@ var (
 		{
 			Args:    []string{"rm", "--help"},
 			Command: &Help{Subcommand: "rm"},
+		},
+		{
+			Args:    []string{"remove", "--help"},
+			Command: &Help{Subcommand: "remove"},
+		},
+		{
+			Args:    []string{"delete", "--help"},
+			Command: &Help{Subcommand: "delete"},
 		},
 
 		// Shell

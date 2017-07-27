@@ -11,6 +11,9 @@ SYNOPSIS
 
 `vaulted rm` *name* *...*
 
+`vaulted delete` *name* *...*  
+`vaulted remove` *name* *...*
+
 DESCRIPTION
 -----------
 
