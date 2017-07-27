@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/miquella/vaulted/lib"
+	"github.com/miquella/vaulted/lib/legacy"
 )
 
 var (
@@ -13,14 +14,15 @@ var (
 
 type Upgrade struct{}
 
-func (u *Upgrade) Run(steward Steward) error {
-	password, environments, err := steward.OpenLegacyVault()
+func (u *Upgrade) Run(store vaulted.Store) error {
+	ls := store.(legacy.LegacyStore)
+	environments, password, err := ls.OpenLegacyVault()
 	if err != nil {
 		return err
 	}
 
 	// collect the current list of vaults (so we don't overwrite any)
-	vaults, _ := steward.ListVaults()
+	vaults, _ := store.ListVaults()
 	existingVaults := map[string]bool{}
 	for _, name := range vaults {
 		existingVaults[name] = true
@@ -33,10 +35,10 @@ func (u *Upgrade) Run(steward Steward) error {
 			continue
 		}
 
-		vault := vaulted.Vault{
+		vault := &vaulted.Vault{
 			Vars: env.Vars,
 		}
-		err = steward.SealVault(name, &password, &vault)
+		err = store.SealVaultWithPassword(vault, name, password)
 		if err != nil {
 			failed++
 			fmt.Printf("%s: %v\n", name, err)

@@ -20,11 +20,11 @@ func TestUpgrade(t *testing.T) {
 		},
 	})
 
-	steward := NewTestSteward()
-	steward.Vaults["one"] = cloneVault(one)
-	steward.Passwords["one"] = "hablam wookie"
-	steward.LegacyPassword = "robby bobby"
-	steward.LegacyEnvironments = map[string]legacy.Environment{
+	store := NewTestStore()
+	store.Vaults["one"] = cloneVault(one)
+	store.Passwords["one"] = "hablam wookie"
+	store.LegacyPassword = "robby bobby"
+	store.LegacyEnvironments = map[string]legacy.Environment{
 		"one": {
 			Vars: map[string]string{
 				"OLD": "LEGACY",
@@ -39,23 +39,23 @@ func TestUpgrade(t *testing.T) {
 
 	CaptureStdout(func() {
 		u := Upgrade{}
-		err := u.Run(steward)
+		err := u.Run(store)
 		if err != nil {
 			t.Fatal(err)
 		}
 	})
 
-	if !reflect.DeepEqual(one, steward.Vaults["one"]) {
-		t.Fatalf("Expected: %#v, got %#v", one, steward.Vaults["one"])
+	if !reflect.DeepEqual(one, store.Vaults["one"]) {
+		t.Fatalf("Expected: %#v, got %#v", one, store.Vaults["one"])
 	}
-	if steward.Passwords["one"] != "hablam wookie" {
-		t.Fatalf("Password should not have changed. Expected %v, got %v", "hablam wookie", steward.Passwords["one"])
+	if store.Passwords["one"] != "hablam wookie" {
+		t.Fatalf("Password should not have changed. Expected %v, got %v", "hablam wookie", store.Passwords["one"])
 	}
 
-	if !reflect.DeepEqual(two, steward.Vaults["two"]) {
-		t.Fatalf("Expected: %#v, got %#v", two, steward.Vaults["two"])
+	if !reflect.DeepEqual(two, store.Vaults["two"]) {
+		t.Fatalf("Expected: %#v, got %#v", two, store.Vaults["two"])
 	}
-	if steward.LegacyPassword != steward.Passwords["two"] {
-		t.Fatalf("Password not kept. Expected %v, got %v", steward.LegacyPassword, steward.Passwords["two"])
+	if store.LegacyPassword != store.Passwords["two"] {
+		t.Fatalf("Password not kept. Expected %v, got %v", store.LegacyPassword, store.Passwords["two"])
 	}
 }

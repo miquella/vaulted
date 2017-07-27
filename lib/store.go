@@ -19,16 +19,36 @@ var (
 	ErrInvalidEncryptionConfig = errors.New("Invalid encryption configuration")
 )
 
-func VaultExists(name string) bool {
-	existing := xdg.DATA.Find(filepath.Join("vaulted", name))
-	if len(existing) == 0 {
-		return false
-	}
+type Store interface {
+	Steward() Steward
 
-	return true
+	ListVaults() ([]string, error)
+
+	VaultExists(name string) bool
+	OpenVault(name string) (*Vault, string, error)
+	OpenVaultWithPassword(name, password string) (*Vault, string, error)
+	SealVault(vault *Vault, name string) error
+	SealVaultWithPassword(vault *Vault, name, password string) error
+	RemoveVault(name string) error
+
+	GetSession(name string) (*Session, string, error)
 }
 
-func ListVaults() ([]string, error) {
+type store struct {
+	steward Steward
+}
+
+func New(steward Steward) Store {
+	return &store{
+		steward: steward,
+	}
+}
+
+func (s *store) Steward() Steward {
+	return s.steward
+}
+
+func (s *store) ListVaults() ([]string, error) {
 	vaults, err := xdg.DATA.Glob(filepath.Join("vaulted", "*"))
 	if err != nil {
 		return nil, err
@@ -54,7 +74,93 @@ func ListVaults() ([]string, error) {
 	return found, nil
 }
 
-func SealVault(name, password string, vault *Vault) error {
+func (s *store) VaultExists(name string) bool {
+	existing := xdg.DATA.Find(filepath.Join("vaulted", name))
+	return len(existing) != 0
+}
+
+func (s *store) OpenVault(name string) (*Vault, string, error) {
+	if !s.VaultExists(name) {
+		return nil, "", os.ErrNotExist
+	}
+
+	maxTries := 1
+	if getMax, ok := s.steward.(StewardMaxTries); ok {
+		maxTries = getMax.GetMaxOpenTries()
+	}
+	for i := 0; i < maxTries; i++ {
+		password, err := s.steward.GetPassword(OpenOperation, name)
+		if err != nil {
+			return nil, "", err
+		}
+
+		if v, p, err := s.OpenVaultWithPassword(name, password); err != ErrInvalidPassword {
+			return v, p, err
+		}
+	}
+
+	return nil, "", ErrInvalidPassword
+}
+
+func (s *store) OpenVaultWithPassword(name, password string) (*Vault, string, error) {
+	if !s.VaultExists(name) {
+		return nil, "", os.ErrNotExist
+	}
+
+	vf, err := readVaultFile(name)
+	if err != nil {
+		return nil, "", err
+	}
+
+	v := Vault{}
+
+	switch vf.Method {
+	case "secretbox":
+		if vf.Key == nil {
+			return nil, "", ErrInvalidKeyConfig
+		}
+
+		nonce := vf.Details.Bytes("nonce")
+		if len(nonce) == 0 {
+			return nil, "", ErrInvalidEncryptionConfig
+		}
+		boxNonce := [24]byte{}
+		copy(boxNonce[:], nonce)
+
+		boxKey := [32]byte{}
+		derivedKey, err := vf.Key.key(password, len(boxKey))
+		if err != nil {
+			return nil, "", err
+		}
+		copy(boxKey[:], derivedKey[:])
+
+		plaintext, ok := secretbox.Open(nil, vf.Ciphertext, &boxNonce, &boxKey)
+		if !ok {
+			return nil, "", ErrInvalidPassword
+		}
+
+		err = json.Unmarshal(plaintext, &v)
+		if err != nil {
+			return nil, "", err
+		}
+
+	default:
+		return nil, "", fmt.Errorf("Invalid encryption method: %s", vf.Method)
+	}
+
+	return &v, password, nil
+}
+
+func (s *store) SealVault(vault *Vault, name string) error {
+	password, err := s.steward.GetPassword(SealOperation, name)
+	if err != nil {
+		return err
+	}
+
+	return s.SealVaultWithPassword(vault, name, password)
+}
+
+func (s *store) SealVaultWithPassword(vault *Vault, name, password string) error {
 	vf := &VaultFile{
 		Method:  "secretbox",
 		Details: make(Details),
@@ -105,52 +211,7 @@ func SealVault(name, password string, vault *Vault) error {
 	return writeVaultFile(name, vf)
 }
 
-func OpenVault(name, password string) (*Vault, error) {
-	vf, err := readVaultFile(name)
-	if err != nil {
-		return nil, err
-	}
-
-	v := Vault{}
-
-	switch vf.Method {
-	case "secretbox":
-		if vf.Key == nil {
-			return nil, ErrInvalidKeyConfig
-		}
-
-		nonce := vf.Details.Bytes("nonce")
-		if len(nonce) == 0 {
-			return nil, ErrInvalidEncryptionConfig
-		}
-		boxNonce := [24]byte{}
-		copy(boxNonce[:], nonce)
-
-		boxKey := [32]byte{}
-		derivedKey, err := vf.Key.key(password, len(boxKey))
-		if err != nil {
-			return nil, err
-		}
-		copy(boxKey[:], derivedKey[:])
-
-		plaintext, ok := secretbox.Open(nil, vf.Ciphertext, &boxNonce, &boxKey)
-		if !ok {
-			return nil, ErrInvalidPassword
-		}
-
-		err = json.Unmarshal(plaintext, &v)
-		if err != nil {
-			return nil, err
-		}
-
-	default:
-		return nil, fmt.Errorf("Invalid encryption method: %s", vf.Method)
-	}
-
-	return &v, nil
-}
-
-func RemoveVault(name string) error {
+func (s *store) RemoveVault(name string) error {
 	existing := xdg.DATA_HOME.Find(filepath.Join("vaulted", name))
 	if existing == "" {
 		untouchable := xdg.DATA_DIRS.Find(filepath.Join("vaulted", name))
@@ -166,29 +227,29 @@ func RemoveVault(name string) error {
 	return os.Remove(existing)
 }
 
-func GetSession(name, password string) (*Session, error) {
-	v, err := OpenVault(name, password)
+func (s *store) GetSession(name string) (*Session, string, error) {
+	v, password, err := s.OpenVault(name)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	session, err := getSession(v, name, password)
+	session, err := s.getSession(v, name, password)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	if v.AWSKey != nil && v.AWSKey.Role != "" {
 		session, err = session.Assume(v.AWSKey.Role)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 	}
 
-	return session, nil
+	return session, "", nil
 }
 
-func getSession(v *Vault, name, password string) (*Session, error) {
-	session, err := openSession(name, password)
+func (s *store) getSession(v *Vault, name, password string) (*Session, error) {
+	session, err := s.openSession(name, password)
 	if err != nil {
 		removeSession(name)
 	} else if session.Expiration.After(time.Now().Add(15 * time.Minute)) {
@@ -201,11 +262,11 @@ func getSession(v *Vault, name, password string) (*Session, error) {
 	}
 
 	// we have a valid session, so if saving fails, ignore the failure
-	sealSession(name, password, session)
+	s.sealSession(session, name, password)
 	return session, nil
 }
 
-func sealSession(name, password string, session *Session) error {
+func (s *store) sealSession(session *Session, name, password string) error {
 	// read the vault file (to get key details)
 	vf, err := readVaultFile(name)
 	if err != nil {
@@ -249,7 +310,7 @@ func sealSession(name, password string, session *Session) error {
 	return writeSessionFile(name, sf)
 }
 
-func openSession(name, password string) (*Session, error) {
+func (s *store) openSession(name, password string) (*Session, error) {
 	vf, err := readVaultFile(name)
 	if err != nil {
 		return nil, err
@@ -260,7 +321,7 @@ func openSession(name, password string) (*Session, error) {
 		return nil, err
 	}
 
-	s := Session{}
+	session := Session{}
 
 	switch sf.Method {
 	case "secretbox":
@@ -287,7 +348,7 @@ func openSession(name, password string) (*Session, error) {
 			return nil, ErrInvalidPassword
 		}
 
-		err = json.Unmarshal(plaintext, &s)
+		err = json.Unmarshal(plaintext, &session)
 		if err != nil {
 			return nil, err
 		}
@@ -296,5 +357,5 @@ func openSession(name, password string) (*Session, error) {
 		return nil, fmt.Errorf("Invalid encryption method: %s", sf.Method)
 	}
 
-	return &s, nil
+	return &session, nil
 }

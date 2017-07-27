@@ -3,14 +3,16 @@ package main
 import (
 	"encoding/json"
 	"os"
+
+	"github.com/miquella/vaulted/lib"
 )
 
 type Dump struct {
 	VaultName string
 }
 
-func (d *Dump) Run(steward Steward) error {
-	_, vault, err := steward.OpenVault(d.VaultName, nil)
+func (d *Dump) Run(store vaulted.Store) error {
+	vault, _, err := store.OpenVault(d.VaultName)
 	if err != nil {
 		return err
 	}

@@ -7,15 +7,15 @@ import (
 )
 
 func TestSpawn(t *testing.T) {
-	steward := NewTestSteward()
-	steward.Vaults["one"] = &vaulted.Vault{}
+	store := NewTestStore()
+	store.Vaults["one"] = &vaulted.Vault{}
 
 	CaptureStdout(func() {
 		s := Spawn{
 			VaultName: "one",
 			Command:   []string{"go", "version"},
 		}
-		err := s.Run(steward)
+		err := s.Run(store)
 		if err != nil {
 			t.Fatal(err)
 		}

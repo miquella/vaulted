@@ -74,8 +74,8 @@ var templateFuncMap = template.FuncMap{
 	},
 }
 
-func (e *Env) Run(steward Steward) error {
-	session, err := e.getSession(steward)
+func (e *Env) Run(store vaulted.Store) error {
+	session, err := e.getSession(store)
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func (e *Env) Run(steward Steward) error {
 	return tmpl.Execute(os.Stdout, vals)
 }
 
-func (e *Env) getSession(steward Steward) (*vaulted.Session, error) {
+func (e *Env) getSession(store vaulted.Store) (*vaulted.Session, error) {
 	var err error
 
 	// default session
@@ -127,7 +127,7 @@ func (e *Env) getSession(steward Steward) (*vaulted.Session, error) {
 
 	if e.VaultName != "" {
 		// get specific session
-		_, session, err = steward.GetSession(e.VaultName, nil)
+		session, _, err = store.GetSession(e.VaultName)
 		if err != nil {
 			return nil, err
 		}

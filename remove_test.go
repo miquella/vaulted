@@ -7,20 +7,20 @@ import (
 )
 
 func TestRemove(t *testing.T) {
-	steward := NewTestSteward()
-	steward.Vaults["one"] = &vaulted.Vault{}
-	steward.Vaults["two"] = &vaulted.Vault{}
+	store := NewTestStore()
+	store.Vaults["one"] = &vaulted.Vault{}
+	store.Vaults["two"] = &vaulted.Vault{}
 
 	CaptureStdout(func() {
 		r := Remove{
 			VaultNames: []string{"one"},
 		}
-		err := r.Run(steward)
+		err := r.Run(store)
 		if err != nil {
 			t.Fatal(err)
 		}
 	})
-	if steward.VaultExists("one") {
+	if store.VaultExists("one") {
 		t.Fatal("The vault 'one' was not removed")
 	}
 
@@ -28,7 +28,7 @@ func TestRemove(t *testing.T) {
 		r := Remove{
 			VaultNames: []string{"one", "two", "three"},
 		}
-		err := r.Run(steward)
+		err := r.Run(store)
 		if err == nil {
 			t.Fatal("Expected an error removing 'one' and 'three', but was successful instead")
 		}
@@ -40,7 +40,7 @@ func TestRemove(t *testing.T) {
 			t.Fatalf("Expected ExitCode: 2, got ExitCode: %v", exiterr.ExitCode)
 		}
 	})
-	if steward.VaultExists("two") {
+	if store.VaultExists("two") {
 		t.Fatal("Still expected 'two' to be removed")
 	}
 }

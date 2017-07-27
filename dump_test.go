@@ -9,8 +9,8 @@ import (
 )
 
 func TestDump(t *testing.T) {
-	steward := NewTestSteward()
-	steward.Vaults["one"] = &vaulted.Vault{
+	store := NewTestStore()
+	store.Vaults["one"] = &vaulted.Vault{
 		AWSKey: &vaulted.AWSKey{
 			AWSCredentials: vaulted.AWSCredentials{
 				ID:     "id",
@@ -33,7 +33,7 @@ func TestDump(t *testing.T) {
 		d := Dump{
 			VaultName: "one",
 		}
-		err := d.Run(steward)
+		err := d.Run(store)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -45,19 +45,19 @@ func TestDump(t *testing.T) {
 		t.Fatalf("Failed to read vault: %v", err)
 	}
 
-	if !reflect.DeepEqual(steward.Vaults["one"].AWSKey, v.AWSKey) {
-		t.Fatalf("Expected: %#v, got: %#v", steward.Vaults["one"].AWSKey, v.AWSKey)
+	if !reflect.DeepEqual(store.Vaults["one"].AWSKey, v.AWSKey) {
+		t.Fatalf("Expected: %#v, got: %#v", store.Vaults["one"].AWSKey, v.AWSKey)
 	}
 
-	if !reflect.DeepEqual(steward.Vaults["one"].Vars, v.Vars) {
-		t.Fatalf("Expected: %#v, got: %#v", steward.Vaults["one"].Vars, v.Vars)
+	if !reflect.DeepEqual(store.Vaults["one"].Vars, v.Vars) {
+		t.Fatalf("Expected: %#v, got: %#v", store.Vaults["one"].Vars, v.Vars)
 	}
 
-	if !reflect.DeepEqual(steward.Vaults["one"].SSHKeys, v.SSHKeys) {
-		t.Fatalf("Expected: %#v, got: %#v", steward.Vaults["one"].SSHKeys, v.SSHKeys)
+	if !reflect.DeepEqual(store.Vaults["one"].SSHKeys, v.SSHKeys) {
+		t.Fatalf("Expected: %#v, got: %#v", store.Vaults["one"].SSHKeys, v.SSHKeys)
 	}
 
-	if !reflect.DeepEqual(steward.Vaults["one"].Duration, v.Duration) {
-		t.Fatalf("Expected: %#v, got: %#v", steward.Vaults["one"].Duration, v.Duration)
+	if !reflect.DeepEqual(store.Vaults["one"].Duration, v.Duration) {
+		t.Fatalf("Expected: %#v, got: %#v", store.Vaults["one"].Duration, v.Duration)
 	}
 }

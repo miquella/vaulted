@@ -2,9 +2,7 @@ package main
 
 import (
 	"bytes"
-	"encoding/base64"
 	"io"
-	"math/rand"
 	"os"
 	"time"
 
@@ -58,15 +56,15 @@ func WriteStdin(b []byte, f func()) {
 	f()
 }
 
-func NewTestSteward() *TestSteward {
-	return &TestSteward{
+func NewTestStore() *TestStore {
+	return &TestStore{
 		Passwords: make(map[string]string),
 		Vaults:    make(map[string]*vaulted.Vault),
 		Sessions:  make(map[string]*vaulted.Session),
 	}
 }
 
-type TestSteward struct {
+type TestStore struct {
 	Passwords map[string]string
 	Vaults    map[string]*vaulted.Vault
 	Sessions  map[string]*vaulted.Session
@@ -75,12 +73,20 @@ type TestSteward struct {
 	LegacyEnvironments map[string]legacy.Environment
 }
 
-func (ts TestSteward) VaultExists(name string) bool {
+func (ts TestStore) GetPassword(operation vaulted.Operation, name string) (string, error) {
+	return "prompted password", nil
+}
+
+func (ts TestStore) Steward() vaulted.Steward {
+	return ts
+}
+
+func (ts TestStore) VaultExists(name string) bool {
 	_, exists := ts.Vaults[name]
 	return exists
 }
 
-func (ts TestSteward) ListVaults() ([]string, error) {
+func (ts TestStore) ListVaults() ([]string, error) {
 	var vaults []string
 	for name := range ts.Vaults {
 		vaults = append(vaults, name)
@@ -88,39 +94,30 @@ func (ts TestSteward) ListVaults() ([]string, error) {
 	return vaults, nil
 }
 
-func (ts TestSteward) SealVault(name string, password *string, vault *vaulted.Vault) error {
-	if password == nil {
-		b := make([]byte, 6)
-		_, err := rand.Read(b)
-		if err != nil {
-			return err
-		}
+func (ts TestStore) SealVault(vault *vaulted.Vault, name string) error {
+	return ts.SealVaultWithPassword(vault, name, "sealed")
+}
 
-		newPassword := base64.StdEncoding.EncodeToString(b)
-		password = &newPassword
-	}
-
-	ts.Passwords[name] = *password
+func (ts TestStore) SealVaultWithPassword(vault *vaulted.Vault, name, password string) error {
+	ts.Passwords[name] = password
 	ts.Vaults[name] = cloneVault(vault)
 
 	return nil
 }
 
-func (ts TestSteward) OpenVault(name string, password *string) (string, *vaulted.Vault, error) {
-	if !ts.VaultExists(name) {
-		return "", nil, os.ErrNotExist
-	}
-
-	if password != nil {
-		if ts.Passwords[name] != *password {
-			return "", nil, vaulted.ErrInvalidPassword
-		}
-	}
-
-	return ts.Passwords[name], cloneVault(ts.Vaults[name]), nil
+func (ts TestStore) OpenVault(name string) (*vaulted.Vault, string, error) {
+	return ts.OpenVaultWithPassword(name, "prompted password")
 }
 
-func (ts TestSteward) RemoveVault(name string) error {
+func (ts TestStore) OpenVaultWithPassword(name, password string) (*vaulted.Vault, string, error) {
+	if !ts.VaultExists(name) {
+		return nil, "", os.ErrNotExist
+	}
+
+	return cloneVault(ts.Vaults[name]), ts.Passwords[name], nil
+}
+
+func (ts TestStore) RemoveVault(name string) error {
 	if !ts.VaultExists(name) {
 		return os.ErrNotExist
 	}
@@ -131,15 +128,9 @@ func (ts TestSteward) RemoveVault(name string) error {
 	return nil
 }
 
-func (ts TestSteward) GetSession(name string, password *string) (string, *vaulted.Session, error) {
+func (ts TestStore) GetSession(name string) (*vaulted.Session, string, error) {
 	if !ts.VaultExists(name) {
-		return "", nil, os.ErrNotExist
-	}
-
-	if password != nil {
-		if ts.Passwords[name] != *password {
-			return "", nil, vaulted.ErrInvalidPassword
-		}
+		return nil, "", os.ErrNotExist
 	}
 
 	s := &vaulted.Session{
@@ -177,11 +168,11 @@ func (ts TestSteward) GetSession(name string, password *string) (string, *vaulte
 		}
 	}
 
-	return ts.Passwords[name], s, nil
+	return s, ts.Passwords[name], nil
 }
 
-func (ts TestSteward) OpenLegacyVault() (password string, environments map[string]legacy.Environment, err error) {
-	return ts.LegacyPassword, ts.LegacyEnvironments, nil
+func (ts TestStore) OpenLegacyVault() (environments map[string]legacy.Environment, password string, err error) {
+	return ts.LegacyEnvironments, ts.LegacyPassword, nil
 }
 
 func cloneVault(vault *vaulted.Vault) *vaulted.Vault {
