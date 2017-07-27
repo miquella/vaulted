@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	ErrInvalidPassword         = errors.New("Invalid password")
+	ErrIncorrectPassword       = errors.New("Incorrect password")
 	ErrInvalidKeyConfig        = errors.New("Invalid key configuration")
 	ErrInvalidEncryptionConfig = errors.New("Invalid encryption configuration")
 )
@@ -94,12 +94,12 @@ func (s *store) OpenVault(name string) (*Vault, string, error) {
 			return nil, "", err
 		}
 
-		if v, p, err := s.OpenVaultWithPassword(name, password); err != ErrInvalidPassword {
+		if v, p, err := s.OpenVaultWithPassword(name, password); err != ErrIncorrectPassword {
 			return v, p, err
 		}
 	}
 
-	return nil, "", ErrInvalidPassword
+	return nil, "", ErrIncorrectPassword
 }
 
 func (s *store) OpenVaultWithPassword(name, password string) (*Vault, string, error) {
@@ -136,7 +136,7 @@ func (s *store) OpenVaultWithPassword(name, password string) (*Vault, string, er
 
 		plaintext, ok := secretbox.Open(nil, vf.Ciphertext, &boxNonce, &boxKey)
 		if !ok {
-			return nil, "", ErrInvalidPassword
+			return nil, "", ErrIncorrectPassword
 		}
 
 		err = json.Unmarshal(plaintext, &v)
@@ -345,7 +345,7 @@ func (s *store) openSession(name, password string) (*Session, error) {
 
 		plaintext, ok := secretbox.Open(nil, sf.Ciphertext, &boxNonce, &boxKey)
 		if !ok {
-			return nil, ErrInvalidPassword
+			return nil, ErrIncorrectPassword
 		}
 
 		err = json.Unmarshal(plaintext, &session)

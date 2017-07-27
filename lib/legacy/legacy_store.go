@@ -29,12 +29,12 @@ func (s *legacyStore) OpenLegacyVault() (map[string]Environment, string, error) 
 			return nil, "", err
 		}
 
-		if v, p, err := s.OpenLegacyVaultWithPassword(password); err != vaulted.ErrInvalidPassword {
+		if v, p, err := s.OpenLegacyVaultWithPassword(password); err != vaulted.ErrIncorrectPassword {
 			return v, p, err
 		}
 	}
 
-	return nil, "", vaulted.ErrInvalidPassword
+	return nil, "", vaulted.ErrIncorrectPassword
 }
 
 func (s *legacyStore) OpenLegacyVaultWithPassword(password string) (map[string]Environment, string, error) {

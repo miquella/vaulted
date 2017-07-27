@@ -79,7 +79,7 @@ func (v *Vault) DecryptEnvironments(password string) (map[string]Environment, er
 
 	// validate the mac
 	if !hmac.Equal(v.mac(key), v.MAC) {
-		return nil, vaulted.ErrInvalidPassword
+		return nil, vaulted.ErrIncorrectPassword
 	}
 
 	// decrypt the environments
