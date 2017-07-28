@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -562,8 +563,22 @@ type parseExpectation struct {
 }
 
 func TestParseArgs(t *testing.T) {
-	shell := os.Getenv("SHELL")
-	defer os.Setenv("SHELL", shell)
+	// backup & nuke env vars we don't want
+	savedEnv := make(map[string]string)
+	for _, env := range os.Environ() {
+		envPieces := strings.SplitN(env, "=", 2)
+		if envPieces[0] == "SHELL" || strings.HasPrefix(envPieces[0], "VAULTED") {
+			savedEnv[envPieces[0]] = envPieces[1]
+			os.Unsetenv(envPieces[0])
+		}
+	}
+	defer func() {
+		for key, value := range savedEnv {
+			os.Setenv(key, value)
+		}
+	}()
+
+	// set SHELL to our control case
 	os.Setenv("SHELL", "/bin/fish")
 
 	for _, good := range goodParseCases {
