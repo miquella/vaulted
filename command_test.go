@@ -289,6 +289,10 @@ var (
 			Command: &Help{Subcommand: "upgrade"},
 		},
 		{
+			Args:    []string{"help", "console"},
+			Command: &Help{Subcommand: "console"},
+		},
+		{
 			Args:    []string{"-h"},
 			Command: &Help{},
 		},
@@ -445,6 +449,30 @@ var (
 			Args:    []string{"-V"},
 			Command: &Version{},
 		},
+		// Console
+		{
+			Args: []string{"console", "one"},
+			Command: &Console{
+				VaultName: "one",
+			},
+		},
+		{
+			Args: []string{"console", "--assume", "arn:something:or:other"},
+			Command: &Console{
+				Role: "arn:something:or:other",
+			},
+		},
+		{
+			Args: []string{"console", "--assume", "arn:something:or:other", "one"},
+			Command: &Console{
+				VaultName: "one",
+				Role:      "arn:something:or:other",
+			},
+		},
+		{
+			Args:    []string{"console", "--help"},
+			Command: &Help{Subcommand: "console"},
+		},
 	}
 
 	badParseCases = []parseCase{
@@ -542,6 +570,11 @@ var (
 		// Upgrade
 		{
 			Args: []string{"upgrade", "one"},
+		},
+
+		// Console
+		{
+			Args: []string{"Console", "one", "two"},
 		},
 
 		// Misc

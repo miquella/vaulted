@@ -16,7 +16,7 @@ gem install md2man
 ```
 
 ```sh
-go get -u github.com/jteeuwen/go-bindata
+go get -u github.com/jteeuwen/go-bindata/...
 ```
 
 Generating Man Pages

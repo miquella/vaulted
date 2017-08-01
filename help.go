@@ -22,6 +22,7 @@ var (
 		"add":     "add",
 		"create":  "add",
 		"new":     "add",
+		"console": "console",
 		"cp":      "cp",
 		"copy":    "cp",
 		"dump":    "dump",

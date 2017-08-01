@@ -28,6 +28,9 @@ COMMANDS
 `add` / `create` / `new`
   Interactively creates the content of a new vault. See vaulted-add(1).
 
+`console`
+  Opens the AWS console in the default web browser. See vauled-console(1).
+
 `cp` / `copy`
   Copies the content of a vault and saves it as a new vault with a new password. See vaulted-cp(1).
 

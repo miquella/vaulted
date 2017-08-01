@@ -1,0 +1,36 @@
+.TH vaulted\-console 1
+.SH NAME
+.PP
+vaulted console \- Opens the AWS console in the default web browser
+.SH SYNOPSIS
+.PP
+\fB\fCvaulted console\fR
+.br
+\fB\fCvaulted console\fR \fIname\fP [\fIOPTIONS\fP]
+.br
+\fB\fCvaulted console \-\-assume\fR \fIarn\fP [\fIOPTIONS\fP]
+.br
+\fB\fCvaulted console \-\-duration\fR \fIduration\fP [\fIOPTIONS\fP]
+.SH DESCRIPTION
+.PP
+Opens the AWS console in the default web browser. Uses either the credentials in the current environment or the credentials in the specified vault. Console sessions either use the passed in duration, the provided vault's duration, or defaults to 1 hour.
+.PP
+Durations must be at least 15 minutes and less than 12 hours.
+.SH OPTIONS
+.TP
+\fB\fC\-\-assume\fR \fIarn\fP
+Specifies the full ARN of the role to assume. See \fBASSUMING A ROLE\fP below
+for details on how Vaulted assumes roles.
+.IP
+Role assumption may be performed without specifying a vault to spawn from.
+When invoked this way, credentials are sourced from default locations (e.g.
+environment, configuration files, instance profile, etc.).
+.PP
+\fB\fC\-\-duration\fR \fIduration\fP
+    Specifies the duration that the console session is valid. The duration must be within the range 15m\-12h.
+.SH ASSUMING A ROLE
+.PP
+A role to assume can be specified either in a vault's configuration (via
+\fB\fCvaulted edit\fR) or specified via the \fB\fC\-\-assume\fR option.
+.PP
+Vaulted first opens the specified vault to retrieve the appropriate credentials. If a role is specified in the vault's configuration it will use that unless a role is explicitly passed in through the \fB\fC\-\-assume\fR option. 

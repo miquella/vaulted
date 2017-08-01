@@ -190,6 +190,7 @@ func cloneVault(vault *vaulted.Vault) *vaulted.Vault {
 			AWSCredentials: vaulted.AWSCredentials{
 				ID:     vault.AWSKey.ID,
 				Secret: vault.AWSKey.Secret,
+				Token:  vault.AWSKey.Token,
 			},
 			MFA:  vault.AWSKey.MFA,
 			Role: vault.AWSKey.Role,
@@ -203,6 +204,8 @@ func cloneVault(vault *vaulted.Vault) *vaulted.Vault {
 	for key, value := range vault.SSHKeys {
 		newVault.SSHKeys[key] = value
 	}
+
+	newVault.Duration = vault.Duration
 
 	return newVault
 }
