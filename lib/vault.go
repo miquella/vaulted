@@ -87,7 +87,7 @@ func (k *AWSKey) Valid() bool {
 }
 
 func (k *AWSKey) RequiresMFA() bool {
-	return k.Valid() && k.MFA != ""
+	return k.Valid() && !k.ForgoTempCredGeneration && k.MFA != ""
 }
 
 func (k *AWSKey) GetAWSCredentials(duration time.Duration) (*AWSCredentials, error) {
