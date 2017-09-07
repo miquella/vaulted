@@ -14,6 +14,7 @@ type Spawn struct {
 
 	Command       []string
 	DisplayStatus bool
+	Refresh       bool
 }
 
 func (s *Spawn) Run(store vaulted.Store) error {
@@ -46,7 +47,11 @@ func (s *Spawn) getSession(store vaulted.Store) (*vaulted.Session, error) {
 
 	if s.VaultName != "" {
 		// get specific session
-		session, _, err = store.GetSession(s.VaultName)
+		if s.Refresh {
+			session, _, err = store.CreateSession(s.VaultName)
+		} else {
+			session, _, err = store.GetSession(s.VaultName)
+		}
 		if err != nil {
 			return nil, err
 		}

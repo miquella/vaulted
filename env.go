@@ -18,6 +18,7 @@ type Env struct {
 	Format        string
 	Command       string
 	Interactive   bool
+	Refresh       bool
 }
 
 type templateVals struct {
@@ -127,7 +128,11 @@ func (e *Env) getSession(store vaulted.Store) (*vaulted.Session, error) {
 
 	if e.VaultName != "" {
 		// get specific session
-		session, _, err = store.GetSession(e.VaultName)
+		if e.Refresh {
+			session, _, err = store.CreateSession(e.VaultName)
+		} else {
+			session, _, err = store.GetSession(e.VaultName)
+		}
 		if err != nil {
 			return nil, err
 		}

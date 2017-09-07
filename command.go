@@ -253,6 +253,7 @@ func parseEnvArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("env", pflag.ContinueOnError)
 	flag.String("format", "shell", "Specify what built in format to output variables in (shell, sh, fish, json) or a text template. Default: shell")
 	flag.String("assume", "", "Role to assume")
+	flag.Bool("refresh", false, "Start a new session with new temporary credentials and a refreshed expiration")
 	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
@@ -292,6 +293,7 @@ func parseEnvArgs(args []string) (Command, error) {
 	}
 
 	e.Format, _ = flag.GetString("format")
+	e.Refresh, _ = flag.GetBool("refresh")
 	return e, nil
 }
 
@@ -359,6 +361,7 @@ func parseRemoveArgs(args []string) (Command, error) {
 func parseShellArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("shell", pflag.ContinueOnError)
 	flag.String("assume", "", "Role to assume")
+	flag.Bool("refresh", false, "Start a new session with new temporary credentials and a refreshed expiration")
 	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
@@ -388,6 +391,7 @@ func parseShellArgs(args []string) (Command, error) {
 	s.Role = assume
 	s.Command = interactiveShellCommand()
 	s.DisplayStatus = true
+	s.Refresh, _ = flag.GetBool("refresh")
 	return s, nil
 }
 

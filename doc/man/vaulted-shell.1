@@ -20,6 +20,9 @@ for details on how Vaulted assumes roles.
 Role assumption may be performed without specifying a vault to spawn from.
 When invoked this way, credentials are sourced from default locations (e.g.
 environment, configuration files, instance profile, etc.).
+.TP
+\fB\fC\-\-refresh\fR
+Start a new session with new temporary credentials and a refreshed expiration.
 .SH AWS KEY
 .PP
 Vaulted uses permanent credentials stored in the vault to generate temporary
