@@ -93,6 +93,13 @@ export VAULTED_ENV_EXPIRATION="2006-01-02T22:04:05Z"
   "VAULTED_ENV_EXPIRATION": "2006-01-02T22:04:05Z"
 }
 `
+	envRefreshOutput = `export ONE="111111"
+export THREE="333"
+export TWO="222"
+export VAULTED_ENV="one"
+export VAULTED_ENV_EXPIRATION="2006-01-02T22:04:06Z"
+`
+
 	envCustom = "[AWS_SECURITY_TOKEN AWS_SESSION_TOKEN]"
 )
 
@@ -291,6 +298,25 @@ func TestEnv(t *testing.T) {
 
 	if string(output) != envCustom {
 		t.Error(failureMessage(envCustom, output))
+	}
+
+	output = CaptureStdout(func() {
+		e := Env{
+			VaultName:     "one",
+			DetectedShell: "sh",
+			Format:        "shell",
+			Command:       "vaulted env one --refresh",
+			Refresh:       true,
+			Interactive:   false,
+		}
+
+		err := e.Run(store)
+		if err != nil {
+			t.Error(err)
+		}
+	})
+	if string(output) != envRefreshOutput {
+		t.Error(failureMessage(envRefreshOutput, output))
 	}
 
 }

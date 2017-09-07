@@ -31,6 +31,7 @@ type Store interface {
 	SealVaultWithPassword(vault *Vault, name, password string) error
 	RemoveVault(name string) error
 
+	CreateSession(name string) (*Session, string, error)
 	GetSession(name string) (*Session, string, error)
 }
 
@@ -227,6 +228,27 @@ func (s *store) RemoveVault(name string) error {
 	return os.Remove(existing)
 }
 
+func (s *store) CreateSession(name string) (*Session, string, error) {
+	v, password, err := s.OpenVault(name)
+	if err != nil {
+		return nil, "", err
+	}
+
+	session, err := s.createSession(v, name, password)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if v.AWSKey != nil && v.AWSKey.Role != "" {
+		session, err = session.Assume(v.AWSKey.Role)
+		if err != nil {
+			return nil, "", err
+		}
+	}
+
+	return session, "", nil
+}
+
 func (s *store) GetSession(name string) (*Session, string, error) {
 	v, password, err := s.OpenVault(name)
 	if err != nil {
@@ -256,6 +278,12 @@ func (s *store) getSession(v *Vault, name, password string) (*Session, error) {
 		return session, nil
 	}
 
+	return s.createSession(v, name, password)
+}
+
+func (s *store) createSession(v *Vault, name, password string) (*Session, error) {
+	var session *Session
+	var err error
 	if v.AWSKey.RequiresMFA() {
 		var mfaToken string
 		mfaToken, err = s.steward.GetMFAToken(name)

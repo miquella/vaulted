@@ -29,6 +29,9 @@ OPTIONS
   When invoked this way, credentials are sourced from default locations (e.g.
   environment, configuration files, instance profile, etc.).
 
+`--refresh`
+  Start a new session with new temporary credentials and a refreshed expiration.
+
 AWS KEY
 -------
 

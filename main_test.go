@@ -175,6 +175,30 @@ func (ts TestStore) GetSession(name string) (*vaulted.Session, string, error) {
 	return s, ts.Passwords[name], nil
 }
 
+func (ts TestStore) CreateSession(name string) (*vaulted.Session, string, error) {
+	if !ts.VaultExists(name) {
+		return nil, "", os.ErrNotExist
+	}
+
+	s := &vaulted.Session{
+		Expiration: time.Unix(1136239446, 0),
+		Vars:       make(map[string]string),
+		SSHKeys:    make(map[string]string),
+	}
+	vault := ts.Vaults[name]
+
+	s.Name = name
+
+	for key, value := range vault.Vars {
+		s.Vars[key] = value
+	}
+
+	for key, value := range vault.SSHKeys {
+		s.SSHKeys[key] = value
+	}
+	return s, ts.Passwords[name], nil
+}
+
 func (ts TestStore) OpenLegacyVault() (environments map[string]legacy.Environment, password string, err error) {
 	return ts.LegacyEnvironments, ts.LegacyPassword, nil
 }
