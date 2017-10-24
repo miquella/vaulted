@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/chzyer/readline"
 	"github.com/miquella/ask"
 	"github.com/miquella/vaulted/lib"
 	"github.com/miquella/vaulted/lib/legacy"
@@ -139,23 +140,39 @@ func (t *TTYSteward) GetPassword(operation vaulted.Operation, name string) (stri
 				return "", err
 			}
 
-			if password == confirm {
-				return password, nil
+			if string(password) == string(confirm) {
+				return string(password), nil
 			}
 
 			ask.Print("Passwords do not match.\n\n")
 		}
 
 	case legacy.LegacyOperation:
-		return ask.HiddenAsk("Legacy Password: ")
+		passwd, err := ask.HiddenAsk("Legacy Password: ")
+		if err != nil {
+			return "", err
+		}
+		return string(passwd), nil
 
 	default:
 		ask.Print(fmt.Sprintf("Vault '%s'\n", name))
-		return ask.HiddenAsk("   Password: ")
+		passwd, err := ask.HiddenAsk("   Password: ")
+		if err != nil {
+			return "", err
+		}
+		return string(passwd), nil
 	}
 }
 
 func (t *TTYSteward) GetMFAToken(name string) (string, error) {
-	token, err := ask.Ask("   MFA token: ")
+	reader, err := readline.New("   MFA token: ")
+	if err != nil {
+		return "", err
+	}
+	token, err := reader.Readline()
+	if err != nil {
+		return "", err
+	}
+
 	return strings.TrimSpace(token), err
 }
