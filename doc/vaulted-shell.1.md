@@ -22,8 +22,8 @@ OPTIONS
 -------
 
 `--assume` *arn*
-  Specifies the full ARN of the role to assume. See **ASSUMING A ROLE** below
-  for details on how Vaulted assumes roles.
+  Specifies the full ARN or the role name of the role to assume. See
+  **ASSUMING A ROLE** below for details on how Vaulted assumes roles.
 
   Role assumption may be performed without specifying a vault to spawn from.
   When invoked this way, credentials are sourced from default locations (e.g.
@@ -72,6 +72,15 @@ Vaulted first generates and caches a session for the vault (assuming a vault
 call. This allows the session to be cached for a longer duration than the assume
 roll call will allow (maximum of 1 hour). This also means that the assume role
 call is performed each time a new environment is spawned from the session.
+
+You can also specify a role name and Vaulted will attempt
+to create the full ARN from it, like so:
+
+```
+vaulted shell --assume SuperRole
+```
+
+which would resolve to the full arn `arn:aws:iam::111222333444:role/SuperRole`.
 
 When assuming a role, the maximum duration of the resulting credentials is 1
 hour, regardless of the duration specified in the vault's configuration.
