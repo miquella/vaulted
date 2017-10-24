@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/chzyer/readline"
 	"github.com/miquella/ask"
 	"github.com/miquella/vaulted/lib"
 	"github.com/miquella/vaulted/lib/legacy"
@@ -124,38 +125,59 @@ func (t *TTYSteward) GetPassword(operation vaulted.Operation, name string) (stri
 		}
 	}
 
+	reader, err := readline.New("")
+	if err != nil {
+		return "", err
+	}
+
 	// tty prompt
 	switch operation {
 	case vaulted.SealOperation:
 		ask.Print(fmt.Sprintf("Vault '%s'\n", name))
 		for {
-			password, err := ask.HiddenAsk("   New password: ")
+			password, err := reader.ReadPassword("   New password: ")
 			if err != nil {
 				return "", err
 			}
 
-			confirm, err := ask.HiddenAsk("   Confirm password: ")
+			confirm, err := reader.ReadPassword("   Confirm password: ")
 			if err != nil {
 				return "", err
 			}
 
-			if password == confirm {
-				return password, nil
+			if string(password) == string(confirm) {
+				return string(password), nil
 			}
 
 			ask.Print("Passwords do not match.\n\n")
 		}
 
 	case legacy.LegacyOperation:
-		return ask.HiddenAsk("Legacy Password: ")
+		passwd, err := reader.ReadPassword("Legacy Password: ")
+		if err != nil {
+			return "", err
+		}
+		return string(passwd), nil
 
 	default:
 		ask.Print(fmt.Sprintf("Vault '%s'\n", name))
-		return ask.HiddenAsk("   Password: ")
+		passwd, err := reader.ReadPassword("   Password: ")
+		if err != nil {
+			return "", err
+		}
+		return string(passwd), nil
 	}
 }
 
 func (t *TTYSteward) GetMFAToken(name string) (string, error) {
-	token, err := ask.Ask("   MFA token: ")
+	reader, err := readline.New("   MFA token: ")
+	if err != nil {
+		return "", err
+	}
+	token, err := reader.Readline()
+	if err != nil {
+		return "", err
+	}
+
 	return strings.TrimSpace(token), err
 }
