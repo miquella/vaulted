@@ -23,7 +23,7 @@ type Session struct {
 	SSHKeys    map[string]string `json:"ssh_keys,omitempty"`
 }
 
-func (e *Session) Assume(arn string) (*Session, error) {
+func (e *Session) Assume(providedArn string) (*Session, error) {
 	expiration := e.Expiration
 	maxExpiration := time.Now().Add(time.Hour).Truncate(time.Second)
 	if expiration.After(maxExpiration) {
@@ -31,14 +31,42 @@ func (e *Session) Assume(arn string) (*Session, error) {
 	}
 
 	duration := expiration.Sub(time.Now())
-	creds, err := e.AWSCreds.AssumeRole(arn, duration)
-	if err != nil {
-		return nil, err
+
+	var creds *AWSCredentials
+
+	selectedArn := providedArn
+	arnStruct, err := ParseARN(providedArn)
+	if err == nil {
+		creds, err = e.AWSCreds.AssumeRole(arnStruct.String(), duration)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Unparseable ARN
+		identityArn, err := e.AWSCreds.GetCallerIdentity()
+		if err != nil {
+			return nil, err
+		}
+
+		roleArn := &ARN{
+			Partition: identityArn.Partition,
+			Service:   "iam",
+			Region:    "",
+			AccountId: identityArn.AccountId,
+			Resource:  "role/" + providedArn,
+		}
+
+		roleArnString := roleArn.String()
+		creds, err = e.AWSCreds.AssumeRole(roleArnString, duration)
+		if err != nil {
+			return nil, fmt.Errorf("Error assuming role '%s' which was interpreted as '%s'\nError: %v", providedArn, roleArnString, err)
+		}
+		selectedArn = roleArnString
 	}
 
 	session := &Session{
 		Name:       e.Name,
-		Role:       arn,
+		Role:       selectedArn,
 		Expiration: expiration,
 		AWSCreds:   creds,
 		Vars:       make(map[string]string),

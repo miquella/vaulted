@@ -67,6 +67,23 @@ func (c *AWSCredentials) GetSessionTokenWithMFA(serialNumber, token string, dura
 	return AWSCredentialsFromSTSCredentials(getSessionToken.Credentials), nil
 }
 
+func (c *AWSCredentials) GetCallerIdentity() (*ARN, error) {
+	stsClient, err := c.stsClient()
+	if err != nil {
+		return nil, err
+	}
+
+	callerIdentity, err := stsClient.GetCallerIdentity(nil)
+
+	if err == nil {
+		arn, err := ParseARN(*callerIdentity.Arn)
+		if err == nil {
+			return arn, nil
+		}
+	}
+	return nil, err
+}
+
 func (c *AWSCredentials) AssumeRole(arn string, duration time.Duration) (*AWSCredentials, error) {
 	stsClient, err := c.stsClient()
 	if err != nil {
