@@ -11,6 +11,7 @@ import (
 type Spawn struct {
 	VaultName string
 	Role      string
+	NoSession bool
 
 	Command       []string
 	DisplayStatus bool
@@ -46,8 +47,18 @@ func (s *Spawn) getSession(store vaulted.Store) (*vaulted.Session, error) {
 	session := DefaultSession()
 
 	if s.VaultName != "" {
-		// get specific session
-		if s.Refresh {
+		if s.NoSession {
+			v, _, err := store.OpenVault(s.VaultName)
+			if err != nil {
+				return nil, err
+			}
+
+			if v.AWSKey != nil {
+				v.AWSKey.ForgoTempCredGeneration = true
+			}
+			session, err = v.NewSession(s.VaultName)
+			// get specific session
+		} else if s.Refresh {
 			session, _, err = store.CreateSession(s.VaultName)
 		} else {
 			session, _, err = store.GetSession(s.VaultName)

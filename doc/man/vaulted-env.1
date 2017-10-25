@@ -7,6 +7,8 @@ vaulted env \- outputs shell commands that load secrets for a vault into the she
 \fB\fCvaulted env\fR \fIname\fP [\fIOPTIONS\fP]
 .br
 \fB\fCvaulted env \-\-assume\fR \fIarn\fP [\fIOPTIONS\fP]
+.br
+\fB\fCvaulted env \-\-no\-session\fR \fIname\fP [\fIOPTIONS\fP]
 .SH DESCRIPTION
 .PP
 Creates a session using variables and the AWS key stored in the vault. The
@@ -28,6 +30,13 @@ Specifies the full ARN or short name of the role to assume. See
 Role assumption may be performed without specifying a vault to spawn from.
 When invoked this way, credentials are sourced from default locations (e.g.
 environment, configuration files, instance profile, etc.).
+.TP
+\fB\fC\-\-no\-session\fR
+Disables the generation of temporary credentials and role assumption. The
+permanent credentials stored in the vault are used instead.
+.IP
+Role assumption can be performed after spawning a shell using the \fB\fC\-\-assume\fR
+command with the ARN of the role you wish to assume.
 .TP
 \fB\fC\-\-format\fR <shell,fish,sh,json,\fIcustom\fP>
 Specify what format to use, defaults to \fB\fCshell\fR which will autodetect which
