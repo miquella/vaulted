@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/chzyer/readline"
 	"github.com/miquella/ask"
 	"github.com/miquella/vaulted/lib"
 	"github.com/miquella/vaulted/lib/legacy"
@@ -156,6 +157,14 @@ func (t *TTYSteward) GetPassword(operation vaulted.Operation, name string) (stri
 }
 
 func (t *TTYSteward) GetMFAToken(name string) (string, error) {
-	token, err := ask.Ask("   MFA token: ")
+	reader, err := readline.New("   MFA token: ")
+	if err != nil {
+		return "", err
+	}
+	token, err := reader.Readline()
+	if err != nil {
+		return "", err
+	}
+
 	return strings.TrimSpace(token), err
 }
