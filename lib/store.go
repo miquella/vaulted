@@ -288,10 +288,10 @@ func (s *store) createSession(v *Vault, name, password string) (*Session, error)
 		var mfaToken string
 		mfaToken, err = s.steward.GetMFAToken(name)
 		if err == nil {
-			session, err = v.CreateSessionWithMFA(name, mfaToken)
+			session, err = v.NewSessionWithMFA(name, mfaToken)
 		}
 	} else {
-		session, err = v.CreateSession(name)
+		session, err = v.NewSession(name)
 	}
 	if err != nil {
 		return nil, err

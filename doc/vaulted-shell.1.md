@@ -10,7 +10,8 @@ SYNOPSIS
 --------
 
 `vaulted shell` *name* [*OPTIONS*]  
-`vaulted shell --assume` *arn* [*OPTIONS*]
+`vaulted shell --assume` *arn* [*OPTIONS*]  
+`vaulted shell --no-session` *name* [*OPTIONS*]
 
 DESCRIPTION
 -----------
@@ -28,6 +29,13 @@ OPTIONS
   Role assumption may be performed without specifying a vault to spawn from.
   When invoked this way, credentials are sourced from default locations (e.g.
   environment, configuration files, instance profile, etc.).
+
+`--no-session`
+  Disables the generation of temporary credentials and role assumption. The
+  permanent credentials stored in the vault are used instead.
+
+  Role assumption can be performed after spawning a shell using the `--assume`
+  command with the ARN of the role you wish to assume.
 
 `--refresh`
   Start a new session with new temporary credentials and a refreshed expiration.

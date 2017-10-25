@@ -13,6 +13,7 @@ import (
 type Env struct {
 	VaultName string
 	Role      string
+	NoSession bool
 
 	DetectedShell string
 	Format        string
@@ -127,8 +128,18 @@ func (e *Env) getSession(store vaulted.Store) (*vaulted.Session, error) {
 	session := DefaultSession()
 
 	if e.VaultName != "" {
-		// get specific session
-		if e.Refresh {
+		if e.NoSession {
+			v, _, err := store.OpenVault(e.VaultName)
+			if err != nil {
+				return nil, err
+			}
+
+			if v.AWSKey != nil {
+				v.AWSKey.ForgoTempCredGeneration = true
+			}
+			session, err = v.NewSession(e.VaultName)
+			// get specific session
+		} else if e.Refresh {
 			session, _, err = store.CreateSession(e.VaultName)
 		} else {
 			session, _, err = store.GetSession(e.VaultName)

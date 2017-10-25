@@ -253,6 +253,7 @@ func parseEnvArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("env", pflag.ContinueOnError)
 	flag.String("format", "shell", "Specify what built in format to output variables in (shell, sh, fish, json) or a text template. Default: shell")
 	flag.String("assume", "", "Role to assume")
+	flag.Bool("no-session", false, "Disable use of temporary credentials")
 	flag.Bool("refresh", false, "Start a new session with new temporary credentials and a refreshed expiration")
 	flag.Usage = func() {}
 	err := flag.Parse(args)
@@ -260,17 +261,29 @@ func parseEnvArgs(args []string) (Command, error) {
 		return nil, err
 	}
 
-	vaultName := ""
-	assume, _ := flag.GetString("assume")
+	e := &Env{}
+	e.VaultName = ""
+	e.Format, _ = flag.GetString("format")
+	e.Role, _ = flag.GetString("assume")
+	e.NoSession, _ = flag.GetBool("no-session")
+	e.Refresh, _ = flag.GetBool("refresh")
 
 	if flag.NArg() > 1 {
 		return nil, ErrTooManyArguments
 	}
 
 	if flag.NArg() == 1 {
-		vaultName = flag.Arg(0)
-	} else if flag.NArg() < 1 && assume == "" {
+		e.VaultName = flag.Arg(0)
+	} else if flag.NArg() < 1 && e.Role == "" {
 		return nil, ErrNotEnoughArguments
+	}
+
+	if e.NoSession != false {
+		if e.Role != "" {
+			return nil, errors.New("Refusing to output variables. Because --assume generates session credentials it cannot be combined with --no-session.")
+		} else if e.Refresh != false {
+			return nil, errors.New("Refusing to output variables. Because --refresh refreshes session credentials it cannot be combined with --no-session.")
+		}
 	}
 
 	shell, err := detectShell()
@@ -278,9 +291,6 @@ func parseEnvArgs(args []string) (Command, error) {
 		shell = "sh"
 	}
 
-	e := &Env{}
-	e.VaultName = vaultName
-	e.Role = assume
 	e.DetectedShell = shell
 	e.Command = strings.Join(os.Args, " ")
 
@@ -292,8 +302,6 @@ func parseEnvArgs(args []string) (Command, error) {
 		}
 	}
 
-	e.Format, _ = flag.GetString("format")
-	e.Refresh, _ = flag.GetBool("refresh")
 	return e, nil
 }
 
@@ -361,6 +369,7 @@ func parseRemoveArgs(args []string) (Command, error) {
 func parseShellArgs(args []string) (Command, error) {
 	flag := pflag.NewFlagSet("shell", pflag.ContinueOnError)
 	flag.String("assume", "", "Role to assume")
+	flag.Bool("no-session", false, "Disable use of temporary credentials")
 	flag.Bool("refresh", false, "Start a new session with new temporary credentials and a refreshed expiration")
 	flag.Usage = func() {}
 	err := flag.Parse(args)
@@ -368,30 +377,37 @@ func parseShellArgs(args []string) (Command, error) {
 		return nil, err
 	}
 
-	vaultName := ""
-	assume, _ := flag.GetString("assume")
+	s := &Spawn{}
+	s.VaultName = ""
+	s.Role, _ = flag.GetString("assume")
+	s.NoSession, _ = flag.GetBool("no-session")
+	s.Refresh, _ = flag.GetBool("refresh")
+	s.Command = interactiveShellCommand()
+	s.DisplayStatus = true
 
 	if flag.NArg() > 1 {
 		return nil, ErrTooManyArguments
 	}
 
+	if s.NoSession != false {
+		if s.Role != "" {
+			return nil, errors.New("Refusing to output variables. Because --assume generates session credentials it cannot be combined with --no-session.")
+		} else if s.Refresh != false {
+			return nil, errors.New("Refusing to output variables. Because --refresh refreshes session credentials it cannot be combined with --no-session.")
+		}
+	}
+
 	if flag.NArg() == 1 {
-		vaultName = flag.Arg(0)
+		s.VaultName = flag.Arg(0)
 
 		currentVaultedEnv := os.Getenv("VAULTED_ENV")
 		if currentVaultedEnv != "" {
 			return nil, fmt.Errorf("Refusing to spawn a new shell when already in environment '%s'.", currentVaultedEnv)
 		}
-	} else if flag.NArg() < 1 && assume == "" {
+	} else if flag.NArg() < 1 && s.Role == "" {
 		return nil, ErrNotEnoughArguments
 	}
 
-	s := &Spawn{}
-	s.VaultName = vaultName
-	s.Role = assume
-	s.Command = interactiveShellCommand()
-	s.DisplayStatus = true
-	s.Refresh, _ = flag.GetBool("refresh")
 	return s, nil
 }
 

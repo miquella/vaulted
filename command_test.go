@@ -219,6 +219,17 @@ var (
 			},
 		},
 		{
+			Args:   []string{"env", "foo", "--no-session"},
+			OsArgs: []string{"vaulted", "env", "foo", "--no-session"},
+			Command: &Env{
+				VaultName:     "foo",
+				NoSession:     true,
+				DetectedShell: "fish",
+				Format:        "shell",
+				Command:       "vaulted env foo --no-session",
+			},
+		},
+		{
 			Args:    []string{"env", "--help"},
 			Command: &Help{Subcommand: "env"},
 		},
@@ -422,6 +433,15 @@ var (
 			},
 		},
 		{
+			Args: []string{"shell", "foo", "--no-session"},
+			Command: &Spawn{
+				VaultName:     "foo",
+				NoSession:     true,
+				Command:       []string{"/bin/fish", "--login"},
+				DisplayStatus: true,
+			},
+		},
+		{
 			Args:    []string{"shell", "--help"},
 			Command: &Help{Subcommand: "shell"},
 		},
@@ -510,6 +530,16 @@ var (
 		{
 			Args: []string{"env", "one", "two"},
 		},
+		{
+			Args: []string{"env", "--no-session"},
+		},
+		{
+			Args: []string{"env", "one", "--no-session", "--assume", "arn:blah:blah"},
+		},
+		{
+			Args: []string{"env", "one", "--no-session", "--refresh"},
+		},
+
 		// List
 		{
 			Args: []string{"ls", "one"},
@@ -537,6 +567,15 @@ var (
 		},
 		{
 			Args: []string{"shell", "one", "two"},
+		},
+		{
+			Args: []string{"shell", "--no-session"},
+		},
+		{
+			Args: []string{"shell", "one", "--no-session", "--assume", "arn:blah:blah"},
+		},
+		{
+			Args: []string{"shell", "one", "--no-session", "--refresh"},
 		},
 
 		// Upgrade

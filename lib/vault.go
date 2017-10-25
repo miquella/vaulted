@@ -23,19 +23,19 @@ type Vault struct {
 	SSHKeys  map[string]string `json:"ssh_keys,omitempty"`
 }
 
-func (v *Vault) CreateSession(name string) (*Session, error) {
-	return v.createSession(name, func(duration time.Duration) (*AWSCredentials, error) {
+func (v *Vault) NewSession(name string) (*Session, error) {
+	return v.newSession(name, func(duration time.Duration) (*AWSCredentials, error) {
 		return v.AWSKey.GetAWSCredentials(duration)
 	})
 }
 
-func (v *Vault) CreateSessionWithMFA(name, mfaToken string) (*Session, error) {
-	return v.createSession(name, func(duration time.Duration) (*AWSCredentials, error) {
+func (v *Vault) NewSessionWithMFA(name, mfaToken string) (*Session, error) {
+	return v.newSession(name, func(duration time.Duration) (*AWSCredentials, error) {
 		return v.AWSKey.GetAWSCredentialsWithMFA(mfaToken, duration)
 	})
 }
 
-func (v *Vault) createSession(name string, credsFunc func(duration time.Duration) (*AWSCredentials, error)) (*Session, error) {
+func (v *Vault) newSession(name string, credsFunc func(duration time.Duration) (*AWSCredentials, error)) (*Session, error) {
 	var duration time.Duration
 	if v.Duration == 0 {
 		duration = STSDurationDefault
