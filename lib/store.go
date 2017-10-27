@@ -35,12 +35,15 @@ type Store interface {
 }
 
 type store struct {
-	steward Steward
+	steward         Steward
+	keychainSteward KeychainSteward
 }
 
 func New(steward Steward) Store {
+	keychainSteward, _ := steward.(KeychainSteward)
 	return &store{
-		steward: steward,
+		steward:         steward,
+		keychainSteward: keychainSteward,
 	}
 }
 
@@ -84,6 +87,15 @@ func (s *store) OpenVault(name string) (*Vault, string, error) {
 		return nil, "", os.ErrNotExist
 	}
 
+	if s.keychainSteward != nil {
+		password, err := s.keychainSteward.GetKeychainPassword(name)
+		if err == nil {
+			if v, p, err := s.OpenVaultWithPassword(name, password); err != ErrIncorrectPassword {
+				return v, p, err
+			}
+		}
+	}
+
 	maxTries := 1
 	if getMax, ok := s.steward.(StewardMaxTries); ok {
 		maxTries = getMax.GetMaxOpenTries()
@@ -95,6 +107,9 @@ func (s *store) OpenVault(name string) (*Vault, string, error) {
 		}
 
 		if v, p, err := s.OpenVaultWithPassword(name, password); err != ErrIncorrectPassword {
+			if err == nil && s.keychainSteward != nil {
+				s.keychainSteward.SetKeychainPassword(name, password)
+			}
 			return v, p, err
 		}
 	}
@@ -157,6 +172,9 @@ func (s *store) SealVault(vault *Vault, name string) error {
 		return err
 	}
 
+	if s.keychainSteward != nil {
+		s.keychainSteward.SetKeychainPassword(name, password)
+	}
 	return s.SealVaultWithPassword(vault, name, password)
 }
 

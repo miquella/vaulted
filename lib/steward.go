@@ -11,9 +11,18 @@ const (
 	SealOperation
 )
 
+var (
+	ErrKeychainPasswordNotFound = errors.New("Keychain password not found")
+)
+
 type Steward interface {
 	GetMFAToken(name string) (string, error)
 	GetPassword(operation Operation, name string) (string, error)
+}
+
+type KeychainSteward interface {
+	GetKeychainPassword(name string) (string, error)
+	SetKeychainPassword(name, password string) error
 }
 
 type StewardMaxTries interface {
