@@ -18,11 +18,12 @@ var (
 )
 
 const (
-	CONSOLE_URL = "https://console.aws.amazon.com/console/home"
-	SIGNIN_URL  = "https://signin.aws.amazon.com/federation"
+	ConsoleURL                 = "https://console.aws.amazon.com/console/home"
+	ConsoleFederationSigninURL = "https://signin.aws.amazon.com/federation"
 
-	MinConsoleDuration = 15 * time.Minute
-	MaxConsoleDuration = 12 * time.Hour
+	ConsoleMinDuration     = 15 * time.Minute
+	ConsoleMaxDuration     = 12 * time.Hour
+	ConsoleDefaultDuration = 1 * time.Hour
 )
 
 type Console struct {
@@ -31,109 +32,166 @@ type Console struct {
 	Duration  time.Duration
 }
 
+type TokenParams struct {
+	awsKey   *vaulted.AWSKey
+	duration time.Duration
+}
+
 func (c *Console) Run(store vaulted.Store) error {
 	signinToken, err := c.getSigninToken(store)
 	if err != nil {
 		return err
 	}
 
-	// console signin
-	signinUrl, _ := url.Parse(SIGNIN_URL)
-	loginQuery := make(url.Values)
-	loginQuery.Set("Action", "login")
-	loginQuery.Set("SigninToken", signinToken)
-	loginQuery.Set("Destination", CONSOLE_URL)
-
-	signinUrl.RawQuery = loginQuery.Encode()
-	err = browser.OpenURL(signinUrl.String())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return openConsole(signinToken)
 }
 
 func (c *Console) getSigninToken(store vaulted.Store) (string, error) {
-	// Setup default values (may be overwritten by values from vault)
-	duration := 1 * time.Hour
-	var awsKey vaulted.AWSKey
-
-	// Override defaults with values from specified vault
-	if c.VaultName != "" {
-		v, _, err := store.OpenVault(c.VaultName)
-		if err != nil {
-			return "", err
-		}
-
-		duration = v.Duration
-
-		if v.AWSKey.Valid() {
-			awsKey = *v.AWSKey
-			if c.Role != "" {
-				awsKey.Role = c.Role
-			}
-		}
-	}
-
-	// If duration was provided through the command line overwrite with that
-	if c.Duration != 0 && (c.Duration < 15*time.Minute || c.Duration > 12*time.Hour) {
-		return "", ErrInvalidDuration
-	} else if c.Duration > 0 {
-		duration = c.Duration
-	}
-
-	return c.getSigninTokenFromCreds(store, awsKey, duration)
-}
-
-func (c *Console) getSigninTokenFromCreds(store vaulted.Store, awsKey vaulted.AWSKey, duration time.Duration) (string, error) {
-	// Get creds from environment if no creds loaded from vault
-	creds, err := awsKey.AWSCredentials.WithLocalDefault()
-	if err != nil && err != credentials.ErrNoValidProvidersFoundInChain {
-		return "", err
-	} else if err == credentials.ErrNoValidProvidersFoundInChain || !creds.Valid() {
-		return "", ErrNoCredentialsFound
-	}
-
-	if creds.ValidSession() {
-		return "", ErrInvalidTemporaryCredentials
-	}
-
-	duration, err = capDuration(duration)
+	params, err := c.getTokenParams(store)
 	if err != nil {
 		return "", err
 	}
 
-	// assume provided role or get a federation token
-	if awsKey.Role != "" {
-		if awsKey.MFA != "" {
-			tokenCode, tokenErr := store.Steward().GetMFAToken(c.VaultName)
-			if tokenErr != nil {
-				return "", tokenErr
-			}
-			creds, err = creds.AssumeRoleWithMFA(awsKey.MFA, tokenCode, awsKey.Role, 15*time.Minute)
-		} else {
-			creds, err = creds.AssumeRole(awsKey.Role, 15*time.Minute)
-		}
-		if err != nil {
-			return "", err
-		}
-		return creds.GetSigninToken(&duration)
+	if c.Role != "" {
+		return c.getAssumeRoleToken(store, params)
 	} else {
-		creds, err = creds.GetFederationToken(duration)
-		if err != nil {
-			return "", err
-		}
-		return creds.GetSigninToken(nil)
+		return c.getFederationToken(params)
 	}
 }
 
+func (c *Console) getTokenParams(store vaulted.Store) (TokenParams, error) {
+	vault, err := c.getVault(store)
+	if err != nil {
+		return TokenParams{}, err
+	}
+
+	awsKey := c.validateAWSKey(vault.AWSKey)
+
+	duration, err := c.chooseDuration(vault.Duration)
+	if err != nil {
+		return TokenParams{}, err
+	}
+
+	params := TokenParams{
+		awsKey:   awsKey,
+		duration: duration,
+	}
+	return params, nil
+}
+
+func (c *Console) getVault(store vaulted.Store) (*vaulted.Vault, error) {
+	vault := &vaulted.Vault{}
+	var err error
+	if c.VaultName != "" {
+		vault, _, err = store.OpenVault(c.VaultName)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return vault, nil
+}
+
+func (c *Console) validateAWSKey(awsKey *vaulted.AWSKey) *vaulted.AWSKey {
+	key := &vaulted.AWSKey{}
+
+	if awsKey != nil && awsKey.Valid() {
+		key = awsKey
+	}
+
+	if c.Role != "" {
+		key.Role = c.Role
+	}
+	return key
+}
+
+func (c *Console) chooseDuration(vaultDuration time.Duration) (time.Duration, error) {
+	duration := ConsoleDefaultDuration
+
+	if vaultDuration != 0 {
+		duration = vaultDuration
+	}
+
+	if c.Duration != 0 {
+		duration = c.Duration
+	}
+
+	return capDuration(duration)
+}
+
 func capDuration(duration time.Duration) (time.Duration, error) {
-	if duration < MinConsoleDuration {
+	if duration < ConsoleMinDuration {
 		return time.Duration(0), ErrInvalidDuration
 	}
-	if duration > MaxConsoleDuration {
-		duration = MaxConsoleDuration
+	if duration > ConsoleMaxDuration {
+		duration = ConsoleMaxDuration
 		fmt.Println("Your vault duration is greater than the max console duration.\nCurrent console session duration set to 12 hours.")
 	}
 	return duration, nil
+}
+
+func (c *Console) getAssumeRoleToken(store vaulted.Store, params TokenParams) (string, error) {
+	var err error
+	awsCreds, err := c.getCredentials(params.awsKey)
+	if err != nil {
+		return "", err
+	}
+
+	if params.awsKey.MFA != "" {
+		tokenCode, err := store.Steward().GetMFAToken(c.VaultName)
+		if err != nil {
+			return "", err
+		}
+		awsCreds, err = awsCreds.AssumeRoleWithMFA(params.awsKey.MFA, tokenCode, params.awsKey.Role, ConsoleMinDuration)
+	} else {
+		awsCreds, err = awsCreds.AssumeRole(params.awsKey.Role, ConsoleMinDuration)
+	}
+	if err != nil {
+		return "", err
+	}
+	return awsCreds.GetSigninToken(&params.duration)
+}
+
+func (c *Console) getFederationToken(params TokenParams) (string, error) {
+	awsCreds, err := c.getCredentials(params.awsKey)
+	if err != nil {
+		return "", err
+	}
+
+	awsCreds, err = awsCreds.GetFederationToken(params.duration)
+	if err != nil {
+		return "", err
+	}
+	return awsCreds.GetSigninToken(nil)
+}
+
+func (c *Console) getCredentials(awsKey *vaulted.AWSKey) (*vaulted.AWSCredentials, error) {
+	awsCreds, err := awsKey.AWSCredentials.WithLocalDefault()
+	if err != nil {
+		if err != credentials.ErrNoValidProvidersFoundInChain {
+			return nil, err
+		} else if err == credentials.ErrNoValidProvidersFoundInChain {
+			return nil, ErrNoCredentialsFound
+		}
+	}
+
+	if awsCreds.ValidSession() {
+		return nil, ErrInvalidTemporaryCredentials
+	}
+
+	return awsCreds, nil
+}
+
+func openConsole(signinToken string) error {
+	signinURL, _ := url.Parse(ConsoleFederationSigninURL)
+	loginQuery := url.Values{
+		"Action":      []string{"login"},
+		"SigninToken": []string{signinToken},
+		"Destination": []string{ConsoleURL},
+	}
+	signinURL.RawQuery = loginQuery.Encode()
+	err := browser.OpenURL(signinURL.String())
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 type parseCase struct {
@@ -126,6 +127,38 @@ var (
 		{
 			Args:    []string{"create", "--help"},
 			Command: &Help{Subcommand: "create"},
+		},
+
+		// Console
+		{
+			Args: []string{"console", "one"},
+			Command: &Console{
+				VaultName: "one",
+			},
+		},
+		{
+			Args: []string{"console", "--assume", "arn:something:or:other"},
+			Command: &Console{
+				Role: "arn:something:or:other",
+			},
+		},
+		{
+			Args: []string{"console", "--assume", "arn:something:or:other", "one"},
+			Command: &Console{
+				VaultName: "one",
+				Role:      "arn:something:or:other",
+			},
+		},
+		{
+			Args: []string{"console", "--duration", "15m", "one"},
+			Command: &Console{
+				VaultName: "one",
+				Duration:  15 * time.Minute,
+			},
+		},
+		{
+			Args:    []string{"console", "--help"},
+			Command: &Help{Subcommand: "console"},
 		},
 
 		// Copy
@@ -449,30 +482,6 @@ var (
 			Args:    []string{"-V"},
 			Command: &Version{},
 		},
-		// Console
-		{
-			Args: []string{"console", "one"},
-			Command: &Console{
-				VaultName: "one",
-			},
-		},
-		{
-			Args: []string{"console", "--assume", "arn:something:or:other"},
-			Command: &Console{
-				Role: "arn:something:or:other",
-			},
-		},
-		{
-			Args: []string{"console", "--assume", "arn:something:or:other", "one"},
-			Command: &Console{
-				VaultName: "one",
-				Role:      "arn:something:or:other",
-			},
-		},
-		{
-			Args:    []string{"console", "--help"},
-			Command: &Help{Subcommand: "console"},
-		},
 	}
 
 	badParseCases = []parseCase{
@@ -493,6 +502,17 @@ var (
 		},
 		{
 			Args: []string{"add", "one", "two"},
+		},
+
+		// Console
+		{
+			Args: []string{"console", "one", "two"},
+		},
+		{
+			Args: []string{"console", "--duration", "10m"},
+		},
+		{
+			Args: []string{"console", "--duration", "13h"},
 		},
 
 		// Copy
@@ -570,11 +590,6 @@ var (
 		// Upgrade
 		{
 			Args: []string{"upgrade", "one"},
-		},
-
-		// Console
-		{
-			Args: []string{"Console", "one", "two"},
 		},
 
 		// Misc

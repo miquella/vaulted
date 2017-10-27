@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	SIGNIN_URL       = "https://signin.aws.amazon.com/federation"
-	ALLOW_ALL_POLICY = `{
+	SigninURL      = "https://signin.aws.amazon.com/federation"
+	AllowAllPolicy = `{
 		"Version": "2012-10-17",
 		"Statement": [
 			{
@@ -70,7 +70,7 @@ func (c *AWSCredentials) GetFederationToken(duration time.Duration) (*AWSCredent
 	getFederationToken, err := stsClient.GetFederationToken(&sts.GetFederationTokenInput{
 		DurationSeconds: aws.Int64(int64(duration.Seconds())),
 		Name:            aws.String(path.Base(arn.Resource)),
-		Policy:          aws.String(ALLOW_ALL_POLICY),
+		Policy:          aws.String(AllowAllPolicy),
 	})
 	if err != nil {
 		return nil, err
@@ -221,7 +221,7 @@ func (c *AWSCredentials) GetSigninToken(duration *time.Duration) (string, error)
 	}
 	getTokenQuery.Set("Session", string(sessionJson))
 
-	signinUrl, _ := url.Parse(SIGNIN_URL)
+	signinUrl, _ := url.Parse(SigninURL)
 	signinUrl.RawQuery = getTokenQuery.Encode()
 	resp, err := http.Get(signinUrl.String())
 	if err != nil {

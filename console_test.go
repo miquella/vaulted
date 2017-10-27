@@ -16,7 +16,7 @@ func TestConsole(t *testing.T) {
 	store.Vaults["one"] = &vaulted.Vault{
 		AWSKey: &vaulted.AWSKey{},
 	}
-
+	store.Vaults["one"].Duration = ConsoleMinDuration
 	err = c.Run(store)
 	if err != ErrNoCredentialsFound {
 		t.Error("No credentials provided, should have caused an ErrNoCredentialsFound")
@@ -37,17 +37,9 @@ func TestConsole(t *testing.T) {
 		Secret: "secret",
 		Token:  "token",
 	}
+	store.Vaults["one"].Duration = ConsoleMinDuration
 	err = c.Run(store)
 	if err != ErrInvalidTemporaryCredentials {
 		t.Error("Temporary session credentials provided, should have caused an invalid temp credentials error")
-	}
-
-	c = Console{
-		VaultName: "one",
-		Duration:  10 * time.Minute,
-	}
-	err = c.Run(store)
-	if err != ErrInvalidDuration {
-		t.Error("Invalid duration provided, should have caused an ErrInvalidDuration")
 	}
 }

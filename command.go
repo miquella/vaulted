@@ -201,6 +201,9 @@ func parseConsoleArgs(args []string) (Command, error) {
 	vaultName := ""
 	assume, _ := flag.GetString("assume")
 	duration, _ := flag.GetDuration("duration")
+	if duration != 0 && (duration < ConsoleMinDuration || duration > ConsoleMaxDuration) {
+		return nil, ErrInvalidDuration
+	}
 
 	if flag.NArg() > 1 {
 		return nil, ErrTooManyArguments
