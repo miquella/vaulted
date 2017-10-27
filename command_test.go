@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/miquella/vaulted/edit"
 )
 
 type parseCase struct {
@@ -96,21 +98,21 @@ var (
 		// Add
 		{
 			Args: []string{"add", "one"},
-			Command: &Edit{
+			Command: &edit.Edit{
 				New:       true,
 				VaultName: "one",
 			},
 		},
 		{
 			Args: []string{"new", "one"},
-			Command: &Edit{
+			Command: &edit.Edit{
 				New:       true,
 				VaultName: "one",
 			},
 		},
 		{
 			Args: []string{"create", "one"},
-			Command: &Edit{
+			Command: &edit.Edit{
 				New:       true,
 				VaultName: "one",
 			},
@@ -167,7 +169,7 @@ var (
 		// Edit
 		{
 			Args: []string{"edit", "one"},
-			Command: &Edit{
+			Command: &edit.Edit{
 				VaultName: "one",
 			},
 		},

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/miquella/vaulted/edit"
 	"github.com/miquella/vaulted/lib"
 	"github.com/spf13/pflag"
 )
@@ -179,7 +180,7 @@ func parseAddArgs(args []string) (Command, error) {
 		return nil, ErrTooManyArguments
 	}
 
-	e := &Edit{}
+	e := &edit.Edit{}
 	e.New = true
 	e.VaultName = flag.Arg(0)
 	return e, nil
@@ -244,7 +245,7 @@ func parseEditArgs(args []string) (Command, error) {
 		return nil, ErrTooManyArguments
 	}
 
-	e := &Edit{}
+	e := &edit.Edit{}
 	e.VaultName = flag.Arg(0)
 	return e, nil
 }
