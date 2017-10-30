@@ -77,6 +77,9 @@ func parseArgs(args []string) (Command, error) {
 	case "add", "create", "new":
 		return parseAddArgs(commandArgs[1:])
 
+	case "console":
+		return parseConsoleArgs(commandArgs[1:])
+
 	case "cp", "copy":
 		return parseCopyArgs(commandArgs[1:])
 
@@ -183,6 +186,38 @@ func parseAddArgs(args []string) (Command, error) {
 	e.New = true
 	e.VaultName = flag.Arg(0)
 	return e, nil
+}
+
+func parseConsoleArgs(args []string) (Command, error) {
+	flag := pflag.NewFlagSet("console", pflag.ContinueOnError)
+	flag.String("assume", "", "Role to assume")
+	flag.Duration("duration", 0, "Duration (15m-12h)")
+	flag.Usage = func() {}
+	err := flag.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	vaultName := ""
+	assume, _ := flag.GetString("assume")
+	duration, _ := flag.GetDuration("duration")
+	if duration != 0 && (duration < ConsoleMinDuration || duration > ConsoleMaxDuration) {
+		return nil, ErrInvalidDuration
+	}
+
+	if flag.NArg() > 1 {
+		return nil, ErrTooManyArguments
+	}
+
+	if flag.NArg() == 1 {
+		vaultName = flag.Arg(0)
+	}
+
+	c := &Console{}
+	c.VaultName = vaultName
+	c.Role = assume
+	c.Duration = duration
+	return c, nil
 }
 
 func parseCopyArgs(args []string) (Command, error) {
