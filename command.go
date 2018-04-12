@@ -21,13 +21,23 @@ var (
 	ErrUnknownShell = errors.New("Unknown shell")
 )
 
+var (
+	HelpRequested bool
+)
+
 type Command interface {
 	Run(store vaulted.Store) error
 }
 
+func NewFlagSet(name string) *pflag.FlagSet {
+	flag := pflag.NewFlagSet(name, pflag.ContinueOnError)
+	flag.BoolVarP(&HelpRequested, "help", "h", false, "Show help man page")
+	return flag
+}
+
 func ParseArgs(args []string) (Command, error) {
 	command, err := parseArgs(args)
-	if err == pflag.ErrHelp {
+	if err == pflag.ErrHelp || HelpRequested {
 		if HelpAliases[args[0]] == "" {
 			return parseHelpArgs(nil)
 		} else {
@@ -116,8 +126,7 @@ func parseArgs(args []string) (Command, error) {
 }
 
 func spawnFlagSet() *pflag.FlagSet {
-	flag := pflag.NewFlagSet("vaulted", pflag.ContinueOnError)
-	flag.Usage = func() {}
+	flag := NewFlagSet("vaulted")
 	flag.SetInterspersed(false)
 	flag.StringP("name", "n", "", "Name of the vault to use")
 	flag.BoolP("interactive", "i", false, "Spawn interactive shell (if -n is used, but no additional arguments a provided, interactive is the default)")
@@ -164,8 +173,7 @@ func parseSpawnArgs(args []string) (Command, error) {
 }
 
 func parseAddArgs(args []string) (Command, error) {
-	flag := pflag.NewFlagSet("add", pflag.ContinueOnError)
-	flag.Usage = func() {}
+	flag := NewFlagSet("vaulted add")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -186,8 +194,7 @@ func parseAddArgs(args []string) (Command, error) {
 }
 
 func parseCopyArgs(args []string) (Command, error) {
-	flag := pflag.NewFlagSet("copy", pflag.ContinueOnError)
-	flag.Usage = func() {}
+	flag := NewFlagSet("vaulted copy")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -208,8 +215,7 @@ func parseCopyArgs(args []string) (Command, error) {
 }
 
 func parseDumpArgs(args []string) (Command, error) {
-	flag := pflag.NewFlagSet("dump", pflag.ContinueOnError)
-	flag.Usage = func() {}
+	flag := NewFlagSet("vaulted dump")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -229,8 +235,7 @@ func parseDumpArgs(args []string) (Command, error) {
 }
 
 func parseEditArgs(args []string) (Command, error) {
-	flag := pflag.NewFlagSet("edit", pflag.ContinueOnError)
-	flag.Usage = func() {}
+	flag := NewFlagSet("vaulted edit")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -250,12 +255,11 @@ func parseEditArgs(args []string) (Command, error) {
 }
 
 func parseEnvArgs(args []string) (Command, error) {
-	flag := pflag.NewFlagSet("env", pflag.ContinueOnError)
+	flag := NewFlagSet("vaulted env")
 	flag.String("format", "shell", "Specify what built in format to output variables in (shell, sh, fish, json) or a text template. Default: shell")
 	flag.String("assume", "", "Role to assume")
 	flag.Bool("no-session", false, "Disable use of temporary credentials")
 	flag.Bool("refresh", false, "Start a new session with new temporary credentials and a refreshed expiration")
-	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -314,8 +318,7 @@ func parseHelpArgs(args []string) (Command, error) {
 }
 
 func parseListArgs(args []string) (Command, error) {
-	flag := pflag.NewFlagSet("list", pflag.ContinueOnError)
-	flag.Usage = func() {}
+	flag := NewFlagSet("vaulted list")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -329,8 +332,7 @@ func parseListArgs(args []string) (Command, error) {
 }
 
 func parseLoadArgs(args []string) (Command, error) {
-	flag := pflag.NewFlagSet("load", pflag.ContinueOnError)
-	flag.Usage = func() {}
+	flag := NewFlagSet("vaulted load")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -350,8 +352,7 @@ func parseLoadArgs(args []string) (Command, error) {
 }
 
 func parseRemoveArgs(args []string) (Command, error) {
-	flag := pflag.NewFlagSet("remove", pflag.ContinueOnError)
-	flag.Usage = func() {}
+	flag := NewFlagSet("vaulted remove")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -367,11 +368,10 @@ func parseRemoveArgs(args []string) (Command, error) {
 }
 
 func parseShellArgs(args []string) (Command, error) {
-	flag := pflag.NewFlagSet("shell", pflag.ContinueOnError)
+	flag := NewFlagSet("vaulted shell")
 	flag.String("assume", "", "Role to assume")
 	flag.Bool("no-session", false, "Disable use of temporary credentials")
 	flag.Bool("refresh", false, "Start a new session with new temporary credentials and a refreshed expiration")
-	flag.Usage = func() {}
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -412,8 +412,7 @@ func parseShellArgs(args []string) (Command, error) {
 }
 
 func parseUpgradeArgs(args []string) (Command, error) {
-	flag := pflag.NewFlagSet("upgrade", pflag.ContinueOnError)
-	flag.Usage = func() {}
+	flag := NewFlagSet("vaulted upgrade")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
