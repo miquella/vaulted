@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -67,21 +68,21 @@ func (c *AWSCredentials) GetSessionTokenWithMFA(serialNumber, token string, dura
 	return AWSCredentialsFromSTSCredentials(getSessionToken.Credentials), nil
 }
 
-func (c *AWSCredentials) GetCallerIdentity() (*ARN, error) {
+func (c *AWSCredentials) GetCallerIdentity() (arn.ARN, error) {
 	stsClient, err := c.stsClient()
 	if err != nil {
-		return nil, err
+		return arn.ARN{}, err
 	}
 
 	callerIdentity, err := stsClient.GetCallerIdentity(nil)
 
 	if err == nil {
-		arn, err := ParseARN(*callerIdentity.Arn)
+		arn, err := arn.Parse(*callerIdentity.Arn)
 		if err == nil {
 			return arn, nil
 		}
 	}
-	return nil, err
+	return arn.ARN{}, err
 }
 
 func (c *AWSCredentials) AssumeRole(arn string, duration time.Duration) (*AWSCredentials, error) {
@@ -127,9 +128,9 @@ func roleSessionName(stsClient *sts.STS) string {
 
 	callerIdentity, err := stsClient.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 	if err == nil {
-		arn, err := ParseARN(*callerIdentity.Arn)
+		arn, err := arn.Parse(*callerIdentity.Arn)
 		if err == nil {
-			roleSessionName = fmt.Sprintf("%s@%s", path.Base(arn.Resource), arn.AccountId)
+			roleSessionName = fmt.Sprintf("%s@%s", path.Base(arn.Resource), arn.AccountID)
 		}
 	}
 

@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
@@ -23,7 +24,7 @@ type Session struct {
 	SSHKeys    map[string]string `json:"ssh_keys,omitempty"`
 }
 
-func (e *Session) Assume(providedArn string) (*Session, error) {
+func (e *Session) Assume(roleArn string) (*Session, error) {
 	expiration := e.Expiration
 	maxExpiration := time.Now().Add(time.Hour).Truncate(time.Second)
 	if expiration.After(maxExpiration) {
@@ -34,10 +35,10 @@ func (e *Session) Assume(providedArn string) (*Session, error) {
 
 	var creds *AWSCredentials
 
-	selectedArn := providedArn
-	arnStruct, err := ParseARN(providedArn)
+	selectedRoleArn := roleArn
+	parsedArn, err := arn.Parse(roleArn)
 	if err == nil {
-		creds, err = e.AWSCreds.AssumeRole(arnStruct.String(), duration)
+		creds, err = e.AWSCreds.AssumeRole(parsedArn.String(), duration)
 		if err != nil {
 			return nil, err
 		}
@@ -48,25 +49,24 @@ func (e *Session) Assume(providedArn string) (*Session, error) {
 			return nil, err
 		}
 
-		roleArn := &ARN{
+		fullRoleArn := arn.ARN{
 			Partition: identityArn.Partition,
 			Service:   "iam",
 			Region:    "",
-			AccountId: identityArn.AccountId,
-			Resource:  "role/" + providedArn,
+			AccountID: identityArn.AccountID,
+			Resource:  "role/" + roleArn,
 		}
 
-		roleArnString := roleArn.String()
-		creds, err = e.AWSCreds.AssumeRole(roleArnString, duration)
+		selectedRoleArn = fullRoleArn.String()
+		creds, err = e.AWSCreds.AssumeRole(selectedRoleArn, duration)
 		if err != nil {
-			return nil, fmt.Errorf("Error assuming role '%s' which was interpreted as '%s'\nError: %v", providedArn, roleArnString, err)
+			return nil, fmt.Errorf("Error assuming role '%s' which was interpreted as '%s'\nError: %v", roleArn, selectedRoleArn, err)
 		}
-		selectedArn = roleArnString
 	}
 
 	session := &Session{
 		Name:       e.Name,
-		Role:       selectedArn,
+		Role:       selectedRoleArn,
 		Expiration: expiration,
 		AWSCreds:   creds,
 		Vars:       make(map[string]string),
@@ -204,12 +204,12 @@ func (e *Session) Variables() *Variables {
 	if e.Role != "" {
 		vars.Set["VAULTED_ENV_ROLE_ARN"] = e.Role
 
-		parts := strings.SplitN(e.Role, ":", 6)
-		if len(parts) == 6 {
-			parts[5] = strings.TrimPrefix(parts[5], "role")
-			vars.Set["VAULTED_ENV_ROLE_ACCOUNT_ID"] = parts[4]
-			vars.Set["VAULTED_ENV_ROLE_NAME"] = path.Base(parts[5])
-			vars.Set["VAULTED_ENV_ROLE_PATH"] = path.Dir(parts[5])
+		roleArn, err := arn.Parse(e.Role)
+		if err == nil {
+			resource := strings.TrimPrefix(roleArn.Resource, "role")
+			vars.Set["VAULTED_ENV_ROLE_ACCOUNT_ID"] = roleArn.AccountID
+			vars.Set["VAULTED_ENV_ROLE_NAME"] = path.Base(resource)
+			vars.Set["VAULTED_ENV_ROLE_PATH"] = path.Dir(resource)
 		}
 	}
 
