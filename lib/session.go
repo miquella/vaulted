@@ -206,11 +206,11 @@ func (e *Session) Variables() *Variables {
 
 		roleArn, err := arn.Parse(e.Role)
 		if err == nil {
-			resource := strings.TrimPrefix(roleArn.Resource, "role")
+			resource := strings.TrimPrefix(roleArn.Resource, "role/")
 			vars.Set["VAULTED_ENV_ROLE_PARTITION"] = roleArn.Partition
 			vars.Set["VAULTED_ENV_ROLE_ACCOUNT_ID"] = roleArn.AccountID
 			vars.Set["VAULTED_ENV_ROLE_NAME"] = path.Base(resource)
-			vars.Set["VAULTED_ENV_ROLE_PATH"] = path.Dir(resource)
+			vars.Set["VAULTED_ENV_ROLE_PATH"] = fmt.Sprintf("/%s/", path.Dir(resource))
 		}
 	}
 
