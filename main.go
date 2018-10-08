@@ -25,12 +25,6 @@ var (
 	ErrNoError           = errors.New("")
 	ErrFileNotExist      = ErrorWithExitCode{os.ErrNotExist, EX_USAGE_ERROR}
 	ErrNoPasswordEntered = ErrorWithExitCode{errors.New("Could not get password"), EX_UNAVAILABLE}
-
-	vaultedErrMap = map[error]ErrorWithExitCode{
-		vaulted.ErrIncorrectPassword:       ErrorWithExitCode{vaulted.ErrIncorrectPassword, EX_TEMPORARY_ERROR},
-		vaulted.ErrInvalidKeyConfig:        ErrorWithExitCode{vaulted.ErrInvalidKeyConfig, EX_DATA_ERROR},
-		vaulted.ErrInvalidEncryptionConfig: ErrorWithExitCode{vaulted.ErrInvalidEncryptionConfig, EX_DATA_ERROR},
-	}
 )
 
 func main() {
@@ -49,10 +43,7 @@ func main() {
 	}
 
 	if err != nil {
-		if _, exists := vaultedErrMap[err]; exists {
-			err = vaultedErrMap[err]
-		}
-
+		err = mapErrorWithExitCode(err)
 		exiterr, ok := err.(ErrorWithExitCode)
 		if !ok || exiterr.error != ErrNoError {
 			fmt.Fprintln(os.Stderr, err)
@@ -62,5 +53,18 @@ func main() {
 		} else {
 			os.Exit(1)
 		}
+	}
+}
+
+func mapErrorWithExitCode(err error) error {
+	switch err {
+	case vaulted.ErrIncorrectPassword:
+		return ErrorWithExitCode{vaulted.ErrIncorrectPassword, EX_TEMPORARY_ERROR}
+	case vaulted.ErrInvalidKeyConfig:
+		return ErrorWithExitCode{vaulted.ErrInvalidKeyConfig, EX_DATA_ERROR}
+	case vaulted.ErrInvalidEncryptionConfig:
+		return ErrorWithExitCode{vaulted.ErrInvalidEncryptionConfig, EX_DATA_ERROR}
+	default:
+		return err
 	}
 }
