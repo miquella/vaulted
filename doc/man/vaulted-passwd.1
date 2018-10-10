@@ -1,0 +1,20 @@
+.TH vaulted\-passwd 1
+.SH NAME
+.PP
+vaulted passwd \- changes the password of a vault
+.SH SYNOPSIS
+.PP
+\fB\fCvaulted passwd\fR \fIname\fP
+.PP
+\fB\fCvaulted password\fR \fIname\fP
+.SH DESCRIPTION
+.PP
+Content in the \fIname\fP vault is untouched, only the password is changed.
+.PP
+If the \fB\fCVAULTED_PASSWORD\fR environment variable is set, it will be used as the
+current password for \fIname\fP, otherwise the user will be prompted for the
+password.
+.PP
+If the \fB\fCVAULTED_NEW_PASSWORD\fR environment variable is set, it will be used as
+the new password for \fIname\fP, otherwise the user will be prompted for the
+password.

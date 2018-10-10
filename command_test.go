@@ -280,6 +280,14 @@ var (
 			Command: &Help{Subcommand: "load"},
 		},
 		{
+			Args:    []string{"help", "passwd"},
+			Command: &Help{Subcommand: "passwd"},
+		},
+		{
+			Args:    []string{"help", "password"},
+			Command: &Help{Subcommand: "password"},
+		},
+		{
 			Args:    []string{"help", "rm"},
 			Command: &Help{Subcommand: "rm"},
 		},
@@ -354,6 +362,30 @@ var (
 		{
 			Args:    []string{"load", "--help"},
 			Command: &Help{Subcommand: "load"},
+		},
+
+		// Passwd
+		{
+			Args: []string{"passwd", "one"},
+			Command: &Copy{
+				OldVaultName: "one",
+				NewVaultName: "one",
+			},
+		},
+		{
+			Args: []string{"password", "one"},
+			Command: &Copy{
+				OldVaultName: "one",
+				NewVaultName: "one",
+			},
+		},
+		{
+			Args:    []string{"passwd", "--help"},
+			Command: &Help{Subcommand: "passwd"},
+		},
+		{
+			Args:    []string{"password", "--help"},
+			Command: &Help{Subcommand: "password"},
 		},
 
 		// Remove
@@ -554,6 +586,20 @@ var (
 		},
 		{
 			Args: []string{"load", "one", "two"},
+		},
+
+		// Passwd
+		{
+			Args: []string{"passwd"},
+		},
+		{
+			Args: []string{"password"},
+		},
+		{
+			Args: []string{"passwd", "one", "two"},
+		},
+		{
+			Args: []string{"password", "one", "two"},
 		},
 
 		// Remove

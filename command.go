@@ -108,6 +108,9 @@ func parseArgs(args []string) (Command, error) {
 	case "load":
 		return parseLoadArgs(commandArgs[1:])
 
+	case "passwd", "password":
+		return parsePasswdArgs(commandArgs[1:])
+
 	case "rm", "delete", "remove":
 		return parseRemoveArgs(commandArgs[1:])
 
@@ -349,6 +352,27 @@ func parseLoadArgs(args []string) (Command, error) {
 	l := &Load{}
 	l.VaultName = flag.Arg(0)
 	return l, nil
+}
+
+func parsePasswdArgs(args []string) (Command, error) {
+	flag := NewFlagSet("vaulted passwd")
+	err := flag.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	if flag.NArg() < 1 {
+		return nil, ErrNotEnoughArguments
+	}
+
+	if flag.NArg() > 1 {
+		return nil, ErrTooManyArguments
+	}
+
+	c := &Copy{}
+	c.OldVaultName = flag.Arg(0)
+	c.NewVaultName = flag.Arg(0)
+	return c, nil
 }
 
 func parseRemoveArgs(args []string) (Command, error) {
