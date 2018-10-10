@@ -13,25 +13,31 @@ import (
 )
 
 type AWSCredentials struct {
-	ID     string `json:"id"`
-	Secret string `json:"secret"`
-	Token  string `json:"token,omitempty"`
+	ID         string     `json:"id"`
+	Secret     string     `json:"secret"`
+	Token      string     `json:"token,omitempty"`
+	Expiration *time.Time `json:"expiration,omitempty"`
 }
 
 func AWSCredentialsFromSTSCredentials(creds *sts.Credentials) *AWSCredentials {
 	return &AWSCredentials{
-		ID:     *creds.AccessKeyId,
-		Secret: *creds.SecretAccessKey,
-		Token:  *creds.SessionToken,
+		ID:         *creds.AccessKeyId,
+		Secret:     *creds.SecretAccessKey,
+		Token:      *creds.SessionToken,
+		Expiration: creds.Expiration,
 	}
 }
 
 func (c *AWSCredentials) Valid() bool {
-	return c != nil && c.ID != "" && c.Secret != ""
+	return c != nil && c.ID != "" && c.Secret != "" && !c.Expired()
 }
 
 func (c *AWSCredentials) ValidSession() bool {
 	return c.Valid() && c.Token != ""
+}
+
+func (c *AWSCredentials) Expired() bool {
+	return c.Expiration != nil && c.Expiration.After(time.Now())
 }
 
 func (c *AWSCredentials) GetSessionToken(duration time.Duration) (*AWSCredentials, error) {

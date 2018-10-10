@@ -67,7 +67,7 @@ func (e *Session) Assume(roleArn string) (*Session, error) {
 	session := &Session{
 		Name:       e.Name,
 		Role:       selectedRoleArn,
-		Expiration: expiration,
+		Expiration: *creds.Expiration,
 		AWSCreds:   creds,
 		Vars:       make(map[string]string),
 		SSHKeys:    make(map[string]string),
