@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"os"
 	"time"
@@ -74,7 +75,14 @@ type TestStore struct {
 }
 
 func (ts TestStore) GetPassword(operation vaulted.Operation, name string) (string, error) {
-	return "prompted password", nil
+	switch operation {
+	case vaulted.OpenOperation:
+		return "prompted open password", nil
+	case vaulted.SealOperation:
+		return "prompted seal password", nil
+	default:
+		return "", errors.New("Unknown operation")
+	}
 }
 
 func (ts TestStore) GetMFAToken(name string) (string, error) {

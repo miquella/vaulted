@@ -46,6 +46,9 @@ COMMANDS
 `ls` / `list`
   Lists all vaults. See vaulted-ls(1).
 
+`passwd` / `password`
+  Changes the password for an existing vault. See vaulted-passwd(1).
+
 `rm` / `delete` / `remove`
   Removes existing vaults. See vaulted-rm(1).
 
