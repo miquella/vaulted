@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	DefaultSessionName = "VaultedSession"
+	DefaultRoleDuration = time.Hour
+	DefaultSessionName  = "VaultedSession"
+	STSDurationDefault  = time.Hour
 )
-
-var STSDurationDefault = time.Hour
 
 var (
 	ErrInvalidCommand = errors.New("Invalid command")
@@ -73,6 +73,7 @@ func (v *Vault) newSession(name string, credsFunc func(duration time.Duration) (
 			return nil, err
 		}
 		s.Role = v.AWSKey.Role
+		s.RoleDuration = v.AWSKey.RoleDuration
 
 		expiration = s.AWSCreds.Expiration
 	}

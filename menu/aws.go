@@ -2,6 +2,7 @@ package menu
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -82,8 +83,27 @@ func (m *AWSMenu) Handler() error {
 			if m.Vault.AWSKey != nil {
 				var awsRole string
 				awsRole, err = interaction.ReadValue("Role ARN: ")
+
+				var durString string
 				if err == nil {
+					durString, err = interaction.ReadValue("Role duration (e.g. 15m or 2h): ")
+				}
+
+				if err == nil {
+					roleDuration, roleDurErr := time.ParseDuration(durString)
+					if roleDurErr != nil {
+						color.Red("%s", roleDurErr)
+						continue
+					}
+					if roleDuration < 15*time.Minute {
+						color.Red("Role duration must be at least 15 minutes")
+						continue
+					} else if roleDuration > 12*time.Hour {
+						warningColor.Println("Warning: AWS limits role durations to no more than 12 hours.")
+						warningColor.Println("         You may experience errors attempting to assume a role for this duration.")
+					}
 					m.Vault.AWSKey.Role = awsRole
+					m.Vault.AWSKey.RoleDuration = &roleDuration
 				}
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
@@ -165,12 +185,29 @@ func (m *AWSMenu) Printer() {
 			fmt.Printf("%s\n", m.Vault.AWSKey.MFA)
 		}
 		if m.Vault.AWSKey.Role != "" {
+			var roleDuration time.Duration
+			if m.Vault.AWSKey.RoleDuration == nil {
+				roleDuration = vaulted.DefaultRoleDuration
+			} else {
+				roleDuration = *m.Vault.AWSKey.RoleDuration
+			}
 			green.Printf("  Role: ")
-			fmt.Printf("%s\n", m.Vault.AWSKey.Role)
+			fmt.Printf("%s (%s)\n", m.Vault.AWSKey.Role, m.formatDuration(roleDuration))
 		}
 		green.Printf("  Substitute with temporary credentials: ")
 		fmt.Printf("%t\n", !m.Vault.AWSKey.ForgoTempCredGeneration)
 	} else {
 		fmt.Println("  [Empty]")
 	}
+}
+
+func (m *AWSMenu) formatDuration(duration time.Duration) string {
+	dur := duration.String()
+	if strings.HasSuffix(dur, "m0s") {
+		dur = dur[:len(dur)-2]
+	}
+	if strings.HasSuffix(dur, "h0m") {
+		dur = dur[:len(dur)-2]
+	}
+	return dur
 }
