@@ -239,13 +239,6 @@ func (s *store) CreateSession(name string) (*Session, string, error) {
 		return nil, "", err
 	}
 
-	if v.AWSKey != nil && v.AWSKey.Role != "" {
-		session, err = session.Assume(v.AWSKey.Role)
-		if err != nil {
-			return nil, "", err
-		}
-	}
-
 	return session, "", nil
 }
 
@@ -258,13 +251,6 @@ func (s *store) GetSession(name string) (*Session, string, error) {
 	session, err := s.getSession(v, name, password)
 	if err != nil {
 		return nil, "", err
-	}
-
-	if v.AWSKey != nil && v.AWSKey.Role != "" {
-		session, err = session.Assume(v.AWSKey.Role)
-		if err != nil {
-			return nil, "", err
-		}
 	}
 
 	return session, "", nil

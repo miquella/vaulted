@@ -138,11 +138,17 @@ func (e *Env) getSession(store vaulted.Store) (*vaulted.Session, error) {
 				v.AWSKey.ForgoTempCredGeneration = true
 			}
 			session, err = v.NewSession(e.VaultName)
-			// get specific session
-		} else if e.Refresh {
-			session, _, err = store.CreateSession(e.VaultName)
 		} else {
-			session, _, err = store.GetSession(e.VaultName)
+			if e.Refresh {
+				session, _, err = store.CreateSession(e.VaultName)
+			} else {
+				session, _, err = store.GetSession(e.VaultName)
+			}
+			if err != nil {
+				return nil, err
+			}
+
+			session, err = session.AssumeSessionRole()
 		}
 		if err != nil {
 			return nil, err
@@ -150,7 +156,7 @@ func (e *Env) getSession(store vaulted.Store) (*vaulted.Session, error) {
 	}
 
 	if e.Role != "" {
-		return session.Assume(e.Role)
+		return session.AssumeRole(e.Role)
 	}
 
 	return session, nil
