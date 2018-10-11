@@ -72,6 +72,7 @@ func (v *Vault) newSession(name string, credsFunc func(duration time.Duration) (
 		if err != nil {
 			return nil, err
 		}
+		s.Role = v.AWSKey.Role
 
 		expiration = s.AWSCreds.Expiration
 	}

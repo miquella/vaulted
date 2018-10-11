@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	SessionVersion = ""
+	SessionVersion = "2"
 )
 
 type Session struct {
@@ -25,14 +25,26 @@ type Session struct {
 	Name       string    `json:"name"`
 	Expiration time.Time `json:"expiration"`
 
-	Role string `json:"role,omitempty"`
+	ActiveRole string `json:"active_role,omitempty"`
 
 	AWSCreds *AWSCredentials   `json:"aws_creds,omitempty"`
+	Role     string            `json:"role,omitempty"`
 	Vars     map[string]string `json:"vars,omitempty"`
 	SSHKeys  map[string]string `json:"ssh_keys,omitempty"`
 }
 
-func (e *Session) Assume(roleArn string) (*Session, error) {
+func (e *Session) AssumeSessionRole() (*Session, error) {
+	if e.Role == "" {
+		return e, nil
+	}
+
+	role := e.Role
+	e.Role = ""
+
+	return e.AssumeRole(role)
+}
+
+func (e *Session) AssumeRole(roleArn string) (*Session, error) {
 	expiration := e.Expiration
 	maxExpiration := time.Now().Add(time.Hour).Truncate(time.Second)
 	if expiration.After(maxExpiration) {
@@ -78,7 +90,7 @@ func (e *Session) Assume(roleArn string) (*Session, error) {
 		Name:       e.Name,
 		Expiration: *creds.Expiration,
 
-		Role: selectedRoleArn,
+		ActiveRole: selectedRoleArn,
 
 		AWSCreds: creds,
 		Vars:     make(map[string]string),
@@ -213,10 +225,10 @@ func (e *Session) Variables() *Variables {
 	vars.Set["VAULTED_ENV"] = e.Name
 	vars.Set["VAULTED_ENV_EXPIRATION"] = e.Expiration.UTC().Format(time.RFC3339)
 
-	if e.Role != "" {
-		vars.Set["VAULTED_ENV_ROLE_ARN"] = e.Role
+	if e.ActiveRole != "" {
+		vars.Set["VAULTED_ENV_ROLE_ARN"] = e.ActiveRole
 
-		roleArn, err := arn.Parse(e.Role)
+		roleArn, err := arn.Parse(e.ActiveRole)
 		if err == nil {
 			resource := strings.TrimPrefix(roleArn.Resource, "role/")
 			vars.Set["VAULTED_ENV_ROLE_PARTITION"] = roleArn.Partition
