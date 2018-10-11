@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/miquella/vaulted/edit"
 	"github.com/miquella/vaulted/lib"
@@ -265,6 +266,7 @@ func parseEnvArgs(args []string) (Command, error) {
 	flag := NewFlagSet("vaulted env")
 	flag.String("format", "shell", "Specify what built in format to output variables in (shell, sh, fish, json) or a text template. Default: shell")
 	flag.String("assume", "", "Role to assume")
+	flag.String("assume-duration", "", "Duration to assume role (e.g. 15m or 2h)")
 	flag.Bool("no-session", false, "Disable use of temporary credentials")
 	flag.Bool("refresh", false, "Start a new session with new temporary credentials and a refreshed expiration")
 	err := flag.Parse(args)
@@ -278,6 +280,7 @@ func parseEnvArgs(args []string) (Command, error) {
 	e.Role, _ = flag.GetString("assume")
 	e.NoSession, _ = flag.GetBool("no-session")
 	e.Refresh, _ = flag.GetBool("refresh")
+	assumeDuration, _ := flag.GetString("assume-duration")
 
 	if flag.NArg() > 1 {
 		return nil, ErrTooManyArguments
@@ -295,6 +298,15 @@ func parseEnvArgs(args []string) (Command, error) {
 		} else if e.Refresh != false {
 			return nil, errors.New("Refusing to output variables. Because --refresh refreshes session credentials it cannot be combined with --no-session.")
 		}
+	}
+
+	if assumeDuration != "" {
+		var parsedDuration time.Duration
+		parsedDuration, err = time.ParseDuration(assumeDuration)
+		if err != nil {
+			return nil, err
+		}
+		e.RoleDuration = &parsedDuration
 	}
 
 	shell, err := detectShell()
@@ -458,6 +470,7 @@ func parseRemoveArgs(args []string) (Command, error) {
 func parseShellArgs(args []string) (Command, error) {
 	flag := NewFlagSet("vaulted shell")
 	flag.String("assume", "", "Role to assume")
+	flag.String("assume-duration", "", "Duration to assume role (e.g. 15m or 2h)")
 	flag.Bool("no-session", false, "Disable use of temporary credentials")
 	flag.Bool("refresh", false, "Start a new session with new temporary credentials and a refreshed expiration")
 	err := flag.Parse(args)
@@ -472,6 +485,7 @@ func parseShellArgs(args []string) (Command, error) {
 	s.Refresh, _ = flag.GetBool("refresh")
 	s.Command = interactiveShellCommand()
 	s.DisplayStatus = true
+	assumeDuration, _ := flag.GetString("assume-duration")
 
 	if flag.NArg() > 1 {
 		return nil, ErrTooManyArguments
@@ -483,6 +497,15 @@ func parseShellArgs(args []string) (Command, error) {
 		} else if s.Refresh != false {
 			return nil, errors.New("Refusing to output variables. Because --refresh refreshes session credentials it cannot be combined with --no-session.")
 		}
+	}
+
+	if assumeDuration != "" {
+		var parsedDuration time.Duration
+		parsedDuration, err = time.ParseDuration(assumeDuration)
+		if err != nil {
+			return nil, err
+		}
+		s.RoleDuration = &parsedDuration
 	}
 
 	if flag.NArg() == 1 {

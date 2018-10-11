@@ -11,6 +11,7 @@ SYNOPSIS
 
 `vaulted env` *name* [*OPTIONS*]  
 `vaulted env --assume` *arn* [*OPTIONS*]  
+`vaulted env --assume-duration` *duration* [*OPTIONS*]  
 `vaulted env --no-session` *name* [*OPTIONS*]
 
 DESCRIPTION
@@ -37,6 +38,14 @@ OPTIONS
   Role assumption may be performed without specifying a vault to spawn from.
   When invoked this way, credentials are sourced from default locations (e.g.
   environment, configuration files, instance profile, etc.).
+
+`--assume-duration` *duration*
+  Specifies the duration that a role should be assumed for (e.g. 30m or 2h)
+  See **ASSUMING A ROLE** below for details on how Vaulted assumes roles.
+
+  This can apply to the role specified in a vault's configuration (via
+  `vaulted edit`) or a role specified via the `--assume` option. If multiple
+  roles are assumed, this will be applied to the final assumed role.
 
 `--no-session`
   Disables the generation of temporary credentials and role assumption. The

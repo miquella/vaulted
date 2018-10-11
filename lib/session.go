@@ -27,10 +27,11 @@ type Session struct {
 
 	ActiveRole string `json:"active_role,omitempty"`
 
-	AWSCreds *AWSCredentials   `json:"aws_creds,omitempty"`
-	Role     string            `json:"role,omitempty"`
-	Vars     map[string]string `json:"vars,omitempty"`
-	SSHKeys  map[string]string `json:"ssh_keys,omitempty"`
+	AWSCreds     *AWSCredentials   `json:"aws_creds,omitempty"`
+	Role         string            `json:"role,omitempty"`
+	RoleDuration *time.Duration    `json:"role_duration,omitempty"`
+	Vars         map[string]string `json:"vars,omitempty"`
+	SSHKeys      map[string]string `json:"ssh_keys,omitempty"`
 }
 
 func (e *Session) AssumeSessionRole() (*Session, error) {
@@ -39,26 +40,28 @@ func (e *Session) AssumeSessionRole() (*Session, error) {
 	}
 
 	role := e.Role
-	e.Role = ""
+	roleDuration := e.RoleDuration
 
-	return e.AssumeRole(role)
+	e.Role = ""
+	e.RoleDuration = nil
+
+	return e.AssumeRole(role, roleDuration)
 }
 
-func (e *Session) AssumeRole(roleArn string) (*Session, error) {
-	expiration := e.Expiration
-	maxExpiration := time.Now().Add(time.Hour).Truncate(time.Second)
-	if expiration.After(maxExpiration) {
-		expiration = maxExpiration
-	}
-
-	duration := expiration.Sub(time.Now())
-
+func (e *Session) AssumeRole(roleArn string, duration *time.Duration) (*Session, error) {
 	var creds *AWSCredentials
+	var roleDuration time.Duration
+
+	if duration == nil {
+		roleDuration = time.Hour
+	} else {
+		roleDuration = *duration
+	}
 
 	selectedRoleArn := roleArn
 	parsedArn, err := arn.Parse(roleArn)
 	if err == nil {
-		creds, err = e.AWSCreds.AssumeRole(parsedArn.String(), duration)
+		creds, err = e.AWSCreds.AssumeRole(parsedArn.String(), roleDuration)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +81,7 @@ func (e *Session) AssumeRole(roleArn string) (*Session, error) {
 		}
 
 		selectedRoleArn = fullRoleArn.String()
-		creds, err = e.AWSCreds.AssumeRole(selectedRoleArn, duration)
+		creds, err = e.AWSCreds.AssumeRole(selectedRoleArn, roleDuration)
 		if err != nil {
 			return nil, fmt.Errorf("Error assuming role '%s' which was interpreted as '%s'\nError: %v", roleArn, selectedRoleArn, err)
 		}
