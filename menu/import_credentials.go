@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/defaults"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/fatih/color"
 	"github.com/miquella/vaulted/lib"
 )
@@ -15,7 +15,14 @@ type ImportCredentialsMenu struct {
 }
 
 func (m *ImportCredentialsMenu) Handler() error {
-	creds, err := defaults.Get().Config.Credentials.Get()
+	credsChain := credentials.NewCredentials(&credentials.ChainProvider{
+		Providers: []credentials.Provider{
+			&credentials.EnvProvider{},
+			&credentials.SharedCredentialsProvider{},
+		},
+	})
+
+	creds, err := credsChain.Get()
 	if err != nil {
 		return nil
 	}
