@@ -11,15 +11,12 @@ import (
 )
 
 type Env struct {
-	VaultName string
-	Role      string
-	NoSession bool
+	SessionOptions
 
 	DetectedShell string
 	Format        string
 	Command       string
 	Interactive   bool
-	Refresh       bool
 }
 
 type templateVals struct {
@@ -77,7 +74,7 @@ var templateFuncMap = template.FuncMap{
 }
 
 func (e *Env) Run(store vaulted.Store) error {
-	session, err := e.getSession(store)
+	session, err := GetSessionWithOptions(store, &e.SessionOptions)
 	if err != nil {
 		return err
 	}
@@ -119,45 +116,4 @@ func (e *Env) Run(store vaulted.Store) error {
 		return ErrorWithExitCode{err, 64}
 	}
 	return tmpl.Execute(os.Stdout, vals)
-}
-
-func (e *Env) getSession(store vaulted.Store) (*vaulted.Session, error) {
-	var err error
-
-	// default session
-	session := DefaultSession()
-
-	if e.VaultName != "" {
-		if e.NoSession {
-			v, _, err := store.OpenVault(e.VaultName)
-			if err != nil {
-				return nil, err
-			}
-
-			if v.AWSKey != nil {
-				v.AWSKey.ForgoTempCredGeneration = true
-			}
-			session, err = v.NewSession(e.VaultName)
-		} else {
-			if e.Refresh {
-				session, _, err = store.CreateSession(e.VaultName)
-			} else {
-				session, _, err = store.GetSession(e.VaultName)
-			}
-			if err != nil {
-				return nil, err
-			}
-
-			session, err = session.AssumeSessionRole()
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if e.Role != "" {
-		return session.AssumeRole(e.Role)
-	}
-
-	return session, nil
 }

@@ -18,8 +18,10 @@ func TestSpawn(t *testing.T) {
 
 	CaptureStdout(func() {
 		s := Spawn{
-			VaultName: "one",
-			Command:   []string{"go", "version"},
+			SessionOptions: SessionOptions{
+				VaultName: "one",
+			},
+			Command: []string{"go", "version"},
 		}
 		err := s.Run(store)
 		if err != nil {
@@ -29,10 +31,12 @@ func TestSpawn(t *testing.T) {
 
 	output := CaptureStdout(func() {
 		s := Spawn{
-			VaultName:     "one",
+			SessionOptions: SessionOptions{
+				VaultName: "one",
+				Refresh:   true,
+			},
 			Command:       []string{"go", "env"},
 			DisplayStatus: true,
-			Refresh:       true,
 		}
 		err := s.Run(store)
 		if err != nil {
