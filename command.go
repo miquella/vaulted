@@ -100,6 +100,9 @@ func parseArgs(args []string) (Command, error) {
 	case "env":
 		return parseEnvArgs(commandArgs[1:])
 
+	case "exec":
+		return parseExecArgs(commandArgs[1:])
+
 	case "help":
 		return parseHelpArgs(commandArgs[1:])
 
@@ -311,6 +314,66 @@ func parseEnvArgs(args []string) (Command, error) {
 	}
 
 	return e, nil
+}
+
+func parseExecArgs(args []string) (Command, error) {
+	flag := NewFlagSet("vaulted exec")
+	flag.String("assume", "", "Role to assume")
+	flag.Bool("no-session", false, "Disable use of temporary credentials")
+	flag.Bool("refresh", false, "Start a new session with new temporary credentials and a refreshed expiration")
+	err := flag.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	s := &Spawn{}
+	s.VaultName = ""
+	s.Role, _ = flag.GetString("assume")
+	s.NoSession, _ = flag.GetBool("no-session")
+	s.Refresh, _ = flag.GetBool("refresh")
+
+	if flag.NArg() == 0 {
+		return nil, ErrNotEnoughArguments
+	}
+
+	vaultArgs := []string{}
+	dashArgs := []string{}
+	if flag.ArgsLenAtDash() == -1 {
+		vaultArgs = flag.Args()
+	} else {
+		vaultArgs = flag.Args()[:flag.ArgsLenAtDash()]
+		dashArgs = flag.Args()[flag.ArgsLenAtDash():]
+	}
+
+	if len(dashArgs) == 0 {
+		if len(vaultArgs) > 1 {
+			s.VaultName = vaultArgs[0]
+			s.Command = vaultArgs[1:]
+		} else {
+			return nil, errors.New("Refusing to exec without a comamand specified")
+		}
+	} else if len(vaultArgs) == 0 {
+		if s.Role != "" {
+			s.Command = dashArgs
+		} else {
+			return nil, errors.New("Refusing to exec without vault name or --assume provided")
+		}
+	} else if len(vaultArgs) == 1 {
+		s.VaultName = vaultArgs[0]
+		s.Command = dashArgs
+	} else {
+		return nil, ErrTooManyArguments
+	}
+
+	if s.NoSession != false {
+		if s.Role != "" {
+			return nil, errors.New("Refusing to exec. Because --assume generates session credentials it cannot be combined with --no-session.")
+		} else if s.Refresh != false {
+			return nil, errors.New("Refusing to exec. Because --refresh refreshes session credentials it cannot be combined with --no-session.")
+		}
+	}
+
+	return s, nil
 }
 
 func parseHelpArgs(args []string) (Command, error) {

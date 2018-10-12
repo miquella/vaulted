@@ -1,23 +1,23 @@
-vaulted-shell 1
-===============
+vaulted-exec 1
+==============
 
 NAME
 ----
 
-vaulted shell - starts an interactive shell with the secrets for the vault loaded into the shell
+vaulted exec - executes shell commands with a given vault or role
 
 SYNOPSIS
 --------
 
-`vaulted shell` *name* [*OPTIONS*]  
-`vaulted shell --assume` *arn* [*OPTIONS*]  
-`vaulted shell --no-session` *name* [*OPTIONS*]
+`vaulted exec` [*OPTIONS*] *name* *commands*  
+`vaulted exec` [*OPTIONS*] *name* `--` *commands*  
+`vaulted exec` [*OPTIONS*] `--assume` *arn* `--` *commands*
 
 DESCRIPTION
 -----------
 
-Starts an interactive shell (uses the `SHELL` environment variable, if set;
-otherwise defaults to `/bin/sh`).
+Executes shell commands with a given vault or role. Exec combines the features
+from `vaulted shell` with the command execution of `vaulted -n`.
 
 OPTIONS
 -------
@@ -44,7 +44,7 @@ AWS KEY
 -------
 
 [comment]: # (WHEN MODIFYING THESE DOCS, ALSO UPDATE: vaulted-env.1.md and
-vaulted-exec.1.md)
+vaulted-shell.1.md)
 
 Vaulted uses permanent credentials stored in the vault to generate temporary
 credentials using AWS STS. The resulting credentials are configured to last for
@@ -72,7 +72,7 @@ ASSUMING A ROLE
 ---------------
 
 [comment]: # (WHEN MODIFYING THESE DOCS, ALSO UPDATE: vaulted-env.1.md and
-vaulted-exec.1.md)
+vaulted-shell.1.md)
 
 A role to assume can be specified either in a vault's configuration (via
 `vaulted edit`) or specified via the `--assume` option.
@@ -87,7 +87,7 @@ You can also specify a role name and Vaulted will attempt
 to create the full ARN from it, like so:
 
 ```
-vaulted shell --assume SuperRole
+vaulted exec --assume SuperRole -- command
 ```
 
 which would resolve to the full arn `arn:aws:iam::111222333444:role/SuperRole`.
@@ -110,7 +110,7 @@ environment variables with information about the role:
 For example:
 
 ```
-vaulted shell --assume arn:aws:iam::111222333444:role/SuperRole
+vaulted exec --assume arn:aws:iam::111222333444:role/SuperRole -- command
 ```
 
 would result in the following variables being set:
