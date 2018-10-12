@@ -43,6 +43,8 @@ func (v *Vault) newSession(name string, credsFunc func(duration time.Duration) (
 		duration = v.Duration
 	}
 
+	var expiration *time.Time
+
 	s := &Session{
 		Name: name,
 		Vars: make(map[string]string),
@@ -67,10 +69,16 @@ func (v *Vault) newSession(name string, credsFunc func(duration time.Duration) (
 		if err != nil {
 			return nil, err
 		}
+
+		expiration = s.AWSCreds.Expiration
 	}
 
 	// now that the session is generated, set the expiration
-	s.Expiration = time.Now().Add(duration).Truncate(time.Second)
+	if expiration != nil {
+		s.Expiration = *expiration
+	} else {
+		s.Expiration = time.Now().Add(duration).Truncate(time.Second)
+	}
 
 	return s, nil
 }
