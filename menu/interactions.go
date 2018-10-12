@@ -23,6 +23,7 @@ func (interaction *Interaction) ReadMenu(message string) (string, error) {
 	}
 
 	fmt.Println("")
+	menuColor.Println("?=Help; q=Save and Quit; Ctrl+C=Abort")
 	input, err := interaction.ReadInput(menuColor.Sprint(message), interaction.rlOutput)
 	fmt.Println("")
 	return input, err

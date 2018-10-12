@@ -36,9 +36,9 @@ func (m *AWSMenu) Handler() error {
 		var input string
 		m.Printer()
 		if m.Vault.AWSKey == nil {
-			input, err = interaction.ReadMenu("Edit AWS key [k,?,b,q]: ")
+			input, err = interaction.ReadMenu("Edit AWS key [k,b]: ")
 		} else {
-			input, err = interaction.ReadMenu("Edit AWS key [k,m,r,t,S,D,?,b,q]: ")
+			input, err = interaction.ReadMenu("Edit AWS key [k,m,r,t,S,D,b]: ")
 		}
 
 		if err != nil {

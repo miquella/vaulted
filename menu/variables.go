@@ -19,9 +19,9 @@ func (m *VariableMenu) Handler() error {
 		var input string
 		m.Printer()
 		if m.Vault.Vars == nil {
-			input, varErr = interaction.ReadMenu("Edit environment variables: [a,?,b,q]: ")
+			input, varErr = interaction.ReadMenu("Edit environment variables: [a,b]: ")
 		} else {
-			input, varErr = interaction.ReadMenu("Edit environment variables: [a,S,D,?,b,q]: ")
+			input, varErr = interaction.ReadMenu("Edit environment variables: [a,S,D,b]: ")
 		}
 		if varErr != nil {
 			return varErr

@@ -34,7 +34,7 @@ func (m *SSHKeyMenu) Handler() error {
 	for {
 		var err error
 		m.Printer()
-		input, err := interaction.ReadMenu("Edit ssh keys: [a,D,?,b,q]: ")
+		input, err := interaction.ReadMenu("Edit ssh keys: [a,D,b]: ")
 		if err != nil {
 			return err
 		}
