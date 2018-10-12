@@ -42,6 +42,9 @@ func (e *Edit) Run(store vaulted.Store) error {
 			vault.AWSKey = &vaulted.AWSKey{
 				AWSCredentials: *creds,
 			}
+
+			detectMFAMenu := menu.DetectMFAMenu{Menu: &menu.Menu{Vault: vault}}
+			_ = detectMFAMenu.Handler()
 		}
 
 	} else {
