@@ -64,8 +64,8 @@ func (m *AWSMenu) Handler() error {
 					ID:     awsAccesskey,
 					Secret: awsSecretkey,
 				},
-				MFA:  "",
-				Role: "",
+				MFA:                     "",
+				Role:                    "",
 				ForgoTempCredGeneration: false,
 			}
 		case "m", "mfa":
@@ -125,7 +125,7 @@ func (m *AWSMenu) Handler() error {
 			return nil
 		case "q", "quit", "exit":
 			var confirm string
-			confirm, err = interaction.ReadValue("Are you sure you wish to exit the vault? (y/n): ")
+			confirm, err = interaction.ReadValue("Are you sure you wish to save and exit the vault? (y/n): ")
 			if err == nil {
 				if confirm == "y" {
 					return ErrSaveAndExit
