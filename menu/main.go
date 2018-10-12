@@ -28,7 +28,8 @@ func (m *MainMenu) Handler() error {
 		sshKeysMenu.Printer()
 		durationMenu.Printer()
 
-		input, err := interaction.ReadMenu("Edit vault: [a,s,v,d,S]: ")
+		var input string
+		input, err = interaction.ReadMenu("Edit vault: [a,s,v,d,S]: ")
 		if err != nil {
 			break
 		}
