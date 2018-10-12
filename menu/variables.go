@@ -66,7 +66,7 @@ func (m *VariableMenu) Handler() error {
 		case "q", "quit", "exit":
 			var confirm string
 			var err error
-			confirm, err = interaction.ReadValue("Are you sure you wish to exit the vault? (y/n): ")
+			confirm, err = interaction.ReadValue("Are you sure you wish to save and exit the vault? (y/n): ")
 			if err == nil {
 				if confirm == "y" {
 					return ErrSaveAndExit
