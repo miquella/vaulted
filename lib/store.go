@@ -393,5 +393,9 @@ func (s *store) openSession(name, password string) (*Session, error) {
 		return nil, fmt.Errorf("Invalid encryption method: %s", sf.Method)
 	}
 
+	if session.SessionVersion != SessionVersion {
+		return nil, fmt.Errorf("Invalid session version: %s", session.SessionVersion)
+	}
+
 	return &session, nil
 }

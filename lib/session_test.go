@@ -9,8 +9,11 @@ import (
 
 func TestSessionVariables(t *testing.T) {
 	e := Session{
+		SessionVersion: SessionVersion,
+
 		Name:       "vault",
 		Expiration: time.Now(),
+
 		Vars: map[string]string{
 			"TEST":         "TESTING",
 			"ANOTHER_TEST": "TEST TEST",
@@ -37,8 +40,11 @@ func TestSessionVariables(t *testing.T) {
 
 func TestSessionVariablesWithPermCreds(t *testing.T) {
 	e := Session{
+		SessionVersion: SessionVersion,
+
 		Name:       "vault",
 		Expiration: time.Now(),
+
 		AWSCreds: &AWSCredentials{
 			ID:     "an-id",
 			Secret: "the-super-sekrit",
@@ -75,8 +81,11 @@ func TestSessionVariablesWithPermCreds(t *testing.T) {
 
 func TestSessionVariablesWithTempCreds(t *testing.T) {
 	e := Session{
+		SessionVersion: SessionVersion,
+
 		Name:       "vault",
 		Expiration: time.Now(),
+
 		AWSCreds: &AWSCredentials{
 			ID:     "an-id",
 			Secret: "the-super-sekrit",
