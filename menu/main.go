@@ -34,7 +34,7 @@ func (m *MainMenu) Handler() error {
 		}
 		switch input {
 		case "a", "aws":
-			return awsMenu.Handler()
+			err = awsMenu.Handler()
 		case "s", "ssh":
 			err = sshKeysMenu.Handler()
 		case "v", "vars", "variables":
