@@ -58,21 +58,43 @@ func (m *AWSMenu) Handler() error {
 			if secretErr != nil {
 				return secretErr
 			}
+
+			// Save the old key in case the user aborts
+			oldAWSKey := m.Vault.AWSKey
 			m.Vault.AWSKey = &vaulted.AWSKey{
 				AWSCredentials: vaulted.AWSCredentials{
 					ID:     awsAccesskey,
 					Secret: awsSecretkey,
 				},
-				MFA:                     "",
-				Role:                    "",
-				ForgoTempCredGeneration: false,
+			}
+
+			detectMFAMenu := DetectMFAMenu{Menu: m.Menu}
+			detectErr := detectMFAMenu.Handler()
+			if detectErr == ErrUserAbort {
+				m.Vault.AWSKey = oldAWSKey
 			}
 		case "m", "mfa":
 			if m.Vault.AWSKey != nil {
-				var awsMfa string
-				awsMfa, err = interaction.ReadValue("MFA ARN or serial number: ")
-				if err == nil {
-					m.Vault.AWSKey.MFA = awsMfa
+				// Save the old MFA in case the user aborts
+				oldMFA := m.Vault.AWSKey.MFA
+				m.Vault.AWSKey.MFA = ""
+
+				detectMFAMenu := DetectMFAMenu{Menu: m.Menu}
+				detectErr := detectMFAMenu.Handler()
+				if detectErr == ErrUserAbort {
+					m.Vault.AWSKey.MFA = oldMFA
+					continue
+				}
+
+				if m.Vault.AWSKey.MFA == "" {
+					var awsMfa string
+					awsMfa, err = interaction.ReadValue("MFA ARN or serial number: ")
+					if err == ErrUserAbort {
+						m.Vault.AWSKey.MFA = oldMFA
+						continue
+					} else if err == nil {
+						m.Vault.AWSKey.MFA = awsMfa
+					}
 				}
 			} else {
 				color.Red("Must associate an AWS key with the vault first")

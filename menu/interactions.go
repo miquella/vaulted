@@ -55,7 +55,7 @@ func (interaction *Interaction) ReadInput(message string, rl *readline.Instance)
 	rl.SetPrompt(message)
 	line, err := rl.Readline()
 	if err == readline.ErrInterrupt {
-		return "", ErrAbort
+		return "", ErrUserAbort
 	}
 	if err != nil {
 		return "", err

@@ -16,7 +16,7 @@ var (
 	menuColor    = color.New(color.FgHiBlue)
 	warningColor = color.New(color.FgHiYellow)
 
-	ErrAbort       = errors.New("Aborted by user. Vault unchanged.")
+	ErrUserAbort   = errors.New("Aborted by user. Vault unchanged.")
 	ErrSaveAndExit = errors.New("Exiting at user request.")
 )
 
