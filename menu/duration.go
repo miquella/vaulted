@@ -49,7 +49,7 @@ func (m *DurationMenu) formatDuration(duration time.Duration) string {
 }
 
 func (m *DurationMenu) Printer() {
-	cyan.Println("\nEnvironment:")
+	cyan.Println("\nSession:")
 	green.Print("  Duration: ")
 	var duration time.Duration
 	if m.Vault.Duration == 0 {

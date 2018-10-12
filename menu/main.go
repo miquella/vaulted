@@ -70,7 +70,7 @@ func (m *MainMenu) Help() {
 	fmt.Println("a - AWS Key")
 	fmt.Println("s - SSH Keys")
 	fmt.Println("v - Variables")
-	fmt.Println("d - Environment Duration")
+	fmt.Println("d - Session Duration")
 	fmt.Println("S - Show/Hide Secrets")
 	fmt.Println("? - Help")
 	fmt.Println("q - Quit")
