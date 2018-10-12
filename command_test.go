@@ -23,7 +23,9 @@ var (
 		{
 			Args: []string{"-n", "one"},
 			Command: &Spawn{
-				VaultName:     "one",
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
 				Command:       []string{"/bin/fish", "--login"},
 				DisplayStatus: true,
 			},
@@ -31,7 +33,9 @@ var (
 		{
 			Args: []string{"-n", "one", "-i"},
 			Command: &Spawn{
-				VaultName:     "one",
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
 				Command:       []string{"/bin/fish", "--login"},
 				DisplayStatus: true,
 			},
@@ -39,7 +43,9 @@ var (
 		{
 			Args: []string{"-i", "-n", "one"},
 			Command: &Spawn{
-				VaultName:     "one",
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
 				Command:       []string{"/bin/fish", "--login"},
 				DisplayStatus: true,
 			},
@@ -47,7 +53,9 @@ var (
 		{
 			Args: []string{"-in", "one"},
 			Command: &Spawn{
-				VaultName:     "one",
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
 				Command:       []string{"/bin/fish", "--login"},
 				DisplayStatus: true,
 			},
@@ -55,43 +63,55 @@ var (
 		{
 			Args: []string{"-n", "one", "some", "command"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"some", "command"},
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
+				Command: []string{"some", "command"},
 			},
 		},
 		{
 			Args: []string{"-n", "one", "command", "--command-flag"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"command", "--command-flag"},
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
+				Command: []string{"command", "--command-flag"},
 			},
 		},
 		{
 			Args: []string{"-n", "one", "--", "some", "command"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"some", "command"},
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
+				Command: []string{"some", "command"},
 			},
 		},
 		{
 			Args: []string{"-n", "one", "some", "--", "command"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"some", "--", "command"},
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
+				Command: []string{"some", "--", "command"},
 			},
 		},
 		{
 			Args: []string{"-n", "one", "--", "some", "--", "command"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"some", "--", "command"},
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
+				Command: []string{"some", "--", "command"},
 			},
 		},
 		{
 			Args: []string{"-n", "one", "--", "--", "some", "--", "command"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"--", "some", "--", "command"},
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
+				Command: []string{"--", "some", "--", "command"},
 			},
 		},
 
@@ -183,7 +203,9 @@ var (
 			Args:   []string{"env", "one"},
 			OsArgs: []string{"vaulted", "env", "one"},
 			Command: &Env{
-				VaultName:     "one",
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
 				DetectedShell: "fish",
 				Format:        "shell",
 				Command:       "vaulted env one",
@@ -193,8 +215,10 @@ var (
 			Args:   []string{"env", "--assume", "arn:something:or:other", "one"},
 			OsArgs: []string{"vaulted", "env", "--assume", "arn:something:or:other", "one"},
 			Command: &Env{
-				VaultName:     "one",
-				Role:          "arn:something:or:other",
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+					Role:      "arn:something:or:other",
+				},
 				DetectedShell: "fish",
 				Format:        "shell",
 				Command:       "vaulted env --assume arn:something:or:other one",
@@ -204,7 +228,9 @@ var (
 			Args:   []string{"env", "--assume", "arn:something:or:other"},
 			OsArgs: []string{"vaulted", "env", "--assume", "arn:something:or:other"},
 			Command: &Env{
-				Role:          "arn:something:or:other",
+				SessionOptions: SessionOptions{
+					Role: "arn:something:or:other",
+				},
 				DetectedShell: "fish",
 				Format:        "shell",
 				Command:       "vaulted env --assume arn:something:or:other",
@@ -214,7 +240,9 @@ var (
 			Args:   []string{"env", "foo", "--format", "json"},
 			OsArgs: []string{"vaulted", "env", "foo", "--format", "json"},
 			Command: &Env{
-				VaultName:     "foo",
+				SessionOptions: SessionOptions{
+					VaultName: "foo",
+				},
 				DetectedShell: "fish",
 				Format:        "json",
 				Command:       "vaulted env foo --format json",
@@ -224,8 +252,10 @@ var (
 			Args:   []string{"env", "foo", "--no-session"},
 			OsArgs: []string{"vaulted", "env", "foo", "--no-session"},
 			Command: &Env{
-				VaultName:     "foo",
-				NoSession:     true,
+				SessionOptions: SessionOptions{
+					VaultName: "foo",
+					NoSession: true,
+				},
 				DetectedShell: "fish",
 				Format:        "shell",
 				Command:       "vaulted env foo --no-session",
@@ -241,42 +271,52 @@ var (
 			Args:   []string{"exec", "one", "cmd", "cmd2"},
 			OsArgs: []string{"vaulted", "exec", "one", "cmd", "cmd2"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"cmd", "cmd2"},
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
+				Command: []string{"cmd", "cmd2"},
 			},
 		},
 		{
 			Args:   []string{"exec", "one", "--", "cmd", "cmd2"},
 			OsArgs: []string{"vaulted", "exec", "one", "--", "cmd", "cmd2"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"cmd", "cmd2"},
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
+				Command: []string{"cmd", "cmd2"},
 			},
 		},
 		{
 			Args:   []string{"exec", "--assume", "arn:some:thing", "one", "cmd", "cmd2"},
 			OsArgs: []string{"vaulted", "exec", "--assume", "arn:some:thing", "one", "cmd", "cmd2"},
 			Command: &Spawn{
-				VaultName: "one",
-				Role:      "arn:some:thing",
-				Command:   []string{"cmd", "cmd2"},
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+					Role:      "arn:some:thing",
+				},
+				Command: []string{"cmd", "cmd2"},
 			},
 		},
 		{
 			Args:   []string{"exec", "--assume", "arn:some:thing", "--", "cmd", "cmd2"},
 			OsArgs: []string{"vaulted", "exec", "--assume", "arn:some:thing", "cmd", "cmd2"},
 			Command: &Spawn{
+				SessionOptions: SessionOptions{
+					Role: "arn:some:thing",
+				},
 				Command: []string{"cmd", "cmd2"},
-				Role:    "arn:some:thing",
 			},
 		},
 		{
 			Args:   []string{"exec", "--no-session", "one", "cmd", "cmd2"},
 			OsArgs: []string{"vaulted", "exec", "--no-session", "one", "cmd", "cmd2"},
 			Command: &Spawn{
-				VaultName: "one",
-				Command:   []string{"cmd", "cmd2"},
-				NoSession: true,
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+					NoSession: true,
+				},
+				Command: []string{"cmd", "cmd2"},
 			},
 		},
 		{
@@ -496,7 +536,9 @@ var (
 		{
 			Args: []string{"shell", "one"},
 			Command: &Spawn{
-				VaultName:     "one",
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+				},
 				Command:       []string{"/bin/fish", "--login"},
 				DisplayStatus: true,
 			},
@@ -504,7 +546,9 @@ var (
 		{
 			Args: []string{"shell", "--assume", "arn:something:or:other"},
 			Command: &Spawn{
-				Role:          "arn:something:or:other",
+				SessionOptions: SessionOptions{
+					Role: "arn:something:or:other",
+				},
 				Command:       []string{"/bin/fish", "--login"},
 				DisplayStatus: true,
 			},
@@ -512,8 +556,10 @@ var (
 		{
 			Args: []string{"shell", "--assume", "arn:something:or:other", "one"},
 			Command: &Spawn{
-				VaultName:     "one",
-				Role:          "arn:something:or:other",
+				SessionOptions: SessionOptions{
+					VaultName: "one",
+					Role:      "arn:something:or:other",
+				},
 				Command:       []string{"/bin/fish", "--login"},
 				DisplayStatus: true,
 			},
@@ -521,8 +567,10 @@ var (
 		{
 			Args: []string{"shell", "foo", "--no-session"},
 			Command: &Spawn{
-				VaultName:     "foo",
-				NoSession:     true,
+				SessionOptions: SessionOptions{
+					VaultName: "foo",
+					NoSession: true,
+				},
 				Command:       []string{"/bin/fish", "--login"},
 				DisplayStatus: true,
 			},

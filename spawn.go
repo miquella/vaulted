@@ -9,17 +9,14 @@ import (
 )
 
 type Spawn struct {
-	VaultName string
-	Role      string
-	NoSession bool
+	SessionOptions
 
 	Command       []string
 	DisplayStatus bool
-	Refresh       bool
 }
 
 func (s *Spawn) Run(store vaulted.Store) error {
-	session, err := s.getSession(store)
+	session, err := GetSessionWithOptions(store, &s.SessionOptions)
 	if err != nil {
 		return err
 	}
@@ -38,45 +35,4 @@ func (s *Spawn) Run(store vaulted.Store) error {
 	}
 
 	return nil
-}
-
-func (s *Spawn) getSession(store vaulted.Store) (*vaulted.Session, error) {
-	var err error
-
-	// default session
-	session := DefaultSession()
-
-	if s.VaultName != "" {
-		if s.NoSession {
-			v, _, err := store.OpenVault(s.VaultName)
-			if err != nil {
-				return nil, err
-			}
-
-			if v.AWSKey != nil {
-				v.AWSKey.ForgoTempCredGeneration = true
-			}
-			session, err = v.NewSession(s.VaultName)
-		} else {
-			if s.Refresh {
-				session, _, err = store.CreateSession(s.VaultName)
-			} else {
-				session, _, err = store.GetSession(s.VaultName)
-			}
-			if err != nil {
-				return nil, err
-			}
-
-			session, err = session.AssumeSessionRole()
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if s.Role != "" {
-		return session.AssumeRole(s.Role)
-	}
-
-	return session, nil
 }

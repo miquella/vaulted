@@ -115,7 +115,9 @@ func TestEnv(t *testing.T) {
 
 	output := CaptureStdout(func() {
 		e := Env{
-			VaultName:     "one",
+			SessionOptions: SessionOptions{
+				VaultName: "one",
+			},
 			DetectedShell: "fish",
 			Format:        "shell",
 			Command:       "vaulted env one",
@@ -132,7 +134,9 @@ func TestEnv(t *testing.T) {
 
 	output = CaptureStdout(func() {
 		e := Env{
-			VaultName:     "one",
+			SessionOptions: SessionOptions{
+				VaultName: "one",
+			},
 			DetectedShell: "sh",
 			Format:        "shell",
 			Command:       "vaulted env one",
@@ -149,7 +153,9 @@ func TestEnv(t *testing.T) {
 
 	output = CaptureStdout(func() {
 		e := Env{
-			VaultName:     "one",
+			SessionOptions: SessionOptions{
+				VaultName: "one",
+			},
 			DetectedShell: "fish",
 			Format:        "shell",
 			Command:       "vaulted env one",
@@ -166,7 +172,9 @@ func TestEnv(t *testing.T) {
 
 	output = CaptureStdout(func() {
 		e := Env{
-			VaultName:     "one",
+			SessionOptions: SessionOptions{
+				VaultName: "one",
+			},
 			DetectedShell: "sh",
 			Format:        "shell",
 			Command:       "vaulted env one",
@@ -187,7 +195,9 @@ func TestEnv(t *testing.T) {
 		defer func() { os.Args = args }()
 
 		e := Env{
-			VaultName:     "one",
+			SessionOptions: SessionOptions{
+				VaultName: "one",
+			},
 			DetectedShell: "sh",
 			Format:        "json",
 		}
@@ -220,7 +230,9 @@ func TestEnv(t *testing.T) {
 
 	output = CaptureStdout(func() {
 		e := Env{
-			VaultName:     "one",
+			SessionOptions: SessionOptions{
+				VaultName: "one",
+			},
 			DetectedShell: "fish",
 			Format:        "fish",
 			Command:       "vaulted env one",
@@ -237,7 +249,9 @@ func TestEnv(t *testing.T) {
 
 	output = CaptureStdout(func() {
 		e := Env{
-			VaultName:     "one",
+			SessionOptions: SessionOptions{
+				VaultName: "one",
+			},
 			DetectedShell: "sh",
 			Format:        "shell",
 			Command:       "vaulted env one",
@@ -251,7 +265,9 @@ func TestEnv(t *testing.T) {
 
 	output = CaptureStdout(func() {
 		e := Env{
-			VaultName:     "one",
+			SessionOptions: SessionOptions{
+				VaultName: "one",
+			},
 			DetectedShell: "fish",
 			Format:        "fish",
 			Command:       "vaulted env one",
@@ -268,7 +284,9 @@ func TestEnv(t *testing.T) {
 
 	output = CaptureStdout(func() {
 		e := Env{
-			VaultName:     "one",
+			SessionOptions: SessionOptions{
+				VaultName: "one",
+			},
 			DetectedShell: "sh",
 			Format:        "shell",
 			Command:       "vaulted env one",
@@ -290,8 +308,10 @@ func TestEnv(t *testing.T) {
 		defer func() { os.Args = args }()
 
 		e := Env{
-			VaultName: "one",
-			Format:    "{{ .Unset }}",
+			SessionOptions: SessionOptions{
+				VaultName: "one",
+			},
+			Format: "{{ .Unset }}",
 		}
 		err := e.Run(store)
 		if err != nil {
@@ -305,11 +325,13 @@ func TestEnv(t *testing.T) {
 
 	output = CaptureStdout(func() {
 		e := Env{
-			VaultName:     "one",
+			SessionOptions: SessionOptions{
+				VaultName: "one",
+				Refresh:   true,
+			},
 			DetectedShell: "sh",
 			Format:        "shell",
 			Command:       "vaulted env one --refresh",
-			Refresh:       true,
 			Interactive:   false,
 		}
 
