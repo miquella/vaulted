@@ -44,7 +44,10 @@ func (v *Vault) newSession(name string, credsFunc func(duration time.Duration) (
 	}
 
 	s := &Session{
+		SessionVersion: SessionVersion,
+
 		Name: name,
+
 		Vars: make(map[string]string),
 	}
 

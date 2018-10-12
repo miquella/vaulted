@@ -15,13 +15,21 @@ import (
 	"golang.org/x/crypto/ssh/agent"
 )
 
+var (
+	SessionVersion = ""
+)
+
 type Session struct {
-	Name       string            `json:"name"`
-	Role       string            `json:"role,omitempty"`
-	Expiration time.Time         `json:"expiration"`
-	AWSCreds   *AWSCredentials   `json:"aws_creds,omitempty"`
-	Vars       map[string]string `json:"vars,omitempty"`
-	SSHKeys    map[string]string `json:"ssh_keys,omitempty"`
+	SessionVersion string `json:"version"`
+
+	Name       string    `json:"name"`
+	Expiration time.Time `json:"expiration"`
+
+	Role string `json:"role,omitempty"`
+
+	AWSCreds *AWSCredentials   `json:"aws_creds,omitempty"`
+	Vars     map[string]string `json:"vars,omitempty"`
+	SSHKeys  map[string]string `json:"ssh_keys,omitempty"`
 }
 
 func (e *Session) Assume(roleArn string) (*Session, error) {
@@ -65,12 +73,16 @@ func (e *Session) Assume(roleArn string) (*Session, error) {
 	}
 
 	session := &Session{
+		SessionVersion: SessionVersion,
+
 		Name:       e.Name,
-		Role:       selectedRoleArn,
 		Expiration: *creds.Expiration,
-		AWSCreds:   creds,
-		Vars:       make(map[string]string),
-		SSHKeys:    make(map[string]string),
+
+		Role: selectedRoleArn,
+
+		AWSCreds: creds,
+		Vars:     make(map[string]string),
+		SSHKeys:  make(map[string]string),
 	}
 	for key, value := range e.Vars {
 		session.Vars[key] = value

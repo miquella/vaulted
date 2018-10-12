@@ -146,9 +146,12 @@ func (ts TestStore) GetSession(name string) (*vaulted.Session, string, error) {
 	}
 
 	s := &vaulted.Session{
+		SessionVersion: vaulted.SessionVersion,
+
 		Expiration: time.Unix(1136239445, 0),
-		Vars:       make(map[string]string),
-		SSHKeys:    make(map[string]string),
+
+		Vars:    make(map[string]string),
+		SSHKeys: make(map[string]string),
 	}
 	if _, exists := ts.Sessions[name]; exists {
 		cachedSession := ts.Sessions[name]
@@ -189,9 +192,12 @@ func (ts TestStore) CreateSession(name string) (*vaulted.Session, string, error)
 	}
 
 	s := &vaulted.Session{
+		SessionVersion: vaulted.SessionVersion,
+
 		Expiration: time.Unix(1136239446, 0),
-		Vars:       make(map[string]string),
-		SSHKeys:    make(map[string]string),
+
+		Vars:    make(map[string]string),
+		SSHKeys: make(map[string]string),
 	}
 	vault := ts.Vaults[name]
 
