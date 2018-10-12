@@ -40,6 +40,9 @@ COMMANDS
 `env`
   Outputs shell commands that load secrets for a vault into the shell. See vaulted-env(1).
 
+`exec`
+  Executes shell commands with a given vault or role. See vaulted-exec(1).
+
 `load`
   Uses JSON provided to stdin to create or replace the content of a vault. See vaulted-load(1).
 

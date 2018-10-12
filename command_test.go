@@ -236,6 +236,54 @@ var (
 			Command: &Help{Subcommand: "env"},
 		},
 
+		// Exec
+		{
+			Args:   []string{"exec", "one", "cmd", "cmd2"},
+			OsArgs: []string{"vaulted", "exec", "one", "cmd", "cmd2"},
+			Command: &Spawn{
+				VaultName: "one",
+				Command:   []string{"cmd", "cmd2"},
+			},
+		},
+		{
+			Args:   []string{"exec", "one", "--", "cmd", "cmd2"},
+			OsArgs: []string{"vaulted", "exec", "one", "--", "cmd", "cmd2"},
+			Command: &Spawn{
+				VaultName: "one",
+				Command:   []string{"cmd", "cmd2"},
+			},
+		},
+		{
+			Args:   []string{"exec", "--assume", "arn:some:thing", "one", "cmd", "cmd2"},
+			OsArgs: []string{"vaulted", "exec", "--assume", "arn:some:thing", "one", "cmd", "cmd2"},
+			Command: &Spawn{
+				VaultName: "one",
+				Role:      "arn:some:thing",
+				Command:   []string{"cmd", "cmd2"},
+			},
+		},
+		{
+			Args:   []string{"exec", "--assume", "arn:some:thing", "--", "cmd", "cmd2"},
+			OsArgs: []string{"vaulted", "exec", "--assume", "arn:some:thing", "cmd", "cmd2"},
+			Command: &Spawn{
+				Command: []string{"cmd", "cmd2"},
+				Role:    "arn:some:thing",
+			},
+		},
+		{
+			Args:   []string{"exec", "--no-session", "one", "cmd", "cmd2"},
+			OsArgs: []string{"vaulted", "exec", "--no-session", "one", "cmd", "cmd2"},
+			Command: &Spawn{
+				VaultName: "one",
+				Command:   []string{"cmd", "cmd2"},
+				NoSession: true,
+			},
+		},
+		{
+			Args:    []string{"exec", "--help"},
+			Command: &Help{Subcommand: "exec"},
+		},
+
 		// Help
 		{
 			Args:    []string{"help", "add"},
@@ -268,6 +316,10 @@ var (
 		{
 			Args:    []string{"help", "env"},
 			Command: &Help{Subcommand: "env"},
+		},
+		{
+			Args:    []string{"help", "exec"},
+			Command: &Help{Subcommand: "exec"},
 		},
 		{
 			Args:    []string{"help", "list"},
@@ -572,6 +624,44 @@ var (
 		},
 		{
 			Args: []string{"env", "one", "--no-session", "--refresh"},
+		},
+
+		// Exec
+		{
+			// no arguments provided
+			Args: []string{"exec"},
+		},
+		{
+			// no command provided
+			Args: []string{"exec", "one"},
+		},
+		{
+			// no command provided
+			Args: []string{"exec", "--assume", "arn:some:thing"},
+		},
+		{
+			// must provide vault name or --assume
+			Args: []string{"exec", "--", "cmd"},
+		},
+		{
+			// may not provide -- without args following
+			Args: []string{"exec", "one", "--"},
+		},
+		{
+			// may not provide cmd args before and after the --
+			Args: []string{"exec", "one", "cmd", "--", "cmd2"},
+		},
+		{
+			// may not provide --no-session without a vault name
+			Args: []string{"exec", "--no-session", "--", "cmd"},
+		},
+		{
+			// may not provide both --no-session and --assume
+			Args: []string{"exec", "one", "--no-session", "--assume", "arn:some:thing", "cmd"},
+		},
+		{
+			// may not provide both --no-session and --refresh
+			Args: []string{"exec", "one", "--no-session", "--refresh", "cmd"},
 		},
 
 		// List

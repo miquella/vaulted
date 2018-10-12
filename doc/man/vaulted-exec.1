@@ -1,18 +1,18 @@
-.TH vaulted\-shell 1
+.TH vaulted\-exec 1
 .SH NAME
 .PP
-vaulted shell \- starts an interactive shell with the secrets for the vault loaded into the shell
+vaulted exec \- executes shell commands with a given vault or role
 .SH SYNOPSIS
 .PP
-\fB\fCvaulted shell\fR \fIname\fP [\fIOPTIONS\fP]
+\fB\fCvaulted exec\fR [\fIOPTIONS\fP] \fIname\fP \fIcommands\fP
 .br
-\fB\fCvaulted shell \-\-assume\fR \fIarn\fP [\fIOPTIONS\fP]
+\fB\fCvaulted exec\fR [\fIOPTIONS\fP] \fIname\fP \fB\fC\-\-\fR \fIcommands\fP
 .br
-\fB\fCvaulted shell \-\-no\-session\fR \fIname\fP [\fIOPTIONS\fP]
+\fB\fCvaulted exec\fR [\fIOPTIONS\fP] \fB\fC\-\-assume\fR \fIarn\fP \fB\fC\-\-\fR \fIcommands\fP
 .SH DESCRIPTION
 .PP
-Starts an interactive shell (uses the \fB\fCSHELL\fR environment variable, if set;
-otherwise defaults to \fB\fC/bin/sh\fR).
+Executes shell commands with a given vault or role. Exec combines the features
+from \fB\fCvaulted shell\fR with the command execution of \fB\fCvaulted \-n\fR\&.
 .SH OPTIONS
 .TP
 \fB\fC\-\-assume\fR \fIarn\fP
@@ -35,7 +35,7 @@ Start a new session with new temporary credentials and a refreshed expiration.
 .SH AWS KEY
 .PP
 [comment]: # (WHEN MODIFYING THESE DOCS, ALSO UPDATE: vaulted\-env.1.md and
-vaulted\-exec.1.md)
+vaulted\-shell.1.md)
 .PP
 Vaulted uses permanent credentials stored in the vault to generate temporary
 credentials using AWS STS. The resulting credentials are configured to last for
@@ -68,7 +68,7 @@ to support legacy SDKs.
 .SH ASSUMING A ROLE
 .PP
 [comment]: # (WHEN MODIFYING THESE DOCS, ALSO UPDATE: vaulted\-env.1.md and
-vaulted\-exec.1.md)
+vaulted\-shell.1.md)
 .PP
 A role to assume can be specified either in a vault's configuration (via
 \fB\fCvaulted edit\fR) or specified via the \fB\fC\-\-assume\fR option.
@@ -84,7 +84,7 @@ to create the full ARN from it, like so:
 .PP
 .RS
 .nf
-vaulted shell \-\-assume SuperRole
+vaulted exec \-\-assume SuperRole \-\- command
 .fi
 .RE
 .PP
@@ -118,7 +118,7 @@ For example:
 .PP
 .RS
 .nf
-vaulted shell \-\-assume arn:aws:iam::111222333444:role/SuperRole
+vaulted exec \-\-assume arn:aws:iam::111222333444:role/SuperRole \-\- command
 .fi
 .RE
 .PP

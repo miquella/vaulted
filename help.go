@@ -27,6 +27,7 @@ var (
 		"dump":     "dump",
 		"edit":     "edit",
 		"env":      "env",
+		"exec":     "exec",
 		"ls":       "ls",
 		"list":     "ls",
 		"load":     "load",

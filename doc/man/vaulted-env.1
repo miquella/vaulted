@@ -81,6 +81,9 @@ Unset	[]string	A slice of variables to be removed from the environment before se
 .TE
 .SH AWS KEY
 .PP
+[comment]: # (WHEN MODIFYING THESE DOCS, ALSO UPDATE: vaulted\-shell.1.md and
+vaulted\-exec.1.md)
+.PP
 Vaulted uses permanent credentials stored in the vault to generate temporary
 credentials using AWS STS. The resulting credentials are configured to last for
 the duration of the vault session (configured via \fB\fCvaulted edit\fR).
@@ -110,6 +113,9 @@ Provided when using temporary credentials. \fB\fCAWS_SECURITY_TOKEN\fR is provid
 to support legacy SDKs.
 .RE
 .SH ASSUMING A ROLE
+.PP
+[comment]: # (WHEN MODIFYING THESE DOCS, ALSO UPDATE: vaulted\-shell.1.md and
+vaulted\-exec.1.md)
 .PP
 A role to assume can be specified either in a vault's configuration (via
 \fB\fCvaulted edit\fR) or specified via the \fB\fC\-\-assume\fR option.
