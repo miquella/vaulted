@@ -51,7 +51,7 @@ func (e *Edit) Run(store vaulted.Store) error {
 		}
 	}
 
-	e.edit(e.VaultName, vault)
+	err = e.edit(e.VaultName, vault)
 	if err != nil {
 		return err
 	}
