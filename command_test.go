@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/miquella/vaulted/edit"
 )
@@ -18,7 +19,8 @@ type parseCase struct {
 }
 
 var (
-	goodParseCases = []parseCase{
+	twoHourDuration = time.Hour * 2
+	goodParseCases  = []parseCase{
 		// Spawn
 		{
 			Args: []string{"-n", "one"},
@@ -259,6 +261,46 @@ var (
 				DetectedShell: "fish",
 				Format:        "shell",
 				Command:       "vaulted env foo --no-session",
+			},
+		},
+		{
+			Args:   []string{"env", "foo", "--assume", "arn:something:or:other", "--assume-duration", "2h"},
+			OsArgs: []string{"vaulted", "env", "foo", "--assume", "arn:something:or:other", "--assume-duration", "2h"},
+			Command: &Env{
+				SessionOptions: SessionOptions{
+					VaultName:    "foo",
+					Role:         "arn:something:or:other",
+					RoleDuration: &twoHourDuration,
+				},
+				DetectedShell: "fish",
+				Format:        "shell",
+				Command:       "vaulted env foo --assume arn:something:or:other --assume-duration 2h",
+			},
+		},
+		{
+			Args:   []string{"env", "--assume", "arn:something:or:other", "--assume-duration", "2h"},
+			OsArgs: []string{"vaulted", "env", "--assume", "arn:something:or:other", "--assume-duration", "2h"},
+			Command: &Env{
+				SessionOptions: SessionOptions{
+					Role:         "arn:something:or:other",
+					RoleDuration: &twoHourDuration,
+				},
+				DetectedShell: "fish",
+				Format:        "shell",
+				Command:       "vaulted env --assume arn:something:or:other --assume-duration 2h",
+			},
+		},
+		{
+			Args:   []string{"env", "foo", "--assume-duration", "2h"},
+			OsArgs: []string{"vaulted", "env", "foo", "--assume-duration", "2h"},
+			Command: &Env{
+				SessionOptions: SessionOptions{
+					VaultName:    "foo",
+					RoleDuration: &twoHourDuration,
+				},
+				DetectedShell: "fish",
+				Format:        "shell",
+				Command:       "vaulted env foo --assume-duration 2h",
 			},
 		},
 		{
@@ -576,6 +618,40 @@ var (
 			},
 		},
 		{
+			Args: []string{"shell", "foo", "--assume", "arn:something:or:other", "--assume-duration", "2h"},
+			Command: &Spawn{
+				SessionOptions: SessionOptions{
+					VaultName:    "foo",
+					Role:         "arn:something:or:other",
+					RoleDuration: &twoHourDuration,
+				},
+				Command:       []string{"/bin/fish", "--login"},
+				DisplayStatus: true,
+			},
+		},
+		{
+			Args: []string{"shell", "--assume", "arn:something:or:other", "--assume-duration", "2h"},
+			Command: &Spawn{
+				SessionOptions: SessionOptions{
+					Role:         "arn:something:or:other",
+					RoleDuration: &twoHourDuration,
+				},
+				Command:       []string{"/bin/fish", "--login"},
+				DisplayStatus: true,
+			},
+		},
+		{
+			Args: []string{"shell", "foo", "--assume-duration", "2h"},
+			Command: &Spawn{
+				SessionOptions: SessionOptions{
+					VaultName:    "foo",
+					RoleDuration: &twoHourDuration,
+				},
+				Command:       []string{"/bin/fish", "--login"},
+				DisplayStatus: true,
+			},
+		},
+		{
 			Args:    []string{"shell", "--help"},
 			Command: &Help{Subcommand: "shell"},
 		},
@@ -673,6 +749,9 @@ var (
 		{
 			Args: []string{"env", "one", "--no-session", "--refresh"},
 		},
+		{
+			Args: []string{"env", "--assume-duration", "2h"},
+		},
 
 		// Exec
 		{
@@ -762,6 +841,9 @@ var (
 		},
 		{
 			Args: []string{"shell", "one", "--no-session", "--refresh"},
+		},
+		{
+			Args: []string{"shell", "--assume-duration", "2h"},
 		},
 
 		// Upgrade

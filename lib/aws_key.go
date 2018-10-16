@@ -6,9 +6,10 @@ import (
 
 type AWSKey struct {
 	AWSCredentials
-	MFA                     string `json:"mfa,omitempty"`
-	Role                    string `json:"role,omitempty"`
-	ForgoTempCredGeneration bool   `json:"forgoTempCredGeneration"`
+	MFA                     string         `json:"mfa,omitempty"`
+	Role                    string         `json:"role,omitempty"`
+	RoleDuration            *time.Duration `json:"roleDuration,omitempty"`
+	ForgoTempCredGeneration bool           `json:"forgoTempCredGeneration"`
 }
 
 func (k *AWSKey) Valid() bool {

@@ -8,6 +8,8 @@ vaulted env \- outputs shell commands that load secrets for a vault into the she
 .br
 \fB\fCvaulted env \-\-assume\fR \fIarn\fP [\fIOPTIONS\fP]
 .br
+\fB\fCvaulted env \-\-assume\-duration\fR \fIduration\fP [\fIOPTIONS\fP]
+.br
 \fB\fCvaulted env \-\-no\-session\fR \fIname\fP [\fIOPTIONS\fP]
 .SH DESCRIPTION
 .PP
@@ -30,6 +32,14 @@ Specifies the full ARN or short name of the role to assume. See
 Role assumption may be performed without specifying a vault to spawn from.
 When invoked this way, credentials are sourced from default locations (e.g.
 environment, configuration files, instance profile, etc.).
+.TP
+\fB\fC\-\-assume\-duration\fR \fIduration\fP
+Specifies the duration that a role should be assumed for (e.g. 30m or 2h)
+See \fBASSUMING A ROLE\fP below for details on how Vaulted assumes roles.
+.IP
+This can apply to the role specified in a vault's configuration (via
+\fB\fCvaulted edit\fR) or a role specified via the \fB\fC\-\-assume\fR option. If multiple
+roles are assumed, this will be applied to the final assumed role.
 .TP
 \fB\fC\-\-no\-session\fR
 Disables the generation of temporary credentials and role assumption. The

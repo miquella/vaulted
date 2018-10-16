@@ -19,8 +19,9 @@ type SessionOptions struct {
 
 	NoSession bool
 
-	Refresh bool
-	Role    string
+	Refresh      bool
+	Role         string
+	RoleDuration *time.Duration
 }
 
 func DefaultSession() *vaulted.Session {
@@ -61,7 +62,7 @@ func GetSessionWithOptions(store vaulted.Store, options *SessionOptions) (*vault
 
 	// Assume any role specified
 	if options.Role != "" {
-		return session.AssumeRole(options.Role)
+		return session.AssumeRole(options.Role, options.RoleDuration)
 	}
 
 	return session, nil
@@ -98,5 +99,9 @@ func getVaultSession(store vaulted.Store, options *SessionOptions) (*vaulted.Ses
 	}
 
 	// Assume the session's role
+	if options.RoleDuration != nil {
+		session.RoleDuration = options.RoleDuration
+	}
+
 	return session.AssumeSessionRole()
 }
