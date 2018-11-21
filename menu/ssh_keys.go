@@ -16,7 +16,7 @@ import (
 )
 
 type SSHKeyMenu struct {
-	Menu
+	*Menu
 }
 
 func (m *SSHKeyMenu) Help() {

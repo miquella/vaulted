@@ -10,7 +10,7 @@ import (
 )
 
 type DurationMenu struct {
-	Menu
+	*Menu
 }
 
 func (m *DurationMenu) Handler() error {

@@ -10,8 +10,7 @@ import (
 
 // AWSMenu The menu type for the AWS edit tree
 type AWSMenu struct {
-	Menu
-	ShowHiddenVars *bool
+	*Menu
 }
 
 func (m *AWSMenu) Help() {
@@ -149,7 +148,7 @@ func (m *AWSMenu) Printer() {
 		green.Printf("  Key ID: ")
 		fmt.Printf("%s\n", m.Vault.AWSKey.ID)
 		green.Printf("  Secret: ")
-		if *m.ShowHiddenVars {
+		if m.Menu.ShowHidden {
 			fmt.Printf("%s\n", m.Vault.AWSKey.Secret)
 		} else {
 			fmt.Printf("%s\n", faintColor.Sprint("<hidden>"))
