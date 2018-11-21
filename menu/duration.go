@@ -13,28 +13,27 @@ type DurationMenu struct {
 	Menu
 }
 
-func (m *DurationMenu) Handler() (err error) {
-	var dur string
+func (m *DurationMenu) Handler() error {
 	maxDuration := 999 * time.Hour
 	if m.Vault.AWSKey != nil && m.Vault.AWSKey.ForgoTempCredGeneration == false {
 		maxDuration = 36 * time.Hour
 	}
 	readMessage := fmt.Sprintf("Duration (15m–%s): ", m.formatDuration(maxDuration))
-	dur, err = interaction.ReadValue(readMessage)
+	dur, err := interaction.ReadValue(readMessage)
 	if err == nil {
 		duration, durErr := time.ParseDuration(dur)
 		if durErr != nil {
 			color.Red("%s", durErr)
-			return
+			return nil
 		}
 		if duration < 15*time.Minute || duration > maxDuration {
 			errorMessage := fmt.Sprintf("Duration must be between 15m and %s", m.formatDuration(maxDuration))
 			color.Red(errorMessage)
-			return
+			return nil
 		}
 		m.Vault.Duration = duration
 	}
-	return
+	return err
 }
 
 func (m *DurationMenu) formatDuration(duration time.Duration) string {

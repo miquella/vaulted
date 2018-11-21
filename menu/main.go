@@ -41,7 +41,7 @@ func (m *MainMenu) Handler() error {
 		case "v", "vars", "variables":
 			err = variableMenu.Handler()
 		case "d", "duration":
-			return durationMenu.Handler()
+			err = durationMenu.Handler()
 		case "S", "show", "hide":
 			m.toggleHidden()
 		case "b", "q", "quit", "exit":
