@@ -15,10 +15,10 @@ type MainMenu struct {
 
 func (m *MainMenu) Handler() error {
 	var err error
-	durationMenu := &DurationMenu{Menu: Menu{Vault: m.Vault}}
-	awsMenu := &AWSMenu{Menu: Menu{Vault: m.Vault}, ShowHiddenVars: &m.ShowHidden}
-	variableMenu := &VariableMenu{Menu: Menu{Vault: m.Vault}, ShowHiddenVars: &m.ShowHidden}
-	sshKeysMenu := &SSHKeyMenu{Menu: Menu{Vault: m.Vault}}
+	durationMenu := &DurationMenu{Menu: &m.Menu}
+	awsMenu := &AWSMenu{Menu: &m.Menu}
+	variableMenu := &VariableMenu{Menu: &m.Menu}
+	sshKeysMenu := &SSHKeyMenu{Menu: &m.Menu}
 
 	for {
 		cyan.Printf("\nVault: ")

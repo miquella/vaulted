@@ -8,8 +8,7 @@ import (
 )
 
 type VariableMenu struct {
-	Menu
-	ShowHiddenVars *bool
+	*Menu
 }
 
 func (m *VariableMenu) Handler() error {
@@ -103,7 +102,7 @@ func (m *VariableMenu) Printer() {
 
 		for _, key := range keys {
 			green.Printf("  %s: ", key)
-			if *m.ShowHiddenVars {
+			if m.Menu.ShowHidden {
 				fmt.Printf("%s\n", m.Vault.Vars[key])
 			} else {
 				fmt.Printf("%s\n", faintColor.Sprint("<hidden>"))
