@@ -33,19 +33,19 @@ type Session struct {
 	SSHKeys  map[string]string `json:"ssh_keys,omitempty"`
 }
 
-func (e *Session) AssumeSessionRole() (*Session, error) {
-	if e.Role == "" {
-		return e, nil
+func (s *Session) AssumeSessionRole() (*Session, error) {
+	if s.Role == "" {
+		return s, nil
 	}
 
-	role := e.Role
-	e.Role = ""
+	role := s.Role
+	s.Role = ""
 
-	return e.AssumeRole(role)
+	return s.AssumeRole(role)
 }
 
-func (e *Session) AssumeRole(roleArn string) (*Session, error) {
-	expiration := e.Expiration
+func (s *Session) AssumeRole(roleArn string) (*Session, error) {
+	expiration := s.Expiration
 	maxExpiration := time.Now().Add(time.Hour).Truncate(time.Second)
 	if expiration.After(maxExpiration) {
 		expiration = maxExpiration
@@ -58,13 +58,13 @@ func (e *Session) AssumeRole(roleArn string) (*Session, error) {
 	selectedRoleArn := roleArn
 	parsedArn, err := arn.Parse(roleArn)
 	if err == nil {
-		creds, err = e.AWSCreds.AssumeRole(parsedArn.String(), duration)
+		creds, err = s.AWSCreds.AssumeRole(parsedArn.String(), duration)
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		// Unparseable ARN
-		identityArn, err := e.AWSCreds.GetCallerIdentity()
+		identityArn, err := s.AWSCreds.GetCallerIdentity()
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +78,7 @@ func (e *Session) AssumeRole(roleArn string) (*Session, error) {
 		}
 
 		selectedRoleArn = fullRoleArn.String()
-		creds, err = e.AWSCreds.AssumeRole(selectedRoleArn, duration)
+		creds, err = s.AWSCreds.AssumeRole(selectedRoleArn, duration)
 		if err != nil {
 			return nil, fmt.Errorf("Error assuming role '%s' which was interpreted as '%s'\nError: %v", roleArn, selectedRoleArn, err)
 		}
@@ -87,7 +87,7 @@ func (e *Session) AssumeRole(roleArn string) (*Session, error) {
 	session := &Session{
 		SessionVersion: SessionVersion,
 
-		Name:       e.Name,
+		Name:       s.Name,
 		Expiration: *creds.Expiration,
 
 		ActiveRole: selectedRoleArn,
@@ -96,17 +96,17 @@ func (e *Session) AssumeRole(roleArn string) (*Session, error) {
 		Vars:     make(map[string]string),
 		SSHKeys:  make(map[string]string),
 	}
-	for key, value := range e.Vars {
+	for key, value := range s.Vars {
 		session.Vars[key] = value
 	}
-	for key, value := range e.SSHKeys {
+	for key, value := range s.SSHKeys {
 		session.SSHKeys[key] = value
 	}
 
 	return session, nil
 }
 
-func (e *Session) Spawn(cmd []string) (*int, error) {
+func (s *Session) Spawn(cmd []string) (*int, error) {
 	if len(cmd) == 0 {
 		return nil, ErrInvalidCommand
 	}
@@ -118,7 +118,7 @@ func (e *Session) Spawn(cmd []string) (*int, error) {
 	}
 
 	// start the agent
-	sock, err := e.startProxyKeyring()
+	sock, err := s.startProxyKeyring()
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (e *Session) Spawn(cmd []string) (*int, error) {
 
 	// start the process
 	var attr os.ProcAttr
-	attr.Env = e.buildEnviron(vars)
+	attr.Env = s.buildEnviron(vars)
 	attr.Files = []*os.File{os.Stdin, os.Stdout, os.Stderr}
 
 	proc, err := os.StartProcess(cmdpath, cmd, &attr)
@@ -151,8 +151,8 @@ func (e *Session) Spawn(cmd []string) (*int, error) {
 
 	// relay trapped signals to the spawned process
 	go func() {
-		for s := range sigs {
-			proc.Signal(s)
+		for sig := range sigs {
+			proc.Signal(sig)
 		}
 	}()
 
@@ -178,15 +178,15 @@ func (e *Session) Spawn(cmd []string) (*int, error) {
 	return &exitStatus, nil
 }
 
-func (e *Session) startProxyKeyring() (string, error) {
+func (s *Session) startProxyKeyring() (string, error) {
 	keyring, err := NewProxyKeyring(os.Getenv("SSH_AUTH_SOCK"))
 	if err != nil {
 		return "", err
 	}
 
 	// load ssh keys
-	for comment, key := range e.SSHKeys {
-		timeRemaining := e.Expiration.Sub(time.Now())
+	for comment, key := range s.SSHKeys {
+		timeRemaining := s.Expiration.Sub(time.Now())
 		addedKey := agent.AddedKey{
 			Comment:      comment,
 			LifetimeSecs: uint32(timeRemaining.Seconds()),
@@ -213,22 +213,22 @@ func (e *Session) startProxyKeyring() (string, error) {
 	return sock, err
 }
 
-func (e *Session) Variables() *Variables {
+func (s *Session) Variables() *Variables {
 	vars := Variables{
 		Set: make(map[string]string),
 	}
 
-	for key, value := range e.Vars {
+	for key, value := range s.Vars {
 		vars.Set[key] = value
 	}
 
-	vars.Set["VAULTED_ENV"] = e.Name
-	vars.Set["VAULTED_ENV_EXPIRATION"] = e.Expiration.UTC().Format(time.RFC3339)
+	vars.Set["VAULTED_ENV"] = s.Name
+	vars.Set["VAULTED_ENV_EXPIRATION"] = s.Expiration.UTC().Format(time.RFC3339)
 
-	if e.ActiveRole != "" {
-		vars.Set["VAULTED_ENV_ROLE_ARN"] = e.ActiveRole
+	if s.ActiveRole != "" {
+		vars.Set["VAULTED_ENV_ROLE_ARN"] = s.ActiveRole
 
-		roleArn, err := arn.Parse(e.ActiveRole)
+		roleArn, err := arn.Parse(s.ActiveRole)
 		if err == nil {
 			resource := strings.TrimPrefix(roleArn.Resource, "role/")
 			vars.Set["VAULTED_ENV_ROLE_PARTITION"] = roleArn.Partition
@@ -238,13 +238,13 @@ func (e *Session) Variables() *Variables {
 		}
 	}
 
-	if e.AWSCreds != nil {
-		vars.Set["AWS_ACCESS_KEY_ID"] = e.AWSCreds.ID
-		vars.Set["AWS_SECRET_ACCESS_KEY"] = e.AWSCreds.Secret
+	if s.AWSCreds != nil {
+		vars.Set["AWS_ACCESS_KEY_ID"] = s.AWSCreds.ID
+		vars.Set["AWS_SECRET_ACCESS_KEY"] = s.AWSCreds.Secret
 
-		if e.AWSCreds.Token != "" {
-			vars.Set["AWS_SESSION_TOKEN"] = e.AWSCreds.Token
-			vars.Set["AWS_SECURITY_TOKEN"] = e.AWSCreds.Token
+		if s.AWSCreds.Token != "" {
+			vars.Set["AWS_SESSION_TOKEN"] = s.AWSCreds.Token
+			vars.Set["AWS_SECURITY_TOKEN"] = s.AWSCreds.Token
 		} else {
 			vars.Unset = append(
 				vars.Unset,
@@ -257,14 +257,14 @@ func (e *Session) Variables() *Variables {
 	return &vars
 }
 
-func (e *Session) buildEnviron(extraVars map[string]string) []string {
+func (s *Session) buildEnviron(extraVars map[string]string) []string {
 	vars := make(map[string]string)
 	for _, v := range os.Environ() {
 		parts := strings.SplitN(v, "=", 2)
 		vars[parts[0]] = parts[1]
 	}
 
-	v := e.Variables()
+	v := s.Variables()
 	for _, key := range v.Unset {
 		delete(vars, key)
 	}
