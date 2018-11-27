@@ -97,28 +97,32 @@ In addition to the variables specified above, Vaulted provides additional
 environment variables with information about the role:
 .RS
 .IP \(bu 2
+\fB\fCVAULTED_ENV_ROLE_ACCOUNT_ID\fR
+.br
+The account ID of the role assumed.
+.IP \(bu 2
 \fB\fCVAULTED_ENV_ROLE_ARN\fR
 .br
 The full ARN of the role assumed.
 .IP \(bu 2
-\fB\fCVAULTED_ENV_ROLE_ACCOUNT_ID\fR
-.br
-The account ID specified by the role ARN.
-.IP \(bu 2
 \fB\fCVAULTED_ENV_ROLE_NAME\fR
 .br
-The name of the role specified by the role ARN.
+The name of the role assumed.
+.IP \(bu 2
+\fB\fCVAULTED_ENV_ROLE_PARTITION\fR
+.br
+The AWS partition of the role assumed.
 .IP \(bu 2
 \fB\fCVAULTED_ENV_ROLE_PATH\fR
 .br
-The path of the role specified by the role ARN.
+The path of the role assumed.
 .RE
 .PP
 For example:
 .PP
 .RS
 .nf
-vaulted shell \-\-assume arn:aws:iam::111222333444:role/SuperRole
+vaulted shell \-\-assume arn:aws:iam::111222333444:role/path/SuperRole
 .fi
 .RE
 .PP
@@ -126,10 +130,11 @@ would result in the following variables being set:
 .PP
 .RS
 .nf
-VAULTED_ENV_ROLE_ARN=arn:aws:iam::111222333444:role/SuperRole
 VAULTED_ENV_ROLE_ACCOUNT_ID=111222333444
+VAULTED_ENV_ROLE_ARN=arn:aws:iam::111222333444:role/path/SuperRole
 VAULTED_ENV_ROLE_NAME=SuperRole
-VAULTED_ENV_ROLE_PATH=/
+VAULTED_ENV_ROLE_PARTITION=aws
+VAULTED_ENV_ROLE_PATH=/path/
 .fi
 .RE
 .SH GUI Password Prompts

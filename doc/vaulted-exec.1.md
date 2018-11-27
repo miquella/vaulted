@@ -98,28 +98,31 @@ hour, regardless of the duration specified in the vault's configuration.
 In addition to the variables specified above, Vaulted provides additional
 environment variables with information about the role:
 
+ * `VAULTED_ENV_ROLE_ACCOUNT_ID`  
+   The account ID of the role assumed.
  * `VAULTED_ENV_ROLE_ARN`  
    The full ARN of the role assumed.
- * `VAULTED_ENV_ROLE_ACCOUNT_ID`  
-   The account ID specified by the role ARN.
  * `VAULTED_ENV_ROLE_NAME`  
-   The name of the role specified by the role ARN.
+   The name of the role assumed.
+ * `VAULTED_ENV_ROLE_PARTITION`  
+   The AWS partition of the role assumed.
  * `VAULTED_ENV_ROLE_PATH`  
-   The path of the role specified by the role ARN.
+   The path of the role assumed.
 
 For example:
 
 ```
-vaulted exec --assume arn:aws:iam::111222333444:role/SuperRole -- command
+vaulted exec --assume arn:aws:iam::111222333444:role/path/SuperRole -- command
 ```
 
 would result in the following variables being set:
 
 ```
-VAULTED_ENV_ROLE_ARN=arn:aws:iam::111222333444:role/SuperRole
 VAULTED_ENV_ROLE_ACCOUNT_ID=111222333444
+VAULTED_ENV_ROLE_ARN=arn:aws:iam::111222333444:role/path/SuperRole
 VAULTED_ENV_ROLE_NAME=SuperRole
-VAULTED_ENV_ROLE_PATH=/
+VAULTED_ENV_ROLE_PARTITION=aws
+VAULTED_ENV_ROLE_PATH=/path/
 ```
 
 GUI Password Prompts
