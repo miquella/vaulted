@@ -61,8 +61,28 @@ COMMANDS
 `upgrade`
   Upgrades legacy vaults to the current vault format. See vaulted-upgrade(1).
 
+FILE LOCATIONS
+--------------
+
+Vaults and cached sessions are stored according to the [XDG Base Directory Specification][xdg].
+
+**Vault** files are stored in:
+
+* `$XDG_DATA_HOME/vaulted/` _(typically `~/.local/share/vaulted/`)_
+* `$XDG_DATA_DIRS/vaulted/` _(typically `/usr/local/share` and `/usr/share`)_
+
+Vault files are written to `$XDG_DATA_HOME/vaulted/`. To backup your Vaulted data, all files in
+this directory should be backed up. Session cache files do not need to be retained.
+
+**Session** cache files are stored in:
+
+* `$XDG_CACHE/vaulted/` _(typically `~/.cache/vaulted/`)_
+
+[xdg]: https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+
 EXIT CODES
 ----------
+
 |Exit code|Meaning|
 |:-:|---|
 | 0 | Success. |
