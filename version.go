@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	VERSION = "2.3.unstable"
+	VERSION = "2.4.unstable"
 )
 
 type Version struct{}
