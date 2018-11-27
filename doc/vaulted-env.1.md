@@ -124,7 +124,7 @@ You can also specify a role name and Vaulted will attempt to create the full ARN
 from it, like so:
 
 ```
-vaulted shell --assume SuperRole
+vaulted env --assume SuperRole
 ```
 
 which would resolve to the full arn `arn:aws:iam::111222333444:role/SuperRole`.
@@ -135,28 +135,31 @@ hour, regardless of the duration specified in the vault's configuration.
 In addition to the variables specified above, Vaulted provides additional
 environment variables with information about the role:
 
+ * `VAULTED_ENV_ROLE_ACCOUNT_ID`  
+   The account ID of the role assumed.
  * `VAULTED_ENV_ROLE_ARN`  
    The full ARN of the role assumed.
- * `VAULTED_ENV_ROLE_ACCOUNT_ID`  
-   The account ID specified by the role ARN.
  * `VAULTED_ENV_ROLE_NAME`  
-   The name of the role specified by the role ARN.
+   The name of the role assumed.
+ * `VAULTED_ENV_ROLE_PARTITION`  
+   The AWS partition of the role assumed.
  * `VAULTED_ENV_ROLE_PATH`  
-   The path of the role specified by the role ARN.
+   The path of the role assumed.
 
 For example:
 
 ```
-vaulted shell --assume arn:aws:iam::111222333444:role/SuperRole
+vaulted env --assume arn:aws:iam::111222333444:role/path/SuperRole
 ```
 
 would result in the following variables being available in {{.Set}}:
 
 ```
-VAULTED_ENV_ROLE_ARN=arn:aws:iam::111222333444:role/SuperRole
 VAULTED_ENV_ROLE_ACCOUNT_ID=111222333444
+VAULTED_ENV_ROLE_ARN=arn:aws:iam::111222333444:role/path/SuperRole
 VAULTED_ENV_ROLE_NAME=SuperRole
-VAULTED_ENV_ROLE_PATH=/
+VAULTED_ENV_ROLE_PARTITION=aws
+VAULTED_ENV_ROLE_PATH=/path/
 ```
 
 GUI Password Prompts
