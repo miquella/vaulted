@@ -64,6 +64,26 @@ Starts an interactive shell with the secrets for the vault loaded into the shell
 \fB\fCupgrade\fR
 Upgrades legacy vaults to the current vault format. See 
 .BR vaulted-upgrade (1).
+.SH FILE LOCATIONS
+.PP
+Vaults and cached sessions are stored according to the XDG Base Directory Specification \[la]https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html\[ra]\&.
+.PP
+\fBVault\fP files are stored in:
+.RS
+.IP \(bu 2
+\fB\fC$XDG_DATA_HOME/vaulted/\fR \fI(typically \fB\fC~/.local/share/vaulted/\fR)\fP
+.IP \(bu 2
+\fB\fC$XDG_DATA_DIRS/vaulted/\fR \fI(typically \fB\fC/usr/local/share\fR and \fB\fC/usr/share\fR)\fP
+.RE
+.PP
+Vault files are written to \fB\fC$XDG_DATA_HOME/vaulted/\fR\&. To backup your Vaulted data, all files in
+this directory should be backed up. Session cache files do not need to be retained.
+.PP
+\fBSession\fP cache files are stored in:
+.RS
+.IP \(bu 2
+\fB\fC$XDG_CACHE/vaulted/\fR \fI(typically \fB\fC~/.cache/vaulted/\fR)\fP
+.RE
 .SH EXIT CODES
 .TS
 allbox;

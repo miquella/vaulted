@@ -93,14 +93,33 @@ _**Warning!** Leaving interactive shells with your credentials loaded can be
 dangerous as you may inadvertently provide credentials to an application you
 didn't intend!_
 
+File Locations
+--------------
+
+Vaults and cached sessions are stored according to the [XDG Base Directory Specification][xdg].
+
+**Vault** files are stored in:
+
+* `$XDG_DATA_HOME/vaulted/` _(typically `~/.local/share/vaulted/`)_
+* `$XDG_DATA_DIRS/vaulted/` _(typically `/usr/local/share` and `/usr/share`)_
+
+Vault files are written to `$XDG_DATA_HOME/vaulted/`. To backup your Vaulted data, all files in
+this directory should be backed up. Session cache files do not need to be retained.
+
+**Session** cache files are stored in:
+
+* `$XDG_CACHE/vaulted/` _(typically `~/.cache/vaulted/`)_
+
+[xdg]: https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+
 Using Vaulted from other software
 ---------------------------------
+
 An `env` subcommand has been included with the intention of supplying machine
 readable output for integration with shells and shell utilities. Every effort
 has been made to supply meaningful return codes on failures along with a
 description of what has gone wrong. See `vaulted(1)` for details on the return
 values to expect and their meanings.
-
 
 Going Further
 -------------
