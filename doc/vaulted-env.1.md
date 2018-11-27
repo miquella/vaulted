@@ -10,8 +10,7 @@ SYNOPSIS
 --------
 
 `vaulted env` *name* [*OPTIONS*]  
-`vaulted env --assume` *arn* [*OPTIONS*]  
-`vaulted env --no-session` *name* [*OPTIONS*]
+`vaulted env --assume` *arn* [*OPTIONS*]
 
 DESCRIPTION
 -----------

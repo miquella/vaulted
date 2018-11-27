@@ -10,8 +10,7 @@ SYNOPSIS
 --------
 
 `vaulted shell` *name* [*OPTIONS*]  
-`vaulted shell --assume` *arn* [*OPTIONS*]  
-`vaulted shell --no-session` *name* [*OPTIONS*]
+`vaulted shell --assume` *arn* [*OPTIONS*]
 
 DESCRIPTION
 -----------
