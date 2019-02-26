@@ -63,9 +63,6 @@ OPTIONS
   As an example, to output just the AWS credentials in a JSON format, use the
   custom template: `--format '{{ json .AWSCreds }}'`
 
-`--refresh`
-  Start a new session with new temporary credentials and a refreshed expiration.
-
 |Field Name|Type|Notes|
 |---|---|---|
 | Command | string | The full command line used to invoke vaulted including options |
@@ -75,6 +72,9 @@ OPTIONS
 | AWSCreds.Token | string | Session token for the AWS access key (used with temporary credentials) |
 | Set | map[string]string | A map of environment variables to be set along with their values |
 | Unset | []string | A slice of variables to be removed from the environment before setting new values |
+
+`--refresh`
+  Start a new session with new temporary credentials and a refreshed expiration.
 
 AWS KEY
 -------

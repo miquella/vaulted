@@ -54,9 +54,6 @@ printed JSON string.
 .IP
 As an example, to output just the AWS credentials in a JSON format, use the
 custom template: \fB\fC\-\-format '{{ json .AWSCreds }}'\fR
-.TP
-\fB\fC\-\-refresh\fR
-Start a new session with new temporary credentials and a refreshed expiration.
 .TS
 allbox;
 cb cb cb
@@ -77,6 +74,9 @@ AWSCreds.Token	string	Session token for the AWS access key (used with temporary 
 Set	map[string]string	A map of environment variables to be set along with their values
 Unset	[]string	A slice of variables to be removed from the environment before setting new values
 .TE
+.TP
+\fB\fC\-\-refresh\fR
+Start a new session with new temporary credentials and a refreshed expiration.
 .SH AWS KEY
 .PP
 [comment]: # (WHEN MODIFYING THESE DOCS, ALSO UPDATE: vaulted\-shell.1.md and
