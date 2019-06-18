@@ -9,5 +9,5 @@ require (
 	github.com/miquella/ask v1.0.0
 	github.com/miquella/xdg v1.0.0
 	github.com/spf13/pflag v1.0.3
-	golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85
+	golang.org/x/crypto v0.0.0-20190617133340-57b3e21c3d56
 )
