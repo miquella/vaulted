@@ -13,8 +13,8 @@ import (
 )
 
 type ProxyKeyring struct {
-	keyring  agent.Agent
-	upstream agent.Agent
+	keyring  agent.ExtendedAgent
+	upstream agent.ExtendedAgent
 
 	listener net.Listener
 }
@@ -22,7 +22,7 @@ type ProxyKeyring struct {
 func NewProxyKeyring(upstreamAuthSock string) (*ProxyKeyring, error) {
 	var err error
 	var conn net.Conn
-	var upstream agent.Agent
+	var upstream agent.ExtendedAgent
 
 	if upstreamAuthSock != "" {
 		conn, err = net.Dial("unix", upstreamAuthSock)
@@ -35,7 +35,7 @@ func NewProxyKeyring(upstreamAuthSock string) (*ProxyKeyring, error) {
 
 	return &ProxyKeyring{
 		upstream: upstream,
-		keyring:  agent.NewKeyring(),
+		keyring:  agent.NewKeyring().(agent.ExtendedAgent),
 	}, nil
 }
 
@@ -125,6 +125,22 @@ func (pk *ProxyKeyring) Sign(key ssh.PublicKey, data []byte) (*ssh.Signature, er
 	return nil, err
 }
 
+func (pk *ProxyKeyring) SignWithFlags(key ssh.PublicKey, data []byte, flags agent.SignatureFlags) (*ssh.Signature, error) {
+	sig, err := pk.keyring.SignWithFlags(key, data, flags)
+	if err == nil {
+		return sig, nil
+	}
+
+	if pk.upstream != nil {
+		usig, uerr := pk.upstream.SignWithFlags(key, data, flags)
+		if uerr == nil {
+			return usig, nil
+		}
+	}
+
+	return nil, err
+}
+
 func (pk *ProxyKeyring) Add(key agent.AddedKey) error {
 	return pk.keyring.Add(key)
 }
@@ -197,4 +213,8 @@ func (pk *ProxyKeyring) Signers() ([]ssh.Signer, error) {
 	}
 
 	return signers, nil
+}
+
+func (pk *ProxyKeyring) Extension(extensionType string, contents []byte) ([]byte, error) {
+	return nil, agent.ErrExtensionUnsupported
 }
