@@ -14,6 +14,11 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
+const (
+	BaseIterations          = 1 << 17
+	AdditionIterationsRange = 1 << 18
+)
+
 type VaultFile struct {
 	Key *VaultKey `json:"key"`
 
@@ -86,10 +91,10 @@ func newVaultKey(previous *VaultKey) *VaultKey {
 		method = "pbkdf2-sha512"
 		details = make(Details)
 
-		iterations := 65536
-		r, err := rand.Int(rand.Reader, big.NewInt(32768))
+		iterations := BaseIterations
+		r, err := rand.Int(rand.Reader, big.NewInt(AdditionIterationsRange))
 		if err == nil {
-			iterations = 65536 + int(r.Int64())
+			iterations += int(r.Int64())
 		}
 
 		details.SetInt("iterations", iterations)
