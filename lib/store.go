@@ -31,8 +31,8 @@ type Store interface {
 	SealVaultWithPassword(vault *Vault, name, password string) error
 	RemoveVault(name string) error
 
-	CreateSession(name string) (*Session, string, error)
-	GetSession(name string) (*Session, string, error)
+	CreateSession(vault *Vault, name, password string) (*Session, error)
+	GetSession(vault *Vault, name, password string) (*Session, error)
 }
 
 type store struct {
@@ -228,35 +228,7 @@ func (s *store) RemoveVault(name string) error {
 	return os.Remove(existing)
 }
 
-func (s *store) CreateSession(name string) (*Session, string, error) {
-	v, password, err := s.OpenVault(name)
-	if err != nil {
-		return nil, "", err
-	}
-
-	session, err := s.createSession(v, name, password)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return session, "", nil
-}
-
-func (s *store) GetSession(name string) (*Session, string, error) {
-	v, password, err := s.OpenVault(name)
-	if err != nil {
-		return nil, "", err
-	}
-
-	session, err := s.getSession(v, name, password)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return session, "", nil
-}
-
-func (s *store) getSession(v *Vault, name, password string) (*Session, error) {
+func (s *store) GetSession(v *Vault, name, password string) (*Session, error) {
 	session, err := s.openSession(name, password)
 	if err != nil {
 		removeSession(name)
@@ -264,12 +236,17 @@ func (s *store) getSession(v *Vault, name, password string) (*Session, error) {
 		return session, nil
 	}
 
-	return s.createSession(v, name, password)
+	return s.CreateSession(v, name, password)
 }
 
-func (s *store) createSession(v *Vault, name, password string) (*Session, error) {
+func (s *store) CreateSession(v *Vault, name, password string) (*Session, error) {
 	var session *Session
 	var err error
+
+	if !s.VaultExists(name) {
+		return nil, os.ErrNotExist
+	}
+
 	if v.AWSKey.RequiresMFA() {
 		var mfaToken string
 		mfaToken, err = s.steward.GetMFAToken(name)

@@ -85,13 +85,17 @@ func getVaultSessionWithNoSession(store vaulted.Store, options *SessionOptions) 
 
 func getVaultSession(store vaulted.Store, options *SessionOptions) (*vaulted.Session, error) {
 	var session *vaulted.Session
-	var err error
+
+	vault, password, err := store.OpenVault(options.VaultName)
+	if err != nil {
+		return nil, err
+	}
 
 	// Create/get cached session
 	if options.Refresh {
-		session, _, err = store.CreateSession(options.VaultName)
+		session, err = store.CreateSession(vault, options.VaultName, password)
 	} else {
-		session, _, err = store.GetSession(options.VaultName)
+		session, err = store.GetSession(vault, options.VaultName, password)
 	}
 	if err != nil {
 		return nil, err

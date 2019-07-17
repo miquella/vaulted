@@ -140,9 +140,9 @@ func (ts TestStore) RemoveVault(name string) error {
 	return nil
 }
 
-func (ts TestStore) GetSession(name string) (*vaulted.Session, string, error) {
+func (ts TestStore) GetSession(vault *vaulted.Vault, name, password string) (*vaulted.Session, error) {
 	if !ts.VaultExists(name) {
-		return nil, "", os.ErrNotExist
+		return nil, os.ErrNotExist
 	}
 
 	s := &vaulted.Session{
@@ -170,8 +170,6 @@ func (ts TestStore) GetSession(name string) (*vaulted.Session, string, error) {
 			s.SSHKeys[key] = value
 		}
 	} else {
-		vault := ts.Vaults[name]
-
 		s.Name = name
 
 		for key, value := range vault.Vars {
@@ -183,12 +181,12 @@ func (ts TestStore) GetSession(name string) (*vaulted.Session, string, error) {
 		}
 	}
 
-	return s, ts.Passwords[name], nil
+	return s, nil
 }
 
-func (ts TestStore) CreateSession(name string) (*vaulted.Session, string, error) {
+func (ts TestStore) CreateSession(vault *vaulted.Vault, name, password string) (*vaulted.Session, error) {
 	if !ts.VaultExists(name) {
-		return nil, "", os.ErrNotExist
+		return nil, os.ErrNotExist
 	}
 
 	s := &vaulted.Session{
@@ -199,7 +197,6 @@ func (ts TestStore) CreateSession(name string) (*vaulted.Session, string, error)
 		Vars:    make(map[string]string),
 		SSHKeys: make(map[string]string),
 	}
-	vault := ts.Vaults[name]
 
 	s.Name = name
 
@@ -210,7 +207,7 @@ func (ts TestStore) CreateSession(name string) (*vaulted.Session, string, error)
 	for key, value := range vault.SSHKeys {
 		s.SSHKeys[key] = value
 	}
-	return s, ts.Passwords[name], nil
+	return s, nil
 }
 
 func (ts TestStore) OpenLegacyVault() (environments map[string]legacy.Environment, password string, err error) {
