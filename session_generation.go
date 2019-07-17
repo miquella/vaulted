@@ -80,6 +80,8 @@ func getDefaultSession(options *SessionOptions) (*vaulted.Session, error) {
 		Duration: time.Hour,
 	}
 
+	updateVaultFromEnvAndOptions(vault, options)
+
 	// Create the session
 	return vault.NewSession(os.Getenv("VAULTED_ENV"))
 }
@@ -89,6 +91,8 @@ func getVaultSession(store vaulted.Store, options *SessionOptions) (*vaulted.Ses
 	if err != nil {
 		return nil, err
 	}
+
+	updateVaultFromEnvAndOptions(vault, options)
 
 	// Create/get cached session
 	var session *vaulted.Session
@@ -103,4 +107,26 @@ func getVaultSession(store vaulted.Store, options *SessionOptions) (*vaulted.Ses
 
 	// Assume the session's role
 	return session.AssumeSessionRole()
+}
+
+func updateVaultFromEnvAndOptions(vault *vaulted.Vault, options *SessionOptions) {
+	// Calculate the region (lowest precedence to highest)
+	region := os.Getenv("AWS_DEFAULT_REGION")
+	if awsRegion := os.Getenv("AWS_REGION"); awsRegion != "" {
+		region = awsRegion
+	}
+	if vault.AWSKey != nil {
+		if vault.AWSKey.Region != nil && *vault.AWSKey.Region != "" {
+			region = *vault.AWSKey.Region
+		}
+	}
+
+	// Set the region
+	if region != "" {
+		if vault.AWSKey == nil {
+			vault.AWSKey = &vaulted.AWSKey{}
+		}
+
+		vault.AWSKey.Region = &region
+	}
 }

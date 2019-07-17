@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
 )
@@ -17,14 +18,20 @@ type AWSCredentials struct {
 	Secret     string     `json:"secret"`
 	Token      string     `json:"token,omitempty"`
 	Expiration *time.Time `json:"expiration,omitempty"`
+	Region     *string    `json:"region,omitempty"`
 }
 
-func AWSCredentialsFromSTSCredentials(creds *sts.Credentials) *AWSCredentials {
+func AWSCredentialsFromSTSCredentials(creds *sts.Credentials, region *string) *AWSCredentials {
+	if region != nil && *region == "" {
+		region = nil
+	}
+
 	return &AWSCredentials{
 		ID:         *creds.AccessKeyId,
 		Secret:     *creds.SecretAccessKey,
 		Token:      *creds.SessionToken,
 		Expiration: creds.Expiration,
+		Region:     region,
 	}
 }
 
@@ -53,7 +60,7 @@ func (c *AWSCredentials) GetSessionToken(duration time.Duration) (*AWSCredential
 		return nil, err
 	}
 
-	return AWSCredentialsFromSTSCredentials(getSessionToken.Credentials), nil
+	return AWSCredentialsFromSTSCredentials(getSessionToken.Credentials, stsClient.Config.Region), nil
 }
 
 func (c *AWSCredentials) GetSessionTokenWithMFA(serialNumber, token string, duration time.Duration) (*AWSCredentials, error) {
@@ -71,7 +78,7 @@ func (c *AWSCredentials) GetSessionTokenWithMFA(serialNumber, token string, dura
 		return nil, err
 	}
 
-	return AWSCredentialsFromSTSCredentials(getSessionToken.Credentials), nil
+	return AWSCredentialsFromSTSCredentials(getSessionToken.Credentials, stsClient.Config.Region), nil
 }
 
 func (c *AWSCredentials) GetCallerIdentity() (arn.ARN, error) {
@@ -106,19 +113,26 @@ func (c *AWSCredentials) AssumeRole(arn string, duration time.Duration) (*AWSCre
 		return nil, err
 	}
 
-	return AWSCredentialsFromSTSCredentials(assumeRole.Credentials), nil
+	return AWSCredentialsFromSTSCredentials(assumeRole.Credentials, stsClient.Config.Region), nil
 }
 
 func (c *AWSCredentials) stsClient() (*sts.STS, error) {
-	// if c is nil, the default credential provider chain is used
+	// if c is nil, default configs are used
 	// (yes, I know this seems a little weird)
-	config := &aws.Config{}
-	if c != nil && c.ID != "" {
-		config.Credentials = credentials.NewStaticCredentials(
-			c.ID,
-			c.Secret,
-			c.Token,
-		)
+	config := &aws.Config{
+		EndpointResolver: STSEndpointResolver(endpoints.DefaultResolver()),
+	}
+
+	if c != nil {
+		config.Region = c.Region
+
+		if c.ID != "" && c.Secret != "" {
+			config.Credentials = credentials.NewStaticCredentials(
+				c.ID,
+				c.Secret,
+				c.Token,
+			)
+		}
 	}
 
 	s, err := session.NewSession(config)
