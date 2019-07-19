@@ -11,6 +11,7 @@ import (
 var (
 	ErrNoSessionIncompatibleWithAssume  = errors.New("--assume generates session credentials, it cannot be combined with --no-session")
 	ErrNoSessionIncompatibleWithRefresh = errors.New("--refresh refreshes session credentials, it cannot be combined with --no-session")
+	ErrNoSessionIncompatibleWithRegion  = errors.New("--region generates session credentials for a region, it cannot be combined with --no-session")
 	ErrNoSessionRequiresVaultName       = errors.New("A vault name must be specified when using --no-session")
 )
 
@@ -20,6 +21,7 @@ type SessionOptions struct {
 	NoSession bool
 
 	Refresh bool
+	Region  string
 	Role    string
 }
 
@@ -32,6 +34,8 @@ func GetSessionWithOptions(store vaulted.Store, options *SessionOptions) (*vault
 			return nil, ErrNoSessionIncompatibleWithRefresh
 		} else if options.Role != "" {
 			return nil, ErrNoSessionIncompatibleWithAssume
+		} else if options.Region != "" {
+			return nil, ErrNoSessionIncompatibleWithRegion
 		}
 
 		return getVaultSessionWithNoSession(store, options)
@@ -119,6 +123,9 @@ func updateVaultFromEnvAndOptions(vault *vaulted.Vault, options *SessionOptions)
 		if vault.AWSKey.Region != nil && *vault.AWSKey.Region != "" {
 			region = *vault.AWSKey.Region
 		}
+	}
+	if options.Region != "" {
+		region = options.Region
 	}
 
 	// Set the region

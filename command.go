@@ -267,6 +267,7 @@ func parseEnvArgs(args []string) (Command, error) {
 	flag.String("assume", "", "Role to assume")
 	flag.Bool("no-session", false, "Disable use of temporary credentials")
 	flag.Bool("refresh", false, "Start a new session with new temporary credentials and a refreshed expiration")
+	flag.String("region", "", "The AWS region to use to generate STS credentials")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -278,6 +279,7 @@ func parseEnvArgs(args []string) (Command, error) {
 	e.Role, _ = flag.GetString("assume")
 	e.NoSession, _ = flag.GetBool("no-session")
 	e.Refresh, _ = flag.GetBool("refresh")
+	e.Region, _ = flag.GetString("region")
 
 	if flag.NArg() > 1 {
 		return nil, ErrTooManyArguments
@@ -460,6 +462,7 @@ func parseShellArgs(args []string) (Command, error) {
 	flag.String("assume", "", "Role to assume")
 	flag.Bool("no-session", false, "Disable use of temporary credentials")
 	flag.Bool("refresh", false, "Start a new session with new temporary credentials and a refreshed expiration")
+	flag.String("region", "", "The AWS region to use to generate STS credentials")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -470,6 +473,7 @@ func parseShellArgs(args []string) (Command, error) {
 	s.Role, _ = flag.GetString("assume")
 	s.NoSession, _ = flag.GetBool("no-session")
 	s.Refresh, _ = flag.GetBool("refresh")
+	s.Region, _ = flag.GetString("region")
 	s.Command = interactiveShellCommand()
 	s.DisplayStatus = true
 
