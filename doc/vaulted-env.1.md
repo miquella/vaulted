@@ -76,6 +76,15 @@ OPTIONS
 `--refresh`
   Start a new session with new temporary credentials and a refreshed expiration.
 
+`--region` *region*
+  Override the region to be used for AWS. This sets the region used when
+  generating temporary credentials.
+
+  When a region is used (via `--region`, the vault itself, or the enclosing
+  environment's `AWS_REGION` or `AWS_DEFAULT_REGION` variables), spawned
+  environments will include the `AWS_REGION` and `AWS_DEFAULT_REGION`
+  environment variables to indicate the active region.
+
 AWS KEY
 -------
 

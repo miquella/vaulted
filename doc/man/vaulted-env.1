@@ -77,6 +77,15 @@ command with the ARN of the role you wish to assume.
 .TP
 \fB\fC\-\-refresh\fR
 Start a new session with new temporary credentials and a refreshed expiration.
+.TP
+\fB\fC\-\-region\fR \fIregion\fP
+Override the region to be used for AWS. This sets the region used when
+generating temporary credentials.
+.IP
+When a region is used (via \fB\fC\-\-region\fR, the vault itself, or the enclosing
+environment's \fB\fCAWS_REGION\fR or \fB\fCAWS_DEFAULT_REGION\fR variables), spawned
+environments will include the \fB\fCAWS_REGION\fR and \fB\fCAWS_DEFAULT_REGION\fR
+environment variables to indicate the active region.
 .SH AWS KEY
 .PP
 [comment]: # (WHEN MODIFYING THESE DOCS, ALSO UPDATE: vaulted\-shell.1.md and
