@@ -37,13 +37,6 @@ OPTIONS
   When invoked this way, credentials are sourced from default locations (e.g.
   environment, configuration files, instance profile, etc.).
 
-`--no-session`
-  Disables the generation of temporary credentials and role assumption. The
-  permanent credentials stored in the vault are used instead.
-
-  Role assumption can be performed after spawning a shell using the `--assume`
-  command with the ARN of the role you wish to assume.
-
 `--format` &lt;shell,fish,sh,json,*custom*&gt;
   Specify what format to use, defaults to `shell` which will autodetect which
   shell format to emit.
@@ -72,6 +65,13 @@ OPTIONS
 | AWSCreds.Token | string | Session token for the AWS access key (used with temporary credentials) |
 | Set | map[string]string | A map of environment variables to be set along with their values |
 | Unset | []string | A slice of variables to be removed from the environment before setting new values |
+
+`--no-session`
+  Disables the generation of temporary credentials and role assumption. The
+  permanent credentials stored in the vault are used instead.
+
+  Role assumption can be performed after spawning a shell using the `--assume`
+  command with the ARN of the role you wish to assume.
 
 `--refresh`
   Start a new session with new temporary credentials and a refreshed expiration.
