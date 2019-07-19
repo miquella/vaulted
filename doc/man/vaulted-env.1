@@ -29,13 +29,6 @@ Role assumption may be performed without specifying a vault to spawn from.
 When invoked this way, credentials are sourced from default locations (e.g.
 environment, configuration files, instance profile, etc.).
 .TP
-\fB\fC\-\-no\-session\fR
-Disables the generation of temporary credentials and role assumption. The
-permanent credentials stored in the vault are used instead.
-.IP
-Role assumption can be performed after spawning a shell using the \fB\fC\-\-assume\fR
-command with the ARN of the role you wish to assume.
-.TP
 \fB\fC\-\-format\fR <shell,fish,sh,json,\fIcustom\fP>
 Specify what format to use, defaults to \fB\fCshell\fR which will autodetect which
 shell format to emit.
@@ -74,6 +67,13 @@ AWSCreds.Token	string	Session token for the AWS access key (used with temporary 
 Set	map[string]string	A map of environment variables to be set along with their values
 Unset	[]string	A slice of variables to be removed from the environment before setting new values
 .TE
+.TP
+\fB\fC\-\-no\-session\fR
+Disables the generation of temporary credentials and role assumption. The
+permanent credentials stored in the vault are used instead.
+.IP
+Role assumption can be performed after spawning a shell using the \fB\fC\-\-assume\fR
+command with the ARN of the role you wish to assume.
 .TP
 \fB\fC\-\-refresh\fR
 Start a new session with new temporary credentials and a refreshed expiration.
