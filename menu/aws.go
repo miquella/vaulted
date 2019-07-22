@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/fatih/color"
 	"github.com/miquella/vaulted/lib"
 )
@@ -13,6 +14,16 @@ type AWSMenu struct {
 	*Menu
 }
 
+func sdkRegions() map[string]bool {
+	regions := make(map[string]bool)
+	for _, partition := range endpoints.DefaultPartitions() {
+		for region := range partition.Regions() {
+			regions[region] = true
+		}
+	}
+	return regions
+}
+
 func (m *AWSMenu) Help() {
 	menuColor.Set()
 	defer color.Unset()
@@ -20,6 +31,7 @@ func (m *AWSMenu) Help() {
 	fmt.Println("k,key    - Key")
 	fmt.Println("m,mfa    - MFA")
 	fmt.Println("r,role   - Role")
+	fmt.Println("  region - Region")
 	fmt.Println("t,temp   - Substitute with temporary credentials")
 	fmt.Println("S,show   - Show/Hide Secrets")
 	fmt.Println("D,delete - Delete")
@@ -109,6 +121,25 @@ func (m *AWSMenu) Handler() error {
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
 			}
+		case "region":
+			region, err := m.readRegion()
+			if err != nil {
+				return err
+			}
+
+			if region != "" {
+				// Set the region
+				if m.Vault.AWSKey == nil {
+					m.Vault.AWSKey = &vaulted.AWSKey{}
+				}
+				m.Vault.AWSKey.Region = &region
+			} else {
+				// Unset the region
+				if m.Vault.AWSKey != nil {
+					m.Vault.AWSKey.Region = nil
+				}
+			}
+
 		case "t", "temp", "temporary":
 			if m.Vault.AWSKey != nil {
 				forgoTempCredGeneration := !m.Vault.AWSKey.ForgoTempCredGeneration
@@ -164,6 +195,19 @@ func (m *AWSMenu) Handler() error {
 	}
 }
 
+func (m *AWSMenu) readRegion() (string, error) {
+	region, err := interaction.ReadValue("Region: ")
+	if err != nil {
+		return "", err
+	}
+
+	if !sdkRegions()[region] {
+		fmt.Printf("\n%s%s%s\n", warningColor.Sprint("WARNING: "), region, warningColor.Sprint(" doesn't appear to be a valid region."))
+	}
+
+	return region, nil
+}
+
 func (m *AWSMenu) Printer() {
 	color.Cyan("\nAWS Key:")
 	if m.Vault.AWSKey != nil {
@@ -191,6 +235,18 @@ func (m *AWSMenu) Printer() {
 		}
 		green.Printf("  Substitute with temporary credentials: ")
 		fmt.Printf("%t\n", !m.Vault.AWSKey.ForgoTempCredGeneration)
+
+		green.Printf("  Region: ")
+		if m.Vault.AWSKey.Region == nil || *m.Vault.AWSKey.Region == "" {
+			fmt.Printf("%s\n", faintColor.Sprint("<global>"))
+		} else {
+			var unrecognized string
+			if !sdkRegions()[*m.Vault.AWSKey.Region] {
+				unrecognized = warningColor.Sprintf(" (unrecognized region)")
+			}
+
+			fmt.Printf("%s%s\n", *m.Vault.AWSKey.Region, unrecognized)
+		}
 	} else {
 		fmt.Println("  [Empty]")
 	}
