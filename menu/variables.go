@@ -83,12 +83,12 @@ func (m *VariableMenu) Help() {
 	color.Set(color.FgYellow)
 	defer color.Unset()
 	fmt.Println("")
-	fmt.Println("a - Add")
-	fmt.Println("S - Show/Hide Secrets")
-	fmt.Println("D - Delete")
-	fmt.Println("? - Help")
-	fmt.Println("b - Back")
-	fmt.Println("q - Quit")
+	fmt.Println("a,add    - Add")
+	fmt.Println("S,show   - Show/Hide Secrets")
+	fmt.Println("D,delete - Delete")
+	fmt.Println("?,help   - Help")
+	fmt.Println("b,back   - Back")
+	fmt.Println("q,quit   - Quit")
 }
 
 func (m *VariableMenu) Printer() {

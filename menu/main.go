@@ -67,11 +67,11 @@ func (m *MainMenu) Help() {
 	menuColor.Set()
 	defer color.Unset()
 
-	fmt.Println("a - AWS Key")
-	fmt.Println("s - SSH Keys")
-	fmt.Println("v - Variables")
-	fmt.Println("d - Session Duration")
-	fmt.Println("S - Show/Hide Secrets")
-	fmt.Println("? - Help")
-	fmt.Println("q - Quit")
+	fmt.Println("a,aws      - AWS Key")
+	fmt.Println("s,ssh      - SSH Keys")
+	fmt.Println("v,vars     - Variables")
+	fmt.Println("d,duration - Session Duration")
+	fmt.Println("S,show     - Show/Hide Secrets")
+	fmt.Println("?,help     - Help")
+	fmt.Println("q,quit     - Quit")
 }
