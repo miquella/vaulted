@@ -23,11 +23,11 @@ func (m *SSHKeyMenu) Help() {
 	menuColor.Set()
 	defer color.Unset()
 
-	fmt.Println("a - Add")
-	fmt.Println("D - Delete")
-	fmt.Println("? - Help")
-	fmt.Println("b - Back")
-	fmt.Println("q - Quit")
+	fmt.Println("a,add    - Add")
+	fmt.Println("D,delete - Delete")
+	fmt.Println("?,help   - Help")
+	fmt.Println("b,back   - Back")
+	fmt.Println("q,quit   - Quit")
 }
 
 func (m *SSHKeyMenu) Handler() error {

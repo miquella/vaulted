@@ -17,15 +17,15 @@ func (m *AWSMenu) Help() {
 	menuColor.Set()
 	defer color.Unset()
 
-	fmt.Println("k - Key")
-	fmt.Println("m - MFA")
-	fmt.Println("r - Role")
-	fmt.Println("t - Substitute with temporary credentials")
-	fmt.Println("S - Show/Hide Secrets")
-	fmt.Println("D - Delete")
-	fmt.Println("? - Help")
-	fmt.Println("b - Back")
-	fmt.Println("q - Quit")
+	fmt.Println("k,key    - Key")
+	fmt.Println("m,mfa    - MFA")
+	fmt.Println("r,role   - Role")
+	fmt.Println("t,temp   - Substitute with temporary credentials")
+	fmt.Println("S,show   - Show/Hide Secrets")
+	fmt.Println("D,delete - Delete")
+	fmt.Println("?,help   - Help")
+	fmt.Println("b,back   - Back")
+	fmt.Println("q,quit   - Quit")
 }
 
 func (m *AWSMenu) Handler() error {
