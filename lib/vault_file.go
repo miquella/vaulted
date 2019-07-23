@@ -69,7 +69,7 @@ func writeVaultFile(name string, vaultFile *VaultFile) error {
 		return err
 	}
 
-	removeSession(name)
+	removeSessionCache(name)
 
 	return nil
 }

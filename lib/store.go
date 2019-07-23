@@ -223,17 +223,21 @@ func (s *store) RemoveVault(name string) error {
 		return fmt.Errorf("Because %s is outside the vaulted managed directory (%s), it must be removed manually", untouchable[0], xdg.DATA_HOME.Join("vaulted"))
 	}
 
-	removeSession(name)
+	removeSessionCache(name)
 
 	return os.Remove(existing)
 }
 
 func (s *store) GetSession(v *Vault, name, password string) (*Session, error) {
-	session, err := s.openSession(name, password)
+	sessionCache, err := s.openSessionCache(name, password)
 	if err != nil {
-		removeSession(name)
-	} else if session.Expiration.After(time.Now().Add(15 * time.Minute)) {
-		return session, nil
+		sessionCache = &SessionCache{}
+		removeSessionCache(name)
+	} else {
+		session, err := sessionCache.GetVaultSession(v)
+		if err == nil && !session.Expired(15*time.Minute) {
+			return session, nil
+		}
 	}
 
 	return s.CreateSession(v, name, password)
@@ -247,6 +251,7 @@ func (s *store) CreateSession(v *Vault, name, password string) (*Session, error)
 		return nil, os.ErrNotExist
 	}
 
+	// actually create the session
 	if v.AWSKey.RequiresMFA() {
 		var mfaToken string
 		mfaToken, err = s.steward.GetMFAToken(name)
@@ -260,20 +265,32 @@ func (s *store) CreateSession(v *Vault, name, password string) (*Session, error)
 		return nil, err
 	}
 
-	// we have a valid session, so if saving fails, ignore the failure
-	s.sealSession(session, name, password)
+	// we ignore errors because the session is viable even if saving the cache fails
+	sessionCache, err := s.openSessionCache(name, password)
+	if err != nil {
+		sessionCache = &SessionCache{}
+		removeSessionCache(name)
+	}
+
+	sessionCache.PutVaultSession(v, session)
+	s.sealSessionCache(sessionCache, name, password)
+
 	return session, nil
 }
 
-func (s *store) sealSession(session *Session, name, password string) error {
+func (s *store) sealSessionCache(sessionCache *SessionCache, name, password string) error {
 	// read the vault file (to get key details)
 	vf, err := readVaultFile(name)
 	if err != nil {
 		return err
 	}
 
-	// marshal the session content
-	content, err := json.Marshal(session)
+	// normalize the session cache first
+	sessionCache.SessionCacheVersion = SessionCacheVersion
+	sessionCache.RemoveExpiredSessions()
+
+	// marshal the session cache content
+	content, err := json.Marshal(sessionCache)
 	if err != nil {
 		return err
 	}
@@ -309,7 +326,7 @@ func (s *store) sealSession(session *Session, name, password string) error {
 	return writeSessionFile(name, sf)
 }
 
-func (s *store) openSession(name, password string) (*Session, error) {
+func (s *store) openSessionCache(name, password string) (*SessionCache, error) {
 	vf, err := readVaultFile(name)
 	if err != nil {
 		return nil, err
@@ -320,7 +337,7 @@ func (s *store) openSession(name, password string) (*Session, error) {
 		return nil, err
 	}
 
-	session := Session{}
+	sessionCache := SessionCache{}
 
 	switch sf.Method {
 	case "secretbox":
@@ -347,7 +364,7 @@ func (s *store) openSession(name, password string) (*Session, error) {
 			return nil, ErrIncorrectPassword
 		}
 
-		err = json.Unmarshal(plaintext, &session)
+		err = json.Unmarshal(plaintext, &sessionCache)
 		if err != nil {
 			return nil, err
 		}
@@ -356,9 +373,9 @@ func (s *store) openSession(name, password string) (*Session, error) {
 		return nil, fmt.Errorf("Invalid encryption method: %s", sf.Method)
 	}
 
-	if session.SessionVersion != SessionVersion {
-		return nil, fmt.Errorf("Invalid session version: %s", session.SessionVersion)
+	if sessionCache.SessionCacheVersion != SessionCacheVersion {
+		return nil, fmt.Errorf("Invalid session version: %s", sessionCache.SessionCacheVersion)
 	}
 
-	return &session, nil
+	return &sessionCache, nil
 }

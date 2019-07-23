@@ -59,7 +59,7 @@ func writeSessionFile(name string, sessionFile *SessionFile) error {
 	return nil
 }
 
-func removeSession(name string) error {
+func removeSessionCache(name string) error {
 	existing := xdg.CACHE_HOME.Find(filepath.Join("vaulted", name))
 	if existing == "" {
 		return os.ErrNotExist
