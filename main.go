@@ -25,6 +25,7 @@ var (
 	ErrNoError           = errors.New("")
 	ErrFileNotExist      = ErrorWithExitCode{os.ErrNotExist, EX_USAGE_ERROR}
 	ErrNoPasswordEntered = ErrorWithExitCode{errors.New("Could not get password"), EX_UNAVAILABLE}
+	ErrNoMFATokenEntered = ErrorWithExitCode{errors.New("Could not get MFA token"), EX_UNAVAILABLE}
 )
 
 func main() {
