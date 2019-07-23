@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/miquella/ask"
@@ -155,7 +156,24 @@ func (t *TTYSteward) GetPassword(operation vaulted.Operation, name string) (stri
 	}
 }
 
+var (
+	mfaTokenValidation = regexp.MustCompile(`^\d{6}$`)
+)
+
 func (t *TTYSteward) GetMFAToken(name string) (string, error) {
-	token, err := ask.Ask("   MFA token: ")
-	return strings.TrimSpace(token), err
+	for attempts := 0; attempts < 3; attempts++ {
+		token, err := ask.Ask("   MFA token: ")
+		if err != nil {
+			return "", err
+		}
+
+		token = strings.TrimSpace(token)
+		if mfaTokenValidation.MatchString(token) {
+			return token, nil
+		}
+
+		ask.Print("Invalid MFA token.\n")
+	}
+
+	return "", ErrNoMFATokenEntered
 }
