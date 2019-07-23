@@ -212,8 +212,6 @@ func TestEnv(t *testing.T) {
 
 	// cached session
 	store.Sessions["one"] = &vaulted.Session{
-		SessionVersion: vaulted.SessionVersion,
-
 		Name:       "one",
 		Expiration: time.Unix(1136239445, 0),
 

@@ -15,13 +15,11 @@ import (
 	"golang.org/x/crypto/ssh/agent"
 )
 
-var (
-	SessionVersion = "2"
+const (
+	NoTolerance time.Duration = 0
 )
 
 type Session struct {
-	SessionVersion string `json:"version"`
-
 	Name       string    `json:"name"`
 	Expiration time.Time `json:"expiration"`
 
@@ -31,6 +29,34 @@ type Session struct {
 	Role     string            `json:"role,omitempty"`
 	Vars     map[string]string `json:"vars,omitempty"`
 	SSHKeys  map[string]string `json:"ssh_keys,omitempty"`
+}
+
+func (s *Session) Clone() *Session {
+	if s == nil {
+		return nil
+	}
+
+	session := *s
+
+	if s.Vars != nil {
+		session.Vars = make(map[string]string)
+		for key, value := range s.Vars {
+			session.Vars[key] = value
+		}
+	}
+
+	if s.SSHKeys != nil {
+		session.SSHKeys = make(map[string]string)
+		for key, value := range s.SSHKeys {
+			session.SSHKeys[key] = value
+		}
+	}
+
+	return &session
+}
+
+func (s *Session) Expired(tolerance time.Duration) bool {
+	return s.Expiration.Before(time.Now().Add(-tolerance))
 }
 
 func (s *Session) AssumeSessionRole() (*Session, error) {
@@ -85,8 +111,6 @@ func (s *Session) AssumeRole(roleArn string) (*Session, error) {
 	}
 
 	session := &Session{
-		SessionVersion: SessionVersion,
-
 		Name:       s.Name,
 		Expiration: *creds.Expiration,
 

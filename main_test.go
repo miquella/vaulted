@@ -146,8 +146,6 @@ func (ts TestStore) GetSession(vault *vaulted.Vault, name, password string) (*va
 	}
 
 	s := &vaulted.Session{
-		SessionVersion: vaulted.SessionVersion,
-
 		Expiration: time.Unix(1136239445, 0),
 
 		Vars:    make(map[string]string),
@@ -190,8 +188,6 @@ func (ts TestStore) CreateSession(vault *vaulted.Vault, name, password string) (
 	}
 
 	s := &vaulted.Session{
-		SessionVersion: vaulted.SessionVersion,
-
 		Expiration: time.Unix(1136239446, 0),
 
 		Vars:    make(map[string]string),

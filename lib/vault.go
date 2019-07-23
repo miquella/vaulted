@@ -46,8 +46,6 @@ func (v *Vault) newSession(name string, credsFunc func(duration time.Duration) (
 	var expiration *time.Time
 
 	s := &Session{
-		SessionVersion: SessionVersion,
-
 		Name: name,
 
 		Vars: make(map[string]string),
