@@ -23,13 +23,6 @@ type SessionOptions struct {
 	Role    string
 }
 
-func DefaultSession() *vaulted.Session {
-	return &vaulted.Session{
-		Name:       os.Getenv("VAULTED_ENV"),
-		Expiration: time.Now().Add(time.Hour).Truncate(time.Second),
-	}
-}
-
 func GetSessionWithOptions(store vaulted.Store, options *SessionOptions) (*vaulted.Session, error) {
 	// Disabled session credentials
 	if options.NoSession {
@@ -44,17 +37,17 @@ func GetSessionWithOptions(store vaulted.Store, options *SessionOptions) (*vault
 		return getVaultSessionWithNoSession(store, options)
 	}
 
-	var err error
 	var session *vaulted.Session
+	var err error
 
 	// Get a session
 	if options.VaultName == "" {
-		session = DefaultSession()
+		session, err = getDefaultSession(options)
 	} else {
 		session, err = getVaultSession(store, options)
-		if err != nil {
-			return nil, err
-		}
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	// Assume any role specified
@@ -81,15 +74,24 @@ func getVaultSessionWithNoSession(store vaulted.Store, options *SessionOptions) 
 	return vault.NewSession(options.VaultName)
 }
 
-func getVaultSession(store vaulted.Store, options *SessionOptions) (*vaulted.Session, error) {
-	var session *vaulted.Session
+func getDefaultSession(options *SessionOptions) (*vaulted.Session, error) {
+	// Create the vault
+	vault := &vaulted.Vault{
+		Duration: time.Hour,
+	}
 
+	// Create the session
+	return vault.NewSession(os.Getenv("VAULTED_ENV"))
+}
+
+func getVaultSession(store vaulted.Store, options *SessionOptions) (*vaulted.Session, error) {
 	vault, password, err := store.OpenVault(options.VaultName)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create/get cached session
+	var session *vaulted.Session
 	if options.Refresh {
 		session, err = store.CreateSession(vault, options.VaultName, password)
 	} else {
