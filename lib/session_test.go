@@ -7,6 +7,18 @@ import (
 	"time"
 )
 
+func TestSessionExpiration(t *testing.T) {
+	s := Session{
+		Expiration: time.Now().Add(15 * time.Minute),
+	}
+	if s.Expired(10 * time.Minute) {
+		t.Errorf("Session manifesting as expired, but shouldn't be")
+	}
+	if !s.Expired(15 * time.Minute) {
+		t.Errorf("Session not manifesting as expired, but should be")
+	}
+}
+
 func TestSessionVariables(t *testing.T) {
 	s := Session{
 		Name:       "vault",
