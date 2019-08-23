@@ -8,7 +8,7 @@ import (
 )
 
 func TestSessionVariables(t *testing.T) {
-	e := Session{
+	s := Session{
 		Name:       "vault",
 		Expiration: time.Now(),
 
@@ -17,15 +17,15 @@ func TestSessionVariables(t *testing.T) {
 			"ANOTHER_TEST": "TEST TEST",
 		},
 	}
-	var expectedSet map[string]string = map[string]string{
+	var expectedSet = map[string]string{
 		"ANOTHER_TEST":           "TEST TEST",
 		"TEST":                   "TESTING",
-		"VAULTED_ENV":            e.Name,
-		"VAULTED_ENV_EXPIRATION": e.Expiration.UTC().Format(time.RFC3339),
+		"VAULTED_ENV":            s.Name,
+		"VAULTED_ENV_EXPIRATION": s.Expiration.UTC().Format(time.RFC3339),
 	}
 	var expectedUnset []string
 
-	vars := e.Variables()
+	vars := s.Variables()
 
 	if !reflect.DeepEqual(expectedSet, vars.Set) {
 		t.Errorf("Expected: %#v\nGot: %#v\n", expectedSet, vars.Set)
@@ -37,7 +37,7 @@ func TestSessionVariables(t *testing.T) {
 }
 
 func TestSessionVariablesWithPermCreds(t *testing.T) {
-	e := Session{
+	s := Session{
 		Name:       "vault",
 		Expiration: time.Now(),
 
@@ -50,20 +50,20 @@ func TestSessionVariablesWithPermCreds(t *testing.T) {
 			"ANOTHER_TEST": "TEST TEST",
 		},
 	}
-	var expectedSet map[string]string = map[string]string{
+	var expectedSet = map[string]string{
 		"ANOTHER_TEST":           "TEST TEST",
-		"AWS_ACCESS_KEY_ID":      e.AWSCreds.ID,
-		"AWS_SECRET_ACCESS_KEY":  e.AWSCreds.Secret,
+		"AWS_ACCESS_KEY_ID":      s.AWSCreds.ID,
+		"AWS_SECRET_ACCESS_KEY":  s.AWSCreds.Secret,
 		"TEST":                   "TESTING",
-		"VAULTED_ENV":            e.Name,
-		"VAULTED_ENV_EXPIRATION": e.Expiration.UTC().Format(time.RFC3339),
+		"VAULTED_ENV":            s.Name,
+		"VAULTED_ENV_EXPIRATION": s.Expiration.UTC().Format(time.RFC3339),
 	}
-	var expectedUnset []string = []string{
+	var expectedUnset = []string{
 		"AWS_SECURITY_TOKEN",
 		"AWS_SESSION_TOKEN",
 	}
 
-	vars := e.Variables()
+	vars := s.Variables()
 
 	if !reflect.DeepEqual(expectedSet, vars.Set) {
 		t.Errorf("Expected: %#v\nGot: %#v\n", expectedSet, vars.Set)
@@ -76,7 +76,7 @@ func TestSessionVariablesWithPermCreds(t *testing.T) {
 }
 
 func TestSessionVariablesWithTempCreds(t *testing.T) {
-	e := Session{
+	s := Session{
 		Name:       "vault",
 		Expiration: time.Now(),
 
@@ -90,19 +90,19 @@ func TestSessionVariablesWithTempCreds(t *testing.T) {
 			"ANOTHER_TEST": "TEST TEST",
 		},
 	}
-	var expectedSet map[string]string = map[string]string{
+	var expectedSet = map[string]string{
 		"ANOTHER_TEST":           "TEST TEST",
-		"AWS_ACCESS_KEY_ID":      e.AWSCreds.ID,
-		"AWS_SECRET_ACCESS_KEY":  e.AWSCreds.Secret,
-		"AWS_SECURITY_TOKEN":     e.AWSCreds.Token,
-		"AWS_SESSION_TOKEN":      e.AWSCreds.Token,
+		"AWS_ACCESS_KEY_ID":      s.AWSCreds.ID,
+		"AWS_SECRET_ACCESS_KEY":  s.AWSCreds.Secret,
+		"AWS_SECURITY_TOKEN":     s.AWSCreds.Token,
+		"AWS_SESSION_TOKEN":      s.AWSCreds.Token,
 		"TEST":                   "TESTING",
-		"VAULTED_ENV":            e.Name,
-		"VAULTED_ENV_EXPIRATION": e.Expiration.UTC().Format(time.RFC3339),
+		"VAULTED_ENV":            s.Name,
+		"VAULTED_ENV_EXPIRATION": s.Expiration.UTC().Format(time.RFC3339),
 	}
 	var expectedUnset []string
 
-	vars := e.Variables()
+	vars := s.Variables()
 
 	if !reflect.DeepEqual(expectedSet, vars.Set) {
 		t.Errorf("Expected: %#v\nGot: %#v\n", expectedSet, vars.Set)
