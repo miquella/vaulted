@@ -56,7 +56,7 @@ func (s *Session) Clone() *Session {
 }
 
 func (s *Session) Expired(tolerance time.Duration) bool {
-	return s.Expiration.Before(time.Now().Add(-tolerance))
+	return time.Now().Add(tolerance).After(s.Expiration)
 }
 
 func (s *Session) AssumeSessionRole() (*Session, error) {
