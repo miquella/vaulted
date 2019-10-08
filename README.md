@@ -108,7 +108,7 @@ this directory should be backed up. Session cache files do not need to be retain
 
 **Session** cache files are stored in:
 
-* `$XDG_CACHE/vaulted/` _(typically `~/.cache/vaulted/`)_
+* `$XDG_CACHE_HOME/vaulted/` _(typically `~/.cache/vaulted/`)_
 
 [xdg]: https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
 
