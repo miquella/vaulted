@@ -13,6 +13,16 @@ import (
 	"github.com/miquella/vaulted/lib/legacy"
 )
 
+const (
+	PASSWORD_TYPE_PASSWORD        = "password"
+	PASSWORD_TYPE_LEGACY_PASSWORD = "legacypassword"
+	PASSWORD_TYPE_MFATOKEN        = "mfatoken"
+
+	PASSWORD_REASON_NEW     = "new"
+	PASSWORD_REASON_NOMATCH = "nomatch"
+	PASSWORD_REASON_CONFIRM = "confirm"
+)
+
 func NewSteward() vaulted.Steward {
 	if askpass, present := os.LookupEnv("VAULTED_ASKPASS"); present {
 		return &AskPassSteward{
@@ -56,18 +66,21 @@ func (t *AskPassSteward) GetPassword(operation vaulted.Operation, name string) (
 	switch operation {
 	case vaulted.SealOperation:
 		for firstTry := false; ; firstTry = true {
+			var passwordreason string
 			var prompt string
 			if firstTry {
+				passwordreason = PASSWORD_REASON_NEW
 				prompt = fmt.Sprintf("'%s' new password: ", name)
 			} else {
+				passwordreason = PASSWORD_REASON_NOMATCH
 				prompt = fmt.Sprintf("'%s' new password (passwords didn't match): ", name)
 			}
-			password, err := t.askpass(prompt)
+			password, err := t.askpass(name, PASSWORD_TYPE_PASSWORD, passwordreason, prompt)
 			if err != nil {
 				return "", err
 			}
 
-			confirm, err := t.askpass(fmt.Sprintf("'%s' confirm password: ", name))
+			confirm, err := t.askpass(name, PASSWORD_TYPE_PASSWORD, PASSWORD_REASON_CONFIRM, fmt.Sprintf("'%s' confirm password: ", name))
 			if err != nil {
 				return "", err
 			}
@@ -78,19 +91,24 @@ func (t *AskPassSteward) GetPassword(operation vaulted.Operation, name string) (
 		}
 
 	case legacy.LegacyOperation:
-		return t.askpass("Legacy Password: ")
+		return t.askpass(name, PASSWORD_TYPE_LEGACY_PASSWORD, "", "Legacy Password: ")
 
 	default:
-		return t.askpass(fmt.Sprintf("'%s' password: ", name))
+		return t.askpass(name, PASSWORD_TYPE_PASSWORD, "", fmt.Sprintf("'%s' password: ", name))
 	}
 }
 
 func (t *AskPassSteward) GetMFAToken(name string) (string, error) {
-	return t.askpass(fmt.Sprintf("'%s' MFA token: ", name))
+	return t.askpass(name, PASSWORD_TYPE_MFATOKEN, "", fmt.Sprintf("'%s' MFA token: ", name))
 }
 
-func (t *AskPassSteward) askpass(prompt string) (string, error) {
+func (t *AskPassSteward) askpass(name string, passwordtype string, reason string, prompt string) (string, error) {
 	cmd := exec.Command(t.Command, prompt)
+	cmd.Env = append(os.Environ(),
+		"VAULTED_ENV="+name,
+		"VAULTED_PASSWORD_TYPE="+passwordtype,
+		"VAULTED_PASSWORD_REASON="+reason,
+	)
 	output, err := cmd.Output()
 	if err != nil {
 		return "", ErrNoPasswordEntered
