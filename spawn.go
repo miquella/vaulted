@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/miquella/ask"
+	"github.com/miquella/ssh-proxy-agent/lib/proxyagent"
+
 	"github.com/miquella/vaulted/lib"
 )
 
@@ -27,7 +29,12 @@ func (s *Spawn) Run(store vaulted.Store) error {
 		ask.Print(fmt.Sprintf("%s — expires: %s (%s remaining)\n", session.Name, session.Expiration.Format("2 Jan 2006 15:04 MST"), timeRemaining))
 	}
 
-	code, err := session.Spawn(s.Command)
+	sshAgent, err := proxyagent.SetupAgent(proxyagent.AgentConfig{})
+	if err != nil {
+		return err
+	}
+
+	code, err := session.Spawn(s.Command, sshAgent)
 	if err != nil {
 		return ErrorWithExitCode{err, 2}
 	} else if *code != 0 {

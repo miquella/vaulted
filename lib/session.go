@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/miquella/ssh-proxy-agent/lib/proxyagent"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
@@ -130,7 +131,7 @@ func (s *Session) AssumeRole(roleArn string) (*Session, error) {
 	return session, nil
 }
 
-func (s *Session) Spawn(cmd []string) (*int, error) {
+func (s *Session) Spawn(cmd []string, sshAgent agent.Agent) (*int, error) {
 	if len(cmd) == 0 {
 		return nil, ErrInvalidCommand
 	}
@@ -141,14 +142,21 @@ func (s *Session) Spawn(cmd []string) (*int, error) {
 		return nil, fmt.Errorf("Cannot find executable %s: %v", cmd[0], err)
 	}
 
-	// start the agent
-	sock, err := s.startProxyKeyring()
-	if err != nil {
-		return nil, err
-	}
-
 	vars := make(map[string]string)
-	vars["SSH_AUTH_SOCK"] = sock
+	if sshAgent != nil {
+		s.populateAgent(sshAgent)
+
+		server := proxyagent.NewServer(sshAgent)
+		err = server.Start()
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			_ = server.Stop()
+		}()
+
+		vars["SSH_AUTH_SOCK"] = server.Socket
+	}
 
 	// trap signals
 	sigs := make(chan os.Signal)
@@ -202,12 +210,7 @@ func (s *Session) Spawn(cmd []string) (*int, error) {
 	return &exitStatus, nil
 }
 
-func (s *Session) startProxyKeyring() (string, error) {
-	keyring, err := NewProxyKeyring(os.Getenv("SSH_AUTH_SOCK"))
-	if err != nil {
-		return "", err
-	}
-
+func (s *Session) populateAgent(sshAgent agent.Agent) error {
 	// load ssh keys
 	for comment, key := range s.SSHKeys {
 		timeRemaining := s.Expiration.Sub(time.Now())
@@ -216,25 +219,19 @@ func (s *Session) startProxyKeyring() (string, error) {
 			LifetimeSecs: uint32(timeRemaining.Seconds()),
 		}
 
+		var err error
 		addedKey.PrivateKey, err = ssh.ParseRawPrivateKey([]byte(key))
 		if err != nil {
-			return "", err
+			return err
 		}
 
-		err := keyring.Add(addedKey)
+		err = sshAgent.Add(addedKey)
 		if err != nil {
-			return "", err
+			return err
 		}
 	}
 
-	sock, err := keyring.Listen()
-	if err != nil {
-		return "", err
-	}
-
-	go keyring.Serve()
-
-	return sock, err
+	return nil
 }
 
 func (s *Session) Variables() *Variables {
