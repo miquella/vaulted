@@ -26,10 +26,11 @@ type Session struct {
 
 	ActiveRole string `json:"active_role,omitempty"`
 
-	AWSCreds *AWSCredentials   `json:"aws_creds,omitempty"`
-	Role     string            `json:"role,omitempty"`
-	Vars     map[string]string `json:"vars,omitempty"`
-	SSHKeys  map[string]string `json:"ssh_keys,omitempty"`
+	AWSCreds   *AWSCredentials   `json:"aws_creds,omitempty"`
+	Role       string            `json:"role,omitempty"`
+	Vars       map[string]string `json:"vars,omitempty"`
+	SSHKeys    map[string]string `json:"ssh_keys,omitempty"`
+	SSHOptions *SSHOptions       `json:"ssh_options,omitempty"`
 }
 
 func (s *Session) Clone() *Session {
@@ -51,6 +52,12 @@ func (s *Session) Clone() *Session {
 		for key, value := range s.SSHKeys {
 			session.SSHKeys[key] = value
 		}
+	}
+
+	if s.SSHOptions != nil {
+		session.SSHOptions = s.SSHOptions
+	} else {
+		session.SSHOptions = &SSHOptions{}
 	}
 
 	return &session
@@ -117,9 +124,10 @@ func (s *Session) AssumeRole(roleArn string) (*Session, error) {
 
 		ActiveRole: selectedRoleArn,
 
-		AWSCreds: creds,
-		Vars:     make(map[string]string),
-		SSHKeys:  make(map[string]string),
+		AWSCreds:   creds,
+		Vars:       make(map[string]string),
+		SSHKeys:    make(map[string]string),
+		SSHOptions: &SSHOptions{},
 	}
 	for key, value := range s.Vars {
 		session.Vars[key] = value
@@ -127,11 +135,14 @@ func (s *Session) AssumeRole(roleArn string) (*Session, error) {
 	for key, value := range s.SSHKeys {
 		session.SSHKeys[key] = value
 	}
+	if s.SSHOptions != nil {
+		session.SSHOptions = s.SSHOptions
+	}
 
 	return session, nil
 }
 
-func (s *Session) Spawn(cmd []string, sshAgent agent.Agent) (*int, error) {
+func (s *Session) Spawn(cmd []string) (*int, error) {
 	if len(cmd) == 0 {
 		return nil, ErrInvalidCommand
 	}
@@ -143,20 +154,25 @@ func (s *Session) Spawn(cmd []string, sshAgent agent.Agent) (*int, error) {
 	}
 
 	vars := make(map[string]string)
-	if sshAgent != nil {
-		s.populateAgent(sshAgent)
-
-		server := proxyagent.NewServer(sshAgent)
-		err = server.Start()
-		if err != nil {
-			return nil, err
-		}
-		defer func() {
-			_ = server.Stop()
-		}()
-
-		vars["SSH_AUTH_SOCK"] = server.Socket
+	sshAgent, err := proxyagent.SetupAgent(proxyagent.AgentConfig{
+		ValidPrincipals: s.SSHOptions.ValidPrincipals,
+		VaultSigningUrl: s.SSHOptions.VaultSigningUrl,
+	})
+	if err != nil {
+		return nil, err
 	}
+	s.populateAgent(sshAgent)
+
+	server := proxyagent.NewServer(sshAgent)
+	err = server.Start()
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = server.Stop()
+	}()
+
+	vars["SSH_AUTH_SOCK"] = server.Socket
 
 	// trap signals
 	sigs := make(chan os.Signal)

@@ -148,8 +148,9 @@ func (ts TestStore) GetSession(vault *vaulted.Vault, name, password string) (*va
 	s := &vaulted.Session{
 		Expiration: time.Unix(1136239445, 0),
 
-		Vars:    make(map[string]string),
-		SSHKeys: make(map[string]string),
+		Vars:       make(map[string]string),
+		SSHKeys:    make(map[string]string),
+		SSHOptions: &vaulted.SSHOptions{},
 	}
 	if _, exists := ts.Sessions[name]; exists {
 		cachedSession := ts.Sessions[name]
@@ -167,6 +168,10 @@ func (ts TestStore) GetSession(vault *vaulted.Vault, name, password string) (*va
 		for key, value := range cachedSession.SSHKeys {
 			s.SSHKeys[key] = value
 		}
+
+		if cachedSession.SSHOptions != nil {
+			s.SSHOptions = cachedSession.SSHOptions
+		}
 	} else {
 		s.Name = name
 
@@ -176,6 +181,10 @@ func (ts TestStore) GetSession(vault *vaulted.Vault, name, password string) (*va
 
 		for key, value := range vault.SSHKeys {
 			s.SSHKeys[key] = value
+		}
+
+		if vault.SSHOptions != nil {
+			s.SSHOptions = vault.SSHOptions
 		}
 	}
 
@@ -190,8 +199,9 @@ func (ts TestStore) CreateSession(vault *vaulted.Vault, name, password string) (
 	s := &vaulted.Session{
 		Expiration: time.Unix(1136239446, 0),
 
-		Vars:    make(map[string]string),
-		SSHKeys: make(map[string]string),
+		Vars:       make(map[string]string),
+		SSHKeys:    make(map[string]string),
+		SSHOptions: &vaulted.SSHOptions{},
 	}
 
 	s.Name = name
@@ -212,8 +222,9 @@ func (ts TestStore) OpenLegacyVault() (environments map[string]legacy.Environmen
 
 func cloneVault(vault *vaulted.Vault) *vaulted.Vault {
 	newVault := &vaulted.Vault{
-		Vars:    make(map[string]string),
-		SSHKeys: make(map[string]string),
+		Vars:       make(map[string]string),
+		SSHKeys:    make(map[string]string),
+		SSHOptions: &vaulted.SSHOptions{},
 	}
 
 	if vault.AWSKey != nil {
@@ -233,6 +244,10 @@ func cloneVault(vault *vaulted.Vault) *vaulted.Vault {
 
 	for key, value := range vault.SSHKeys {
 		newVault.SSHKeys[key] = value
+	}
+
+	if vault.SSHOptions != nil {
+		newVault.SSHOptions = vault.SSHOptions
 	}
 
 	return newVault
