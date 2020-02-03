@@ -16,11 +16,17 @@ var (
 	ErrNoTokenEntered = errors.New("Could not get MFA code")
 )
 
+type SSHOptions struct {
+	ValidPrincipals []string `json:"valid_principals,omitempty"`
+	VaultSigningUrl string   `json:"vault_signing_url,omitempty"`
+}
+
 type Vault struct {
-	Duration time.Duration     `json:"duration,omitempty"`
-	AWSKey   *AWSKey           `json:"aws_key,omitempty"`
-	Vars     map[string]string `json:"vars,omitempty"`
-	SSHKeys  map[string]string `json:"ssh_keys,omitempty"`
+	Duration   time.Duration     `json:"duration,omitempty"`
+	AWSKey     *AWSKey           `json:"aws_key,omitempty"`
+	Vars       map[string]string `json:"vars,omitempty"`
+	SSHKeys    map[string]string `json:"ssh_keys,omitempty"`
+	SSHOptions *SSHOptions       `json:"ssh_options,omitempty"`
 }
 
 func (v *Vault) NewSession(name string) (*Session, error) {
@@ -62,6 +68,11 @@ func (v *Vault) newSession(name string, credsFunc func(duration time.Duration) (
 		for key, value := range v.SSHKeys {
 			s.SSHKeys[key] = value
 		}
+	}
+
+	// copy the vault ssh options to the session
+	if v.SSHOptions != nil {
+		s.SSHOptions = v.SSHOptions
 	}
 
 	if v.AWSKey.Valid() {
