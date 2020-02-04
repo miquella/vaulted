@@ -26,20 +26,21 @@ func (m *SSHKeyMenu) Help() {
 	menuColor.Set()
 	defer color.Unset()
 
-	fmt.Println("a,add    - Add")
-	fmt.Println("D,delete - Delete")
-	fmt.Println("v        - Vault Signing URL")
-	fmt.Println("u,users  - Vault User Principals")
-	fmt.Println("?,help   - Help")
-	fmt.Println("b,back   - Back")
-	fmt.Println("q,quit   - Quit")
+	fmt.Println("a,add      - Add")
+	fmt.Println("D,delete   - Delete")
+	fmt.Println("g,generate - Generate Key")
+	fmt.Println("v          - Vault Signing URL")
+	fmt.Println("u,users    - Vault User Principals")
+	fmt.Println("?,help     - Help")
+	fmt.Println("b,back     - Back")
+	fmt.Println("q,quit     - Quit")
 }
 
 func (m *SSHKeyMenu) Handler() error {
 	for {
 		var err error
 		m.Printer()
-		input, err := interaction.ReadMenu("Edit ssh keys: [a,D,v,u,b]: ")
+		input, err := interaction.ReadMenu("Edit ssh keys: [a,D,g,v,u,b]: ")
 		if err != nil {
 			return err
 		}
@@ -56,6 +57,11 @@ func (m *SSHKeyMenu) Handler() error {
 					color.Red("Key '%s' not found", key)
 				}
 			}
+		case "g", "generate":
+			if m.Vault.SSHOptions == nil {
+				m.Vault.SSHOptions = &vaulted.SSHOptions{}
+			}
+			m.Vault.SSHOptions.GenerateRSAKey = !m.Vault.SSHOptions.GenerateRSAKey
 		case "v":
 			signingUrl, err := interaction.ReadValue("Vault signing URL: ")
 			if err != nil {
@@ -249,6 +255,8 @@ func (m *SSHKeyMenu) Printer() {
 	}
 
 	if m.Vault.SSHOptions != nil {
+		color.Green("\n  Generate SSH Key: %t\n", m.Vault.SSHOptions.GenerateRSAKey)
+
 		if m.Vault.SSHOptions.VaultSigningUrl != "" {
 			color.Cyan("\nHashiCorp Vault:")
 			green.Printf("  Signing URL: ")
