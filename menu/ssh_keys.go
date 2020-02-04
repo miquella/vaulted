@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/miquella/ask"
@@ -28,6 +29,7 @@ func (m *SSHKeyMenu) Help() {
 	fmt.Println("a,add    - Add")
 	fmt.Println("D,delete - Delete")
 	fmt.Println("v        - Vault Signing URL")
+	fmt.Println("u,users  - Vault User Principals")
 	fmt.Println("?,help   - Help")
 	fmt.Println("b,back   - Back")
 	fmt.Println("q,quit   - Quit")
@@ -37,7 +39,7 @@ func (m *SSHKeyMenu) Handler() error {
 	for {
 		var err error
 		m.Printer()
-		input, err := interaction.ReadMenu("Edit ssh keys: [a,D,v,b]: ")
+		input, err := interaction.ReadMenu("Edit ssh keys: [a,D,v,u,b]: ")
 		if err != nil {
 			return err
 		}
@@ -63,6 +65,19 @@ func (m *SSHKeyMenu) Handler() error {
 				m.Vault.SSHOptions = &vaulted.SSHOptions{}
 			}
 			m.Vault.SSHOptions.VaultSigningUrl = signingUrl
+		case "u", "users":
+			userPrincipals, err := interaction.ReadValue("Vault user principals (comma separated): ")
+			if err != nil {
+				return err
+			}
+			if m.Vault.SSHOptions == nil {
+				m.Vault.SSHOptions = &vaulted.SSHOptions{}
+			}
+			if userPrincipals != "" {
+				m.Vault.SSHOptions.ValidPrincipals = strings.Split(userPrincipals, ",")
+			} else {
+				m.Vault.SSHOptions.ValidPrincipals = []string{}
+			}
 		case "b", "back":
 			return nil
 		case "q", "quit", "exit":
@@ -235,8 +250,14 @@ func (m *SSHKeyMenu) Printer() {
 
 	if m.Vault.SSHOptions != nil {
 		if m.Vault.SSHOptions.VaultSigningUrl != "" {
-			cyan.Printf("\nVault Signing URL: ")
+			color.Cyan("\nHashiCorp Vault:")
+			green.Printf("  Signing URL: ")
 			fmt.Printf("%s\n", m.Vault.SSHOptions.VaultSigningUrl)
+
+			if len(m.Vault.SSHOptions.ValidPrincipals) > 0 {
+				green.Printf("  User Principals: ")
+				fmt.Printf("%s\n", m.Vault.SSHOptions.ValidPrincipals)
+			}
 		}
 	}
 }
