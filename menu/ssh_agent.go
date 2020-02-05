@@ -71,6 +71,13 @@ func (m *SSHKeyMenu) Handler() error {
 				m.Vault.SSHOptions = &vaulted.SSHOptions{}
 			}
 			m.Vault.SSHOptions.VaultSigningUrl = signingUrl
+
+			if signingUrl != "" && !m.Vault.SSHOptions.GenerateRSAKey {
+				generateKey, _ := interaction.ReadValue("Would you like to enable RSA key generation (y/n): ")
+				if generateKey == "y" {
+					m.Vault.SSHOptions.GenerateRSAKey = true
+				}
+			}
 		case "u", "users":
 			userPrincipals, err := interaction.ReadValue("HashiCorp Vault user principals (comma separated): ")
 			if err != nil {
