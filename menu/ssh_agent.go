@@ -29,8 +29,8 @@ func (m *SSHKeyMenu) Help() {
 	fmt.Println("a,add      - Add")
 	fmt.Println("D,delete   - Delete")
 	fmt.Println("g,generate - Generate Key")
-	fmt.Println("v          - Vault Signing URL")
-	fmt.Println("u,users    - Vault User Principals")
+	fmt.Println("v          - HashiCorp Vault Signing URL")
+	fmt.Println("u,users    - HashiCorp Vault User Principals")
 	fmt.Println("?,help     - Help")
 	fmt.Println("b,back     - Back")
 	fmt.Println("q,quit     - Quit")
@@ -63,7 +63,7 @@ func (m *SSHKeyMenu) Handler() error {
 			}
 			m.Vault.SSHOptions.GenerateRSAKey = !m.Vault.SSHOptions.GenerateRSAKey
 		case "v":
-			signingUrl, err := interaction.ReadValue("Vault signing URL: ")
+			signingUrl, err := interaction.ReadValue("HashiCorp Vault signing URL: ")
 			if err != nil {
 				return err
 			}
@@ -72,7 +72,7 @@ func (m *SSHKeyMenu) Handler() error {
 			}
 			m.Vault.SSHOptions.VaultSigningUrl = signingUrl
 		case "u", "users":
-			userPrincipals, err := interaction.ReadValue("Vault user principals (comma separated): ")
+			userPrincipals, err := interaction.ReadValue("HashiCorp Vault user principals (comma separated): ")
 			if err != nil {
 				return err
 			}
@@ -239,8 +239,9 @@ func loadPublicKeyComment(filename string) string {
 }
 
 func (m *SSHKeyMenu) Printer() {
-	color.Cyan("\nSSH Keys:")
-	if len(m.Vault.SSHKeys) > 0 {
+	color.Cyan("\nSSH Agent:")
+	color.Cyan("  Keys:")
+	if len(m.Vault.SSHKeys) > 0 || m.Vault.SSHOptions != nil && m.Vault.SSHOptions.GenerateRSAKey {
 		keys := []string{}
 		for key := range m.Vault.SSHKeys {
 			keys = append(keys, key)
@@ -248,22 +249,26 @@ func (m *SSHKeyMenu) Printer() {
 		sort.Strings(keys)
 
 		for _, key := range keys {
-			green.Printf("  %s\n", key)
+			green.Printf("    %s\n", key)
+		}
+
+		if m.Vault.SSHOptions != nil && m.Vault.SSHOptions.GenerateRSAKey {
+			faintColor.Print("    <generated RSA key>\n")
 		}
 	} else {
-		fmt.Println("  [Empty]")
+		fmt.Println("    [Empty]")
 	}
 
 	if m.Vault.SSHOptions != nil {
-		color.Green("\n  Generate SSH Key: %t\n", m.Vault.SSHOptions.GenerateRSAKey)
-
-		if m.Vault.SSHOptions.VaultSigningUrl != "" {
-			color.Cyan("\nHashiCorp Vault:")
-			green.Printf("  Signing URL: ")
-			fmt.Printf("%s\n", m.Vault.SSHOptions.VaultSigningUrl)
+		if m.Vault.SSHOptions.VaultSigningUrl != "" || len(m.Vault.SSHOptions.ValidPrincipals) > 0 {
+			color.Cyan("\n  Signing (HashiCorp Vault):")
+			if m.Vault.SSHOptions.VaultSigningUrl != "" {
+				green.Printf("    URL: ")
+				fmt.Printf("%s\n", m.Vault.SSHOptions.VaultSigningUrl)
+			}
 
 			if len(m.Vault.SSHOptions.ValidPrincipals) > 0 {
-				green.Printf("  User Principals: ")
+				green.Printf("    User: ")
 				fmt.Printf("%s\n", m.Vault.SSHOptions.ValidPrincipals)
 			}
 		}
