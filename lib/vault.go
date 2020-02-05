@@ -17,6 +17,7 @@ var (
 )
 
 type SSHOptions struct {
+	DisableProxy    bool     `json:"disable_proxy"`
 	GenerateRSAKey  bool     `json:"generate_rsa_key"`
 	ValidPrincipals []string `json:"valid_principals,omitempty"`
 	VaultSigningUrl string   `json:"vault_signing_url,omitempty"`
