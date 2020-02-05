@@ -145,6 +145,7 @@ func (s *Session) Spawn(cmd []string) (*int, error) {
 
 	vars := make(map[string]string)
 	sshAgent, err := proxyagent.SetupAgent(proxyagent.AgentConfig{
+		DisableProxy:    s.SSHOptions.DisableProxy,
 		GenerateRSAKey:  s.SSHOptions.GenerateRSAKey,
 		ValidPrincipals: s.SSHOptions.ValidPrincipals,
 		VaultSigningUrl: s.SSHOptions.VaultSigningUrl,
@@ -152,7 +153,10 @@ func (s *Session) Spawn(cmd []string) (*int, error) {
 	if err != nil {
 		return nil, err
 	}
-	s.populateAgent(sshAgent)
+	err = s.populateAgent(sshAgent)
+	if err != nil {
+		return nil, err
+	}
 
 	server := proxyagent.NewServer(sshAgent)
 	err = server.Start()
