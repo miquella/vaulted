@@ -40,6 +40,9 @@ OPTIONS
 `--refresh`
   Start a new session with new temporary credentials and a refreshed expiration.
 
+`--ssh-generate-key`
+  Generate and load an RSA key into the spawned session's SSH agent.
+
 AWS KEY
 -------
 

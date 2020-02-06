@@ -48,6 +48,9 @@ OPTIONS
   environments will include the `AWS_REGION` and `AWS_DEFAULT_REGION`
   environment variables to indicate the active region.
 
+`--ssh-generate-key`
+  Generate and load an RSA key into the spawned session's SSH agent.
+
 AWS KEY
 -------
 
