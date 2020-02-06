@@ -23,9 +23,14 @@ type SessionOptions struct {
 	Refresh bool
 	Region  string
 	Role    string
+
+	GenerateRSAKey *bool
 }
 
 func GetSessionWithOptions(store vaulted.Store, options *SessionOptions) (*vaulted.Session, error) {
+	var session *vaulted.Session
+	var err error
+
 	// Disabled session credentials
 	if options.NoSession {
 		if options.VaultName == "" {
@@ -38,25 +43,33 @@ func GetSessionWithOptions(store vaulted.Store, options *SessionOptions) (*vault
 			return nil, ErrNoSessionIncompatibleWithRegion
 		}
 
-		return getVaultSessionWithNoSession(store, options)
-	}
-
-	var session *vaulted.Session
-	var err error
-
-	// Get a session
-	if options.VaultName == "" {
-		session, err = getDefaultSession(options)
+		session, err = getVaultSessionWithNoSession(store, options)
+		if err != nil {
+			return nil, err
+		}
 	} else {
-		session, err = getVaultSession(store, options)
-	}
-	if err != nil {
-		return nil, err
+		// Get a session
+		if options.VaultName == "" {
+			session, err = getDefaultSession(options)
+		} else {
+			session, err = getVaultSession(store, options)
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		// Assume any role specified
+		if options.Role != "" {
+			session, err = session.AssumeRole(options.Role)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
-	// Assume any role specified
-	if options.Role != "" {
-		return session.AssumeRole(options.Role)
+	// Handle SSH options
+	if options.GenerateRSAKey != nil {
+		session.SSHOptions.GenerateRSAKey = *options.GenerateRSAKey
 	}
 
 	return session, nil
