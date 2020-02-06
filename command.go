@@ -326,6 +326,7 @@ func parseExecArgs(args []string) (Command, error) {
 	flag.Bool("ssh-generate-key", false, "Generates an RSA key into your session's SSH agent")
 	flag.Bool("ssh-proxy-agent", true, "Exposes the external SSH agent to the session")
 	flag.String("ssh-signing-url", "", "Configures the endpoint to use for SSH key signing")
+	flag.StringSlice("ssh-signing-users", []string{}, "Configures the users for SSH key signing")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -337,6 +338,7 @@ func parseExecArgs(args []string) (Command, error) {
 	s.NoSession, _ = flag.GetBool("no-session")
 	s.Refresh, _ = flag.GetBool("refresh")
 	s.SigningUrl, _ = flag.GetString("ssh-signing-url")
+	s.SigningUsers, _ = flag.GetStringSlice("ssh-signing-users")
 
 	if flag.Changed("ssh-generate-key") {
 		generateKey, _ := flag.GetBool("ssh-generate-key")
@@ -479,6 +481,7 @@ func parseShellArgs(args []string) (Command, error) {
 	flag.Bool("ssh-generate-key", false, "Generates an RSA key into your session's SSH agent")
 	flag.Bool("ssh-proxy-agent", true, "Exposes the external SSH agent to the session")
 	flag.String("ssh-signing-url", "", "Configures the endpoint to use for SSH key signing")
+	flag.StringSlice("ssh-signing-users", []string{}, "Configures the users for SSH key signing")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -491,6 +494,7 @@ func parseShellArgs(args []string) (Command, error) {
 	s.Refresh, _ = flag.GetBool("refresh")
 	s.Region, _ = flag.GetString("region")
 	s.SigningUrl, _ = flag.GetString("ssh-signing-url")
+	s.SigningUsers, _ = flag.GetStringSlice("ssh-signing-users")
 	s.Command = interactiveShellCommand()
 	s.DisplayStatus = true
 
