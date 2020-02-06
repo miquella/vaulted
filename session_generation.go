@@ -26,6 +26,7 @@ type SessionOptions struct {
 
 	GenerateRSAKey *bool
 	ProxyAgent     *bool
+	SigningUrl     string
 }
 
 func GetSessionWithOptions(store vaulted.Store, options *SessionOptions) (*vaulted.Session, error) {
@@ -74,6 +75,9 @@ func GetSessionWithOptions(store vaulted.Store, options *SessionOptions) (*vault
 	}
 	if options.ProxyAgent != nil {
 		session.SSHOptions.DisableProxy = !(*options.ProxyAgent)
+	}
+	if options.SigningUrl != "" {
+		session.SSHOptions.VaultSigningUrl = options.SigningUrl
 	}
 
 	return session, nil
