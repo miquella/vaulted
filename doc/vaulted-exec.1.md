@@ -46,6 +46,10 @@ OPTIONS
 `--ssh-proxy-agent`
   Exposes the external SSH agent to the spawned session.
 
+`--ssh-signing-url`
+  Configures the endpoint to use for SSH key signing. Currently only configured
+  to work with HashiCorp Vault endpoints.
+
 AWS KEY
 -------
 
