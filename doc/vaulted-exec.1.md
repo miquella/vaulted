@@ -50,6 +50,9 @@ OPTIONS
   Configures the endpoint to use for SSH key signing. Currently only configured
   to work with HashiCorp Vault endpoints.
 
+`--ssh-signing-users`
+  Configures the users to sign SSH keys for when key signing is enabled.
+
 AWS KEY
 -------
 
