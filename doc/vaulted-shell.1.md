@@ -51,6 +51,9 @@ OPTIONS
 `--ssh-generate-key`
   Generate and load an RSA key into the spawned session's SSH agent.
 
+`--ssh-proxy-agent`
+  Exposes the external SSH agent to the spawned session.
+
 AWS KEY
 -------
 

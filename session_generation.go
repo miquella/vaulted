@@ -25,6 +25,7 @@ type SessionOptions struct {
 	Role    string
 
 	GenerateRSAKey *bool
+	ProxyAgent     *bool
 }
 
 func GetSessionWithOptions(store vaulted.Store, options *SessionOptions) (*vaulted.Session, error) {
@@ -70,6 +71,9 @@ func GetSessionWithOptions(store vaulted.Store, options *SessionOptions) (*vault
 	// Handle SSH options
 	if options.GenerateRSAKey != nil {
 		session.SSHOptions.GenerateRSAKey = *options.GenerateRSAKey
+	}
+	if options.ProxyAgent != nil {
+		session.SSHOptions.DisableProxy = !(*options.ProxyAgent)
 	}
 
 	return session, nil

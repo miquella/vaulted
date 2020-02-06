@@ -324,6 +324,7 @@ func parseExecArgs(args []string) (Command, error) {
 	flag.Bool("no-session", false, "Disable use of temporary credentials")
 	flag.Bool("refresh", false, "Start a new session with new temporary credentials and a refreshed expiration")
 	flag.Bool("ssh-generate-key", false, "Generates an RSA key into your session's SSH agent")
+	flag.Bool("ssh-proxy-agent", true, "Exposes the external SSH agent to the session")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -338,6 +339,10 @@ func parseExecArgs(args []string) (Command, error) {
 	if flag.Changed("ssh-generate-key") {
 		generateKey, _ := flag.GetBool("ssh-generate-key")
 		s.GenerateRSAKey = &generateKey
+	}
+	if flag.Changed("ssh-proxy-agent") {
+		proxyAgent, _ := flag.GetBool("ssh-proxy-agent")
+		s.ProxyAgent = &proxyAgent
 	}
 
 	if flag.NArg() == 0 {
@@ -470,6 +475,7 @@ func parseShellArgs(args []string) (Command, error) {
 	flag.Bool("refresh", false, "Start a new session with new temporary credentials and a refreshed expiration")
 	flag.String("region", "", "The AWS region to use to generate STS credentials")
 	flag.Bool("ssh-generate-key", false, "Generates an RSA key into your session's SSH agent")
+	flag.Bool("ssh-proxy-agent", true, "Exposes the external SSH agent to the session")
 	err := flag.Parse(args)
 	if err != nil {
 		return nil, err
@@ -487,6 +493,10 @@ func parseShellArgs(args []string) (Command, error) {
 	if flag.Changed("ssh-generate-key") {
 		generateKey, _ := flag.GetBool("ssh-generate-key")
 		s.GenerateRSAKey = &generateKey
+	}
+	if flag.Changed("ssh-proxy-agent") {
+		proxyAgent, _ := flag.GetBool("ssh-proxy-agent")
+		s.ProxyAgent = &proxyAgent
 	}
 
 	if flag.NArg() > 1 {
