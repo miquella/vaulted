@@ -3,6 +3,8 @@ package vaulted
 import (
 	"errors"
 	"time"
+
+	"github.com/miquella/ssh-proxy-agent/lib/proxyagent"
 )
 
 const (
@@ -72,13 +74,23 @@ func (v *Vault) newSession(name string, credsFunc func(duration time.Duration) (
 		}
 	}
 
+	var err error
 	// copy the vault ssh options to the session
 	if v.SSHOptions != nil {
 		s.SSHOptions = v.SSHOptions
+
+		// generate an SSH key for the session if necessary
+		if v.SSHOptions.GenerateRSAKey {
+			var keyPair *proxyagent.KeyPair
+			keyPair, err = proxyagent.GenerateRSAKeyPair()
+			if err != nil {
+				return nil, err
+			}
+			s.GeneratedSSHKey = keyPair.PrivateKey
+		}
 	}
 
 	if v.AWSKey.Valid() {
-		var err error
 		s.AWSCreds, err = credsFunc(duration)
 		if err != nil {
 			return nil, err

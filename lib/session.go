@@ -26,11 +26,12 @@ type Session struct {
 
 	ActiveRole string `json:"active_role,omitempty"`
 
-	AWSCreds   *AWSCredentials   `json:"aws_creds,omitempty"`
-	Role       string            `json:"role,omitempty"`
-	Vars       map[string]string `json:"vars,omitempty"`
-	SSHKeys    map[string]string `json:"ssh_keys,omitempty"`
-	SSHOptions *SSHOptions       `json:"ssh_options,omitempty"`
+	AWSCreds        *AWSCredentials   `json:"aws_creds,omitempty"`
+	GeneratedSSHKey string            `json:"generated_ssh_key,omitempty"`
+	Role            string            `json:"role,omitempty"`
+	Vars            map[string]string `json:"vars,omitempty"`
+	SSHKeys         map[string]string `json:"ssh_keys,omitempty"`
+	SSHOptions      *SSHOptions       `json:"ssh_options,omitempty"`
 }
 
 func (s *Session) Clone() *Session {
@@ -52,6 +53,10 @@ func (s *Session) Clone() *Session {
 		for key, value := range s.SSHKeys {
 			session.SSHKeys[key] = value
 		}
+	}
+
+	if s.GeneratedSSHKey != "" {
+		session.GeneratedSSHKey = s.GeneratedSSHKey
 	}
 
 	return &session
@@ -146,7 +151,6 @@ func (s *Session) Spawn(cmd []string) (*int, error) {
 	vars := make(map[string]string)
 	sshAgent, err := proxyagent.SetupAgent(proxyagent.AgentConfig{
 		DisableProxy:    s.SSHOptions.DisableProxy,
-		GenerateRSAKey:  s.SSHOptions.GenerateRSAKey,
 		ValidPrincipals: s.SSHOptions.ValidPrincipals,
 		VaultSigningUrl: s.SSHOptions.VaultSigningUrl,
 	})
@@ -224,25 +228,37 @@ func (s *Session) Spawn(cmd []string) (*int, error) {
 func (s *Session) populateAgent(sshAgent agent.Agent) error {
 	// load ssh keys
 	for comment, key := range s.SSHKeys {
-		timeRemaining := s.Expiration.Sub(time.Now())
-		addedKey := agent.AddedKey{
-			Comment:      comment,
-			LifetimeSecs: uint32(timeRemaining.Seconds()),
-		}
-
-		var err error
-		addedKey.PrivateKey, err = ssh.ParseRawPrivateKey([]byte(key))
+		err := s.loadKeyIntoAgent(sshAgent, key, comment)
 		if err != nil {
 			return err
 		}
+	}
 
-		err = sshAgent.Add(addedKey)
+	// load generated ssh key if needed
+	if s.GeneratedSSHKey != "" {
+		err := s.loadKeyIntoAgent(sshAgent, s.GeneratedSSHKey, "ssh-proxy-agent-generated-key")
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (s *Session) loadKeyIntoAgent(sshAgent agent.Agent, key string, comment string) error {
+	timeRemaining := s.Expiration.Sub(time.Now())
+	addedKey := agent.AddedKey{
+		Comment:      comment,
+		LifetimeSecs: uint32(timeRemaining.Seconds()),
+	}
+
+	var err error
+	addedKey.PrivateKey, err = ssh.ParseRawPrivateKey([]byte(key))
+	if err != nil {
+		return err
+	}
+
+	return sshAgent.Add(addedKey)
 }
 
 func (s *Session) Variables() *Variables {
