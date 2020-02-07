@@ -31,7 +31,7 @@ func (m *AWSMenu) Help() {
 	fmt.Println("k,key    - Key")
 	fmt.Println("m,mfa    - MFA")
 	fmt.Println("r,role   - Role")
-	fmt.Println("  region - Region")
+	fmt.Println("R,region - Region")
 	fmt.Println("t,temp   - Substitute with temporary credentials")
 	fmt.Println("S,show   - Show/Hide Secrets")
 	fmt.Println("D,delete - Delete")
@@ -49,7 +49,7 @@ func (m *AWSMenu) Handler() error {
 		if m.Vault.AWSKey == nil {
 			input, err = interaction.ReadMenu("Edit AWS key [k,b]: ")
 		} else {
-			input, err = interaction.ReadMenu("Edit AWS key [k,m,r,t,S,D,b]: ")
+			input, err = interaction.ReadMenu("Edit AWS key [k,m,r,R,t,S,D,b]: ")
 		}
 
 		if err != nil {
@@ -121,7 +121,7 @@ func (m *AWSMenu) Handler() error {
 			} else {
 				color.Red("Must associate an AWS key with the vault first")
 			}
-		case "region":
+		case "R", "region":
 			region, err := m.readRegion()
 			if err != nil {
 				return err
