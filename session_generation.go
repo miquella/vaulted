@@ -31,9 +31,6 @@ type SessionOptions struct {
 }
 
 func GetSessionWithOptions(store vaulted.Store, options *SessionOptions) (*vaulted.Session, error) {
-	var session *vaulted.Session
-	var err error
-
 	// Disabled session credentials
 	if options.NoSession {
 		if options.VaultName == "" {
@@ -46,42 +43,25 @@ func GetSessionWithOptions(store vaulted.Store, options *SessionOptions) (*vault
 			return nil, ErrNoSessionIncompatibleWithRegion
 		}
 
-		session, err = getVaultSessionWithNoSession(store, options)
-		if err != nil {
-			return nil, err
-		}
+		return getVaultSessionWithNoSession(store, options)
+	}
+
+	var session *vaulted.Session
+	var err error
+
+	// Get a session
+	if options.VaultName == "" {
+		session, err = getDefaultSession(options)
 	} else {
-		// Get a session
-		if options.VaultName == "" {
-			session, err = getDefaultSession(options)
-		} else {
-			session, err = getVaultSession(store, options)
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		// Assume any role specified
-		if options.Role != "" {
-			session, err = session.AssumeRole(options.Role)
-			if err != nil {
-				return nil, err
-			}
-		}
+		session, err = getVaultSession(store, options)
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	// Handle SSH options
-	if options.GenerateRSAKey != nil {
-		session.SSHOptions.GenerateRSAKey = *options.GenerateRSAKey
-	}
-	if options.ProxyAgent != nil {
-		session.SSHOptions.DisableProxy = !(*options.ProxyAgent)
-	}
-	if options.SigningUrl != "" {
-		session.SSHOptions.VaultSigningUrl = options.SigningUrl
-	}
-	if len(options.SigningUsers) > 0 {
-		session.SSHOptions.ValidPrincipals = options.SigningUsers
+	// Assume any role specified
+	if options.Role != "" {
+		return session.AssumeRole(options.Role)
 	}
 
 	return session, nil
@@ -97,6 +77,9 @@ func getVaultSessionWithNoSession(store vaulted.Store, options *SessionOptions) 
 	if vault.AWSKey != nil {
 		vault.AWSKey.ForgoTempCredGeneration = true
 	}
+
+	// Change the in-memory vault to update SSH options only
+	updateVaultFromSSHOptions(vault, options)
 
 	// Skip assuming the vault's role
 
@@ -160,5 +143,27 @@ func updateVaultFromEnvAndOptions(vault *vaulted.Vault, options *SessionOptions)
 		}
 
 		vault.AWSKey.Region = &region
+	}
+
+	// update SSH options
+	updateVaultFromSSHOptions(vault, options)
+}
+
+func updateVaultFromSSHOptions(vault *vaulted.Vault, options *SessionOptions) {
+	if vault.SSHOptions == nil {
+		vault.SSHOptions = &vaulted.SSHOptions{}
+	}
+
+	if options.GenerateRSAKey != nil {
+		vault.SSHOptions.GenerateRSAKey = *options.GenerateRSAKey
+	}
+	if options.ProxyAgent != nil {
+		vault.SSHOptions.DisableProxy = !(*options.ProxyAgent)
+	}
+	if options.SigningUrl != "" {
+		vault.SSHOptions.VaultSigningUrl = options.SigningUrl
+	}
+	if len(options.SigningUsers) > 0 {
+		vault.SSHOptions.ValidPrincipals = options.SigningUsers
 	}
 }

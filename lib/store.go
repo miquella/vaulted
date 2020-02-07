@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/miquella/ssh-proxy-agent/lib/proxyagent"
 	"github.com/miquella/xdg"
 	"golang.org/x/crypto/nacl/secretbox"
 )
@@ -263,6 +264,16 @@ func (s *store) CreateSession(v *Vault, name, password string) (*Session, error)
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	// create a fresh generated key if we are not using a cached session
+	if v.SSHOptions != nil && v.SSHOptions.GenerateRSAKey {
+		var keyPair *proxyagent.KeyPair
+		keyPair, err = proxyagent.GenerateRSAKeyPair()
+		if err != nil {
+			return nil, err
+		}
+		session.GeneratedSSHKey = keyPair.PrivateKey
 	}
 
 	// we ignore errors because the session is viable even if saving the cache fails

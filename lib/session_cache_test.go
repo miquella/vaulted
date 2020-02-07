@@ -30,6 +30,8 @@ var (
 		SSHKeys: map[string]string{
 			"SSH_TESTING": "ssh_testing",
 		},
+
+		SSHOptions: &vaulted.SSHOptions{},
 	}
 )
 
