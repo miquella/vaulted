@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/miquella/ssh-proxy-agent/lib/proxyagent"
 	"github.com/miquella/vaulted/lib"
 )
 
@@ -163,7 +164,14 @@ func updateVaultFromSSHOptions(vault *vaulted.Vault, options *SessionOptions) {
 	if options.SigningUrl != "" {
 		vault.SSHOptions.VaultSigningUrl = options.SigningUrl
 	}
-	if len(options.SigningUsers) > 0 {
-		vault.SSHOptions.ValidPrincipals = options.SigningUsers
+
+	// Calculate the signing users (lowest precedence to highest)
+	signingUsers := []string{proxyagent.DefaultPrincipal()}
+	if len(vault.SSHOptions.ValidPrincipals) > 0 {
+		signingUsers = vault.SSHOptions.ValidPrincipals
 	}
+	if len(options.SigningUsers) > 0 {
+		signingUsers = options.SigningUsers
+	}
+	vault.SSHOptions.ValidPrincipals = signingUsers
 }
