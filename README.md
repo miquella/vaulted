@@ -48,7 +48,7 @@ go get -u github.com/miquella/vaulted
 ```
 
 Don't forget to add `$GOPATH/bin` to your `$PATH`! You must be running go version
-1.9 or greater.
+1.12 or greater.
 
 Getting Started
 ---------------
