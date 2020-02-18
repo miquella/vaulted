@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/miquella/ask v1.0.0
-	github.com/miquella/ssh-proxy-agent v0.3.0
+	github.com/miquella/ssh-proxy-agent v0.4.0
 	github.com/miquella/xdg v1.0.0
 	github.com/pierrec/lz4 v2.4.1+incompatible // indirect
 	github.com/spf13/pflag v1.0.5
