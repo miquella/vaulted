@@ -56,7 +56,8 @@ func (s *Session) Clone() *Session {
 	}
 
 	if s.SSHOptions != nil {
-		session.SSHOptions = s.SSHOptions
+		sshOptions := *s.SSHOptions
+		session.SSHOptions = &sshOptions
 	} else {
 		session.SSHOptions = &SSHOptions{}
 	}
