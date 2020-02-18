@@ -12,8 +12,9 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"github.com/miquella/vaulted/lib"
 	"golang.org/x/crypto/pbkdf2"
+
+	"github.com/miquella/vaulted/lib"
 )
 
 const (

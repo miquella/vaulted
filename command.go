@@ -7,9 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/spf13/pflag"
+
 	"github.com/miquella/vaulted/edit"
 	"github.com/miquella/vaulted/lib"
-	"github.com/spf13/pflag"
 )
 
 var (

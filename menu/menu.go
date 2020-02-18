@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/fatih/color"
+
 	"github.com/miquella/vaulted/lib"
 )
 

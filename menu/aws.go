@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/fatih/color"
+
 	"github.com/miquella/vaulted/lib"
 )
 

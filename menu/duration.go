@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+
 	"github.com/miquella/vaulted/lib"
 )
 

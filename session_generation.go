@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/miquella/ssh-proxy-agent/lib/proxyagent"
+
 	"github.com/miquella/vaulted/lib"
 )
 
