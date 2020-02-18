@@ -31,7 +31,7 @@ func (m *SSHKeyMenu) Help() {
 	fmt.Println("g,generate - Generate Key")
 	fmt.Println("v          - HashiCorp Vault Signing URL")
 	fmt.Println("u,users    - HashiCorp Vault User Principals")
-	fmt.Println("e          - Expose External SSH Agent")
+	fmt.Println("E          - Expose External SSH Agent")
 	fmt.Println("?,help     - Help")
 	fmt.Println("b,back     - Back")
 	fmt.Println("q,quit     - Quit")
@@ -41,7 +41,7 @@ func (m *SSHKeyMenu) Handler() error {
 	for {
 		var err error
 		m.Printer()
-		input, err := interaction.ReadMenu("Edit ssh keys: [a,D,g,v,u,e,b]: ")
+		input, err := interaction.ReadMenu("Edit ssh keys: [a,D,g,v,u,E,b]: ")
 		if err != nil {
 			return err
 		}
@@ -92,7 +92,7 @@ func (m *SSHKeyMenu) Handler() error {
 			} else {
 				m.Vault.SSHOptions.ValidPrincipals = []string{}
 			}
-		case "e":
+		case "E":
 			if m.Vault.SSHOptions == nil {
 				m.Vault.SSHOptions = &vaulted.SSHOptions{}
 			}
@@ -281,8 +281,8 @@ func (m *SSHKeyMenu) Printer() {
 			}
 
 			if len(m.Vault.SSHOptions.ValidPrincipals) > 0 {
-				green.Printf("    User: ")
-				fmt.Printf("%s\n", m.Vault.SSHOptions.ValidPrincipals)
+				green.Printf("    User(s): ")
+				fmt.Printf("%s\n", strings.Join(m.Vault.SSHOptions.ValidPrincipals, ", "))
 			}
 
 			cyan.Print("\n  Expose external SSH agent: ")
