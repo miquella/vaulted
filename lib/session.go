@@ -181,7 +181,10 @@ func (s *Session) Spawn(cmd []string) (*int, error) {
 		_ = server.Stop()
 	}()
 
-	vars["SSH_AUTH_SOCK"] = server.Socket
+	proxyVars := server.GetProxyEnvVars()
+	for v, k := range proxyVars {
+		vars[v] = k
+	}
 
 	// trap signals
 	sigs := make(chan os.Signal)
