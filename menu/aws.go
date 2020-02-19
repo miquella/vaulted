@@ -72,15 +72,19 @@ func (m *AWSMenu) Handler() error {
 				return secretErr
 			}
 
-			// Save the old key in case the user aborts
+			// Copy the key to prevent other values from being lost
 			oldAWSKey := m.Vault.AWSKey
-			m.Vault.AWSKey = &vaulted.AWSKey{
-				AWSCredentials: vaulted.AWSCredentials{
-					ID:     awsAccesskey,
-					Secret: awsSecretkey,
-				},
+			if oldAWSKey == nil {
+				m.Vault.AWSKey = &vaulted.AWSKey{}
+			} else {
+				newAWSKey := *oldAWSKey
+				m.Vault.AWSKey = &newAWSKey
 			}
 
+			m.Vault.AWSKey.ID = awsAccesskey
+			m.Vault.AWSKey.Secret = awsSecretkey
+
+			// Attempt to autoconfigure the MFA
 			detectMFAMenu := DetectMFAMenu{Menu: m.Menu}
 			detectErr := detectMFAMenu.Handler()
 			if detectErr == ErrUserAbort {
