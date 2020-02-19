@@ -284,9 +284,9 @@ func (m *SSHKeyMenu) Printer() {
 				green.Printf("    User(s): ")
 				fmt.Printf("%s\n", strings.Join(m.Vault.SSHOptions.ValidPrincipals, ", "))
 			}
-
-			cyan.Print("\n  Expose external SSH agent: ")
-			fmt.Printf("%t\n", !m.Vault.SSHOptions.DisableProxy)
 		}
+
+		cyan.Print("\n  Expose external SSH agent: ")
+		fmt.Printf("%t\n", !m.Vault.SSHOptions.DisableProxy)
 	}
 }
