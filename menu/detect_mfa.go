@@ -124,6 +124,10 @@ func (m *DetectMFAMenu) iamClient() (*iam.IAM, error) {
 		),
 	}
 
+	if m.Vault.AWSKey.Region != nil {
+		config.Region = aws.String(*m.Vault.AWSKey.Region)
+	}
+
 	s, err := session.NewSession(config)
 	if err != nil {
 		return nil, err
