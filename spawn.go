@@ -25,7 +25,7 @@ func (s *Spawn) Run(store vaulted.Store) error {
 	timeRemaining := session.Expiration.Sub(time.Now())
 	timeRemaining = time.Second * time.Duration(timeRemaining.Seconds())
 	if s.DisplayStatus {
-		ask.Print(fmt.Sprintf("%s — expires: %s (%s remaining)\n", session.Name, session.Expiration.Format("2 Jan 2006 15:04 MST"), timeRemaining))
+		ask.Print(fmt.Sprintf("%s — expires: %s (%s remaining)\n", session.Name, session.Expiration.Format("2 Jan 2006 15:04 MST"), timeRemaining))
 	}
 
 	code, err := session.Spawn(s.Command)
