@@ -171,8 +171,12 @@ func updateVaultFromSSHOptions(vault *vaulted.Vault, options *SessionOptions) {
 	if len(vault.SSHOptions.ValidPrincipals) > 0 {
 		signingUsers = vault.SSHOptions.ValidPrincipals
 	}
-	if len(options.SigningUsers) > 0 {
-		signingUsers = options.SigningUsers
+	if options.SigningUsers != nil {
+		if len(options.SigningUsers) > 0 {
+			signingUsers = options.SigningUsers
+		} else {
+			signingUsers = []string{proxyagent.DefaultPrincipal()}
+		}
 	}
 	vault.SSHOptions.ValidPrincipals = signingUsers
 }
