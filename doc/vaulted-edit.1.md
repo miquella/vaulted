@@ -49,3 +49,24 @@ AWS KEY
    `vaulted shell`.
 * D - Delete  
    Removes all AWS details stored in the vault.
+
+SSH KEYS
+-------
+
+* a - Add  
+   Manages SSH keys loaded into the agent when a session starts.
+* g - Generate Key  
+   Generates a dynamic, in-memory SSH key that will be stored for the vault
+   duration. This is particularly useful when coupled with SSH key signing.
+* v - HashiCorp Vault Signing URL  
+   The HashiCorp Vault URL to configure SSH key signing. This URL can be an
+   absolute path, or if the VAULT_ADDR environment variable is set you may
+   provide this as a relative path to join the two.
+* u - HashiCorp Vault User Principals  
+   Configures the user principals that keys will be signed for when SSH key
+   signing is enabled through HashiCorp Vault.
+* E - Expose external SSH agent  
+   Toggles whether or not to expose an external SSH agent configured via
+   the SSH_AUTH_SOCK environment variable to the spawned vault session.
+* D - Delete  
+   Removes a specified SSH key from the list.

@@ -150,6 +150,31 @@ VAULTED_ENV_ROLE_PARTITION=aws
 VAULTED_ENV_ROLE_PATH=/path/
 .fi
 .RE
+.SH SSH KEY SIGNING
+.PP
+If you have access to a HashiCorp Vault instance that is configured for SSH key
+signing, you can configure the Vaulted session to automatically sign all keys
+added to the agent.
+.PP
+All keys added to the agent will be signed for a one hour duration and will be
+automatically renewed prior to expiration to ensure that the keys are always
+valid for the duration of the vault, so long as the HashiCorp Vault token
+remains valid.
+.PP
+Key signing is particularly useful when combined with SSH key generation which
+will generate a per\-session, in\-memory key to seed the agent that can be signed
+on creation.
+.PP
+If the \fB\fCVAULT_ADDR\fR environment variable is set you can provide a relative path
+to the vault signing URL instead of the full address.
+.PP
+You must have a HashiCorp Vault token configured for this work, either via a
+\fB\fC\&.vault\-token\fR file located in your home directory or a \fB\fCVAULT_TOKEN\fR
+environment variable. Using \fB\fCvault login\fR with the appropriate options can be a
+simple way to populate the \fB\fC\&.vault\-token\fR file.
+.PP
+For more details on the SSH proxy agent that Vaulted employs, see
+\fB\fChttps://github.com/miquella/ssh\-proxy\-agent\fR
 .SH GUI Password Prompts
 .PP
 GUI\-based password prompts can be used by setting the \fB\fCVAULTED_ASKPASS\fR
