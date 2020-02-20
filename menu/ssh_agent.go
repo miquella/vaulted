@@ -74,7 +74,7 @@ func (m *SSHKeyMenu) Handler() error {
 			m.Vault.SSHOptions.VaultSigningUrl = signingUrl
 
 			if signingUrl != "" && !m.Vault.SSHOptions.GenerateRSAKey && len(m.Vault.SSHKeys) == 0 {
-				generateKey, _ := interaction.ReadValue("Would you like to enable RSA key generation (y/n): ")
+				generateKey, _ := interaction.ReadValue("Would you like to enable per-session, dynamic RSA key generation (y/n): ")
 				if generateKey == "y" {
 					m.Vault.SSHOptions.GenerateRSAKey = true
 				}
