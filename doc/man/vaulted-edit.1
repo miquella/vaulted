@@ -53,3 +53,35 @@ D \- Delete
 .br
 Removes all AWS details stored in the vault.
 .RE
+.SH SSH KEYS
+.RS
+.IP \(bu 2
+a \- Add
+.br
+Manages SSH keys loaded into the agent when a session starts.
+.IP \(bu 2
+g \- Generate Key
+.br
+Generates a dynamic, in\-memory SSH key that will be stored for the vault
+duration. This is particularly useful when coupled with SSH key signing.
+.IP \(bu 2
+v \- HashiCorp Vault Signing URL
+.br
+The HashiCorp Vault URL to configure SSH key signing. This URL can be an
+absolute path, or if the VAULT_ADDR environment variable is set you may
+provide this as a relative path to join the two.
+.IP \(bu 2
+u \- HashiCorp Vault User Principals
+.br
+Configures the user principals that keys will be signed for when SSH key
+signing is enabled through HashiCorp Vault.
+.IP \(bu 2
+E \- Expose external SSH agent
+.br
+Toggles whether or not to expose an external SSH agent configured via
+the SSH\fIAUTH\fPSOCK environment variable to the spawned vault session.
+.IP \(bu 2
+D \- Delete
+.br
+Removes a specified SSH key from the list.
+.RE
