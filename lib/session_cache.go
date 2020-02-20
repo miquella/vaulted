@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 )
 
 var (
@@ -95,12 +96,23 @@ func VaultSessionCacheKey(vault *Vault) string {
 		keyAttributes["ssh_key_"+key] = value
 	}
 
-	// we cannot compare the actual generated key, so instead we just
-	// want to confirm that if its existence matches the current vault
-	if vault.SSHOptions != nil && vault.SSHOptions.GenerateRSAKey {
-		keyAttributes["generated_key_exists"] = "true"
-	} else {
-		keyAttributes["generated_key_exists"] = "false"
+	if vault.SSHOptions != nil {
+		if vault.SSHOptions.DisableProxy {
+			keyAttributes["ssh_disable_proxy"] = "true"
+		} else {
+			keyAttributes["ssh_disable_proxy"] = "false"
+		}
+
+		keyAttributes["ssh_vault_signing_url"] = vault.SSHOptions.VaultSigningUrl
+		keyAttributes["ssh_vault_signing_users"] = strings.Join(vault.SSHOptions.ValidPrincipals, ", ")
+
+		// we cannot compare the actual generated key, so instead we just
+		// want to confirm that if its existence matches the current vault
+		if vault.SSHOptions.GenerateRSAKey {
+			keyAttributes["ssh_generated_key_exists"] = "true"
+		} else {
+			keyAttributes["ssh_generated_key_exists"] = "false"
+		}
 	}
 
 	// get a sorted list of the keys (that do not have blank values)
