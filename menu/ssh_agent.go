@@ -32,6 +32,7 @@ func (m *SSHKeyMenu) Help() {
 	fmt.Println("v          - HashiCorp Vault Signing URL")
 	fmt.Println("u,users    - HashiCorp Vault User Principals")
 	fmt.Println("E          - Expose External SSH Agent")
+	fmt.Println("X,export   - Export Key Pair")
 	fmt.Println("?,help     - Help")
 	fmt.Println("b,back     - Back")
 	fmt.Println("q,quit     - Quit")
@@ -41,7 +42,7 @@ func (m *SSHKeyMenu) Handler() error {
 	for {
 		var err error
 		m.Printer()
-		input, err := interaction.ReadMenu("Edit ssh keys: [a,D,g,v,u,E,b]: ")
+		input, err := interaction.ReadMenu("Edit ssh keys: [a,D,g,v,u,E,X,b]: ")
 		if err != nil {
 			return err
 		}
@@ -97,6 +98,22 @@ func (m *SSHKeyMenu) Handler() error {
 				m.Vault.SSHOptions = &vaulted.SSHOptions{}
 			}
 			m.Vault.SSHOptions.DisableProxy = !m.Vault.SSHOptions.DisableProxy
+		case "X", "export":
+			if len(m.Vault.SSHKeys) == 0 {
+				color.Red("There are no keys to export")
+			} else {
+				name, err := interaction.ReadValue("Choose a key to export: ")
+				if err == nil {
+					if key, exists := m.Vault.SSHKeys[name]; exists {
+						err = exportSSHKey(key)
+						if err != nil {
+							return err
+						}
+					} else {
+						color.Red("Key '%s' not found", name)
+					}
+				}
+			}
 		case "b", "back":
 			return nil
 		case "q", "quit", "exit":
@@ -289,4 +306,71 @@ func (m *SSHKeyMenu) Printer() {
 		cyan.Print("\n  Expose external SSH agent: ")
 		fmt.Printf("%t\n", !m.Vault.SSHOptions.DisableProxy)
 	}
+}
+
+func exportSSHKey(key string) error {
+	homeDir := ""
+	user, err := user.Current()
+	if err == nil {
+		homeDir = user.HomeDir
+	} else {
+		homeDir = os.Getenv("HOME")
+	}
+
+	defaultFilename := ""
+	filename := ""
+	if homeDir != "" {
+		defaultFilename = filepath.Join(homeDir, ".ssh", "vaulted_id_rsa")
+		filename, err = interaction.ReadValue(fmt.Sprintf("Export location (default: %s): ", defaultFilename))
+		if err != nil {
+			return err
+		}
+		if filename == "" {
+			filename = defaultFilename
+		}
+		if !filepath.IsAbs(filename) {
+			filename = filepath.Join(filepath.Join(homeDir, ".ssh"), filename)
+		}
+	} else {
+		filename, err = interaction.ReadValue("Export location: ")
+		if err != nil {
+			return err
+		}
+	}
+
+	savePrivateKey := false
+	savePrivateKeyPrompt, err := interaction.ReadValue("Would you like to export the private key as well (y/N): ")
+	if savePrivateKeyPrompt == "y" {
+		savePrivateKey = true
+	}
+
+	return writeSSHToFile(key, filename, savePrivateKey)
+}
+
+func writeSSHToFile(key string, filename string, savePrivateKey bool) error {
+	block, _ := pem.Decode([]byte(key))
+
+	privKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	pubKey, err := ssh.NewPublicKey(&privKey.PublicKey)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = ioutil.WriteFile(filename+".pub", ssh.MarshalAuthorizedKey(pubKey), 0600)
+	if err != nil {
+		return err
+	}
+
+	if savePrivateKey {
+		err = ioutil.WriteFile(filename, []byte(key), 0600)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
