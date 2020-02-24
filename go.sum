@@ -91,6 +91,8 @@ github.com/miquella/ssh-proxy-agent v0.3.0 h1:dgCBMnBWu0Wqz4plbSBBZwB029PzuuN4fX
 github.com/miquella/ssh-proxy-agent v0.3.0/go.mod h1:Kvgpc2dKPyKO2KadzUgBwPNICD8w87O8FSsmBxP6xrw=
 github.com/miquella/ssh-proxy-agent v0.4.0 h1:NWfoJwI0DyF/XEP0p70Bts6prFAAhkAyEx3NfRuwZe8=
 github.com/miquella/ssh-proxy-agent v0.4.0/go.mod h1:Kvgpc2dKPyKO2KadzUgBwPNICD8w87O8FSsmBxP6xrw=
+github.com/miquella/ssh-proxy-agent v0.5.0 h1:8LoO+sTULses3w6XvKmFFhq5MWh1vvyFa4J3zpCN9DA=
+github.com/miquella/ssh-proxy-agent v0.5.0/go.mod h1:+DYHUCWUps5cT7l5nA5pumD5ERpDCwTmO6aTzxVpyZI=
 github.com/miquella/xdg v1.0.0 h1:MAuy6cGqJPs3evpBKzWGRV7r7RzVWXkcj218TaIdiwo=
 github.com/miquella/xdg v1.0.0/go.mod h1:g8uVrUbcx+7tDosTwHzv4LIHPbPFU9wVUklvpPZu04Q=
 github.com/mitchellh/cli v1.0.0/go.mod h1:hNIlj7HEI86fIcpObd7a0FcrxTWetlwJDGcceTlRvqc=
