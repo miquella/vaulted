@@ -15,7 +15,7 @@ import (
 	"github.com/miquella/ask"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/miquella/vaulted/v3/lib"
+	"github.com/miquella/vaulted/lib"
 )
 
 type SSHKeyMenu struct {

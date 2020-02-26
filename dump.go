@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/miquella/vaulted/v3/lib"
+	"github.com/miquella/vaulted/lib"
 )
 
 type Dump struct {

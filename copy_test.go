@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/miquella/vaulted/v3/lib"
+	"github.com/miquella/vaulted/lib"
 )
 
 func TestCopy(t *testing.T) {

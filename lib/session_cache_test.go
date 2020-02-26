@@ -3,7 +3,7 @@ package vaulted_test
 import (
 	"testing"
 
-	"github.com/miquella/vaulted/v3/lib"
+	"github.com/miquella/vaulted/lib"
 )
 
 var (

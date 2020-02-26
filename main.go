@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/miquella/vaulted/v3/lib"
-	"github.com/miquella/vaulted/v3/lib/legacy"
+	"github.com/miquella/vaulted/lib"
+	"github.com/miquella/vaulted/lib/legacy"
 )
 
 const (

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/miquella/vaulted/v3/edit"
+	"github.com/miquella/vaulted/edit"
 )
 
 type parseCase struct {

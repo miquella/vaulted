@@ -6,7 +6,7 @@ import (
 
 	"github.com/miquella/ask"
 
-	"github.com/miquella/vaulted/v3/lib"
+	"github.com/miquella/vaulted/lib"
 )
 
 type Spawn struct {
