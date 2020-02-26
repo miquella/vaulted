@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/miquella/vaulted/lib"
+	"github.com/miquella/vaulted/v3/lib"
 )
 
 const (

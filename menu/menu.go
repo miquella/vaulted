@@ -5,7 +5,7 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/miquella/vaulted/lib"
+	"github.com/miquella/vaulted/v3/lib"
 )
 
 var (

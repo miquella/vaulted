@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/miquella/vaulted/lib"
+	"github.com/miquella/vaulted/v3/lib"
 )
 
 func TestDump(t *testing.T) {

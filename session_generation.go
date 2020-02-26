@@ -7,7 +7,7 @@ import (
 
 	"github.com/miquella/ssh-proxy-agent/lib/proxyagent"
 
-	"github.com/miquella/vaulted/lib"
+	"github.com/miquella/vaulted/v3/lib"
 )
 
 var (
