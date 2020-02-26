@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/miquella/vaulted/lib"
+	"github.com/miquella/vaulted/v3/lib"
 )
 
 func TestList(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/miquella/vaulted/lib"
+	"github.com/miquella/vaulted/v3/lib"
 )
 
 type List struct {

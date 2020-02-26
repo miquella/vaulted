@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/miquella/vaulted/lib"
-	"github.com/miquella/vaulted/menu"
+	"github.com/miquella/vaulted/v3/lib"
+	"github.com/miquella/vaulted/v3/menu"
 )
 
 var (

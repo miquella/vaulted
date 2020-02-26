@@ -9,8 +9,8 @@ import (
 
 	"github.com/miquella/ask"
 
-	"github.com/miquella/vaulted/lib"
-	"github.com/miquella/vaulted/lib/legacy"
+	"github.com/miquella/vaulted/v3/lib"
+	"github.com/miquella/vaulted/v3/lib/legacy"
 )
 
 func NewSteward() vaulted.Steward {

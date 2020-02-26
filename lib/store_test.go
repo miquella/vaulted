@@ -10,7 +10,7 @@ import (
 
 	"github.com/miquella/xdg"
 
-	"github.com/miquella/vaulted/lib"
+	"github.com/miquella/vaulted/v3/lib"
 )
 
 const (
