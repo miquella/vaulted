@@ -44,7 +44,7 @@ func TestListVaults(t *testing.T) {
 	}
 
 	sort.Strings(vaults)
-	expected := []string{"aaa", "bbb", "ccc"}
+	expected := []string{"aaa", "bbb", "ccc", "subfolder/aaa"}
 	if !reflect.DeepEqual(expected, vaults) {
 		t.Fatalf("expected %#v, got %#v", expected, vaults)
 	}
@@ -126,6 +126,15 @@ func setupVaults(t *testing.T) {
 	err := os.Mkdir(filepath.Join(string(xdg.DATA_HOME), "vaulted"), 0700)
 	if err != nil {
 		t.Fatalf("failed to create vaulted DATA_HOME dir: %v", err)
+	}
+
+	err = os.Mkdir(filepath.Join(string(xdg.DATA_HOME), "vaulted", "subfolder"), 0700)
+	if err != nil {
+		t.Fatalf("failed to create vaulted DATA_HOME subfolder dir: %v", err)
+	}
+	err = ioutil.WriteFile(filepath.Join(string(xdg.DATA_HOME), "vaulted", "subfolder", "aaa"), []byte(VAULT_AAA), 0600)
+	if err != nil {
+		t.Fatalf("failed to write 'subfolder/aaa' home vault file: %v", err)
 	}
 
 	err = ioutil.WriteFile(filepath.Join(string(xdg.DATA_HOME), "vaulted", "aaa"), []byte(VAULT_AAA), 0600)
