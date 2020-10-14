@@ -115,6 +115,17 @@ intended to be shown to the user. The askpass implementation then writes the
 password to \fB\fCstdout\fR and returns a success code (0). If a failure code (non\-0)
 is returned, the password input is aborted.
 .PP
+The vault name, requested secret type (password, MFA token etc.) and password
+request reason is passed to the askpass process in the environment variables
+\fB\fCVAULTED_ENV\fR, \fB\fCVAULTED_PASSWORD_TYPE\fR and \fB\fCVAULTED_PASSWORD_REASON\fR
+respectively.
+.PP
+Valid values for \fB\fCVAULTED_PASSWORD_TYPE\fR are: \fB\fCpassword\fR, \fB\fClegacypassword\fR or
+\fB\fCmfatoken\fR\&.
+.PP
+Valid values for \fB\fCVAULTED_PASSWORD_REASON\fR are: \fB\fCnew\fR, \fB\fCnomatch\fR, \fB\fCconfirm\fR or
+the empty string if \fB\fCVAULTED_PASSWORD_TYPE\fR is not \fB\fCpassword\fR\&.
+.PP
 Vaulted is intended to integrate seamlessly with existing askpass
 implementations (e.g. \fB\fCssh\-askpass\fR).
 .PP

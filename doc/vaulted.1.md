@@ -106,6 +106,17 @@ intended to be shown to the user. The askpass implementation then writes the
 password to `stdout` and returns a success code (0). If a failure code (non-0)
 is returned, the password input is aborted.
 
+The vault name, requested secret type (password, MFA token etc.) and password
+request reason is passed to the askpass process in the environment variables
+`VAULTED_ENV`, `VAULTED_PASSWORD_TYPE` and `VAULTED_PASSWORD_REASON`
+respectively.
+
+Valid values for `VAULTED_PASSWORD_TYPE` are: `password`, `legacypassword` or
+`mfatoken`.
+
+Valid values for `VAULTED_PASSWORD_REASON` are: `new`, `nomatch`, `confirm` or
+the empty string if `VAULTED_PASSWORD_TYPE` is not `password`.
+
 Vaulted is intended to integrate seamlessly with existing askpass
 implementations (e.g. `ssh-askpass`).
 
