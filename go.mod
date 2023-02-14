@@ -1,9 +1,11 @@
 module github.com/miquella/vaulted
 
 require (
-	github.com/aws/aws-sdk-go v1.29.2
+	github.com/aws/aws-sdk-go v1.34.0
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
+	github.com/chzyer/test v1.0.0 // indirect
 	github.com/fatih/color v1.9.0
+	github.com/frankban/quicktest v1.14.4 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.4 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
