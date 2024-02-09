@@ -1,14 +1,14 @@
 package main
 
 import (
-	"strings"
 	"testing"
+	"regexp"
 
 	"github.com/miquella/vaulted/lib"
 )
 
 func TestSpawn(t *testing.T) {
-	spawnRefreshVar := `GOPATH="/vaulted"`
+	spawnRefreshVar := `GOPATH=["']/vaulted`
 
 	store := NewTestStore()
 	store.Vaults["one"] = &vaulted.Vault{}
@@ -43,7 +43,11 @@ func TestSpawn(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
-	if !strings.Contains(string(output), spawnRefreshVar) {
+	m, err := regexp.MatchString(spawnRefreshVar, string(output))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !m {
 		t.Errorf("Incorrect output!\nExpected to contain:\n\"%s\"\ngot:\n\"%s\"", spawnRefreshVar, output)
 	}
 }
