@@ -40,11 +40,11 @@ If you do not use Linux Brew, you will need to [build vaulted manually](#manual)
 
 ### Manual
 
-Installation on other platforms should be simple enough through `go get` as
+Installation on other platforms should be simple enough through `go install` as
 long as you have a proper Go environment setup:
 
 ```sh
-go get -u github.com/miquella/vaulted
+go install github.com/miquella/vaulted@latest
 ```
 
 Don't forget to add `$GOPATH/bin` to your `$PATH`! You must be running go version
