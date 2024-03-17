@@ -50,8 +50,14 @@ func (s *store) Steward() Steward {
 	return s.steward
 }
 
-func (s *store) ListVaults() ([]string, error) {
-	vaults, err := xdg.DATA.Glob(filepath.Join("vaulted", "*"))
+func (s *store) listRecursive(extraParts string) ([]string, error) {
+	var vaults []string
+	var err error
+	if extraParts == "" {
+		vaults, err = xdg.DATA.Glob(filepath.Join("vaulted", "*"))
+	} else {
+		vaults, err = xdg.DATA.Glob(filepath.Join("vaulted", extraParts, "*"))
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -63,17 +69,39 @@ func (s *store) ListVaults() ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
+		if info.Mode().IsDir() {
+			var innerVaults []string
+			if extraParts == "" {
+				innerVaults, err = s.listRecursive(info.Name())
+			} else {
+				innerVaults, err = s.listRecursive(filepath.Join(extraParts, info.Name()))
+			}
+
+			if err != nil {
+				return nil, err
+			}
+			found = append(found, innerVaults...)
+			continue
+		}
 		if !info.Mode().IsRegular() {
 			continue
 		}
 
 		if !emitted[info.Name()] {
 			emitted[info.Name()] = true
-			found = append(found, info.Name())
+			if extraParts == "" {
+				found = append(found, info.Name())
+			} else {
+				found = append(found, extraParts+"/"+info.Name())
+			}
 		}
 	}
 
 	return found, nil
+}
+
+func (s *store) ListVaults() ([]string, error) {
+	return s.listRecursive("")
 }
 
 func (s *store) VaultExists(name string) bool {

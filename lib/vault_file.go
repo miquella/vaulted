@@ -50,13 +50,11 @@ func readVaultFile(name string) (*VaultFile, error) {
 }
 
 func writeVaultFile(name string, vaultFile *VaultFile) error {
-	pathname := xdg.DATA_HOME.Join("vaulted")
-	err := os.MkdirAll(pathname, 0700)
+	filename := xdg.DATA_HOME.Join(filepath.Join("vaulted", name))
+	err := os.MkdirAll(filepath.Dir(filename), 0700)
 	if err != nil {
 		return err
 	}
-
-	filename := xdg.DATA_HOME.Join(filepath.Join("vaulted", name))
 	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
