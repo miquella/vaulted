@@ -1,0 +1,42 @@
+name: go
+on:
+  pull_request:
+    branches: ['*']
+  push:
+    branches: ['*']
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  golangci-lint:
+    name: golangci-lint
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+      - uses: golangci/golangci-lint-action@v4
+        with:
+          version: v1.56
+
+  go-test:
+    name: go test
+    strategy:
+      matrix:
+        go-version: [stable, oldstable]
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+      - run: go test -v ./...
